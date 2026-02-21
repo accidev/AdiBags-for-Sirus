@@ -204,7 +204,11 @@ end
 -- Regular bag buttons
 --------------------------------------------------------------------------------
 
-local bagButtonClass, bagButtonProto = addon:NewClass("BagSlotButton", "Button", "ItemButtonTemplate", "AceEvent-3.0")
+local bagButtonClass, bagButtonProto = addon:NewClass("BagSlotButton", "Button", "ItemButtonTemplate")
+local AceEvent = LibStub("AceEvent-3.0")
+bagButtonProto.RegisterMessage = AceEvent.RegisterMessage
+bagButtonProto.UnregisterMessage = AceEvent.UnregisterMessage
+bagButtonProto.UnregisterAllMessages = AceEvent.UnregisterAllMessages
 
 function bagButtonProto:OnCreate(bag)
 	self.bag = bag
@@ -224,6 +228,7 @@ function bagButtonProto:OnCreate(bag)
 	self:SetScript('OnDragStart', self.OnDragStart)
 	self:SetScript('OnReceiveDrag', self.OnClick)
 	self:SetScript('OnClick', self.OnClick)
+	self:SetScript('OnEvent', self.OnEvent)
 	self.UpdateTooltip = self.OnEnter
 
 	self.Count = _G[self:GetName().."Count"]
@@ -274,6 +279,14 @@ end
 function bagButtonProto:OnHide()
 	self:UnregisterAllEvents()
 	self:UnregisterAllMessages()
+end
+
+function bagButtonProto:OnEvent(event, ...)
+	if event == "BAG_UPDATE" then
+		self:BAG_UPDATE(event, ...)
+	elseif event == "ITEM_LOCK_CHANGED" then
+		self:ITEM_LOCK_CHANGED(event, ...)
+	end
 end
 
 function bagButtonProto:OnEnter()

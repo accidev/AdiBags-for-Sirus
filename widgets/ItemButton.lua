@@ -46,7 +46,11 @@ local AceTimer = LibStub('AceTimer-3.0')
 -- Button initialization
 --------------------------------------------------------------------------------
 
-local buttonClass, buttonProto = addon:NewClass("ItemButton", "Button", "ContainerFrameItemButtonTemplate", "AceEvent-3.0")
+local buttonClass, buttonProto = addon:NewClass("ItemButton", "Button", "ContainerFrameItemButtonTemplate")
+local AceEvent = LibStub("AceEvent-3.0")
+buttonProto.RegisterMessage = AceEvent.RegisterMessage
+buttonProto.UnregisterMessage = AceEvent.UnregisterMessage
+buttonProto.UnregisterAllMessages = AceEvent.UnregisterAllMessages
 
 local childrenNames = { "Cooldown", "IconTexture", "IconQuestTexture", "Count", "Stock", "NormalTexture" }
 
@@ -59,6 +63,7 @@ function buttonProto:OnCreate()
     self:RegisterForClicks("LeftButtonUp", "RightButtonUp")
     self:SetScript("OnShow", self.OnShow)
     self:SetScript("OnHide", self.OnHide)
+    self:SetScript("OnEvent", self.OnEvent)
     self:SetWidth(ITEM_SIZE)
     self:SetHeight(ITEM_SIZE)
 end
@@ -227,11 +232,11 @@ end
 --------------------------------------------------------------------------------
 
 function buttonProto:OnShow()
-    self:RegisterEvent('BAG_UPDATE_COOLDOWN', 'UpdateCooldown')
-    self:RegisterEvent('ITEM_LOCK_CHANGED', 'UpdateLock')
-    self:RegisterEvent('QUEST_ACCEPTED', 'UpdateBorder')
+    self:RegisterEvent('BAG_UPDATE_COOLDOWN')
+    self:RegisterEvent('ITEM_LOCK_CHANGED')
+    self:RegisterEvent('QUEST_ACCEPTED')
     if self.UpdateSearch then
-        self:RegisterEvent('INVENTORY_SEARCH_UPDATE', 'UpdateSearch')
+        self:RegisterEvent('INVENTORY_SEARCH_UPDATE')
     end
     self:RegisterEvent('UNIT_QUEST_LOG_CHANGED')
     self:RegisterMessage('AdiBags_UpdateAllButtons', 'Update')
@@ -244,6 +249,27 @@ function buttonProto:OnHide()
     self:UnregisterAllMessages()
     if self.hasStackSplit and self.hasStackSplit == 1 then
         StackSplitFrame:Hide()
+    end
+end
+
+function buttonProto:OnEvent(event, ...)
+    if event == "BAG_UPDATE_COOLDOWN" then
+        self:UpdateCooldown()
+    elseif event == "ITEM_LOCK_CHANGED" then
+        local bag, slot = ...
+        if bag == self.bag and slot == self.slot then
+            self:UpdateLock(true)
+        end
+    elseif event == "QUEST_ACCEPTED" then
+        self:UpdateBorder(true)
+    elseif event == "INVENTORY_SEARCH_UPDATE" then
+        if self.UpdateSearch then self:UpdateSearch() end
+    elseif event == "UNIT_QUEST_LOG_CHANGED" then
+        self:UNIT_QUEST_LOG_CHANGED(event, ...)
+    elseif event == "CURRENT_SPELL_CAST_CHANGED" then
+        self:CURRENT_SPELL_CAST_CHANGED(event, ...)
+    elseif event == "ITEM_LOCKED" then
+        self:ITEM_LOCKED(event, ...)
     end
 end
 
@@ -644,7 +670,10 @@ end
 -- Item stack button
 --------------------------------------------------------------------------------
 
-local stackClass, stackProto = addon:NewClass("StackButton", "Frame", "AceEvent-3.0")
+local stackClass, stackProto = addon:NewClass("StackButton", "Frame")
+stackProto.RegisterMessage = AceEvent.RegisterMessage
+stackProto.UnregisterMessage = AceEvent.UnregisterMessage
+stackProto.UnregisterAllMessages = AceEvent.UnregisterAllMessages
 addon:CreatePool(stackClass, "AcquireStackButton")
 
 function stackProto:OnCreate()
@@ -653,6 +682,7 @@ function stackProto:OnCreate()
     self.slots = {}
     self:SetScript('OnShow', self.OnShow)
     self:SetScript('OnHide', self.OnHide)
+    self:SetScript('OnEvent', self.OnEvent)
     self.GetCountHook = function()
         return self.count
     end
@@ -760,6 +790,12 @@ function stackProto:OnHide()
     end
     self:UnregisterAllEvents()
     self:UnregisterAllMessages()
+end
+
+function stackProto:OnEvent(event, ...)
+    if event == "ITEM_LOCK_CHANGED" then
+        self:ITEM_LOCK_CHANGED(event, ...)
+    end
 end
 
 function stackProto:SetVisibleSlot(slotId)
