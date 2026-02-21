@@ -39,6 +39,7 @@ function addon:SetupDefaultFilters()
     local EQUIPMENT = L['Equipment']
     local AMMUNITION = L['Ammunition']
     local MYTHIC_KEYSTONE = L['Mythic Keystone']
+	local DECOR =  BI["Decorate"]
 
     -- Define global ordering
     self:SetCategoryOrders {
@@ -51,6 +52,7 @@ function addon:SetupDefaultFilters()
         [AMMUNITION] = -30,
         [KEY] = -40,
         [JUNK] = -50,
+		[DECOR] = -60,
     }
 
     -- [90] Parts of an equipment set
@@ -218,6 +220,21 @@ function addon:SetupDefaultFilters()
         questItemFilter.uiName = L['Quest Items']
         questItemFilter.uiDesc = L['Put quest-related items in their own section.']
     end
+    do
+		local TransmogFilter = addon:RegisterFilter('Decorate', 65, function(self, slotData)
+			if (slotData.class == ARMOR and slotData.subclass == "Декоративный предмет") then
+					return DECOR
+			elseif slotData.class == WEAPON then
+				if slotData.quality == 4 and slotData.iLevel == 1 then
+					return DECOR
+				end
+			else
+				return false
+			end
+		end)
+		TransmogFilter.uiName = L["Decorate."]
+		TransmogFilter.uiDesc = L['Put decorated items in their own section.']
+	end
 
     -- [60] Equipment
     do
