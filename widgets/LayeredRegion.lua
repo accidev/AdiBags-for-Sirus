@@ -1,12 +1,24 @@
 --[[
 AdiBags - Adirelle's bag addon.
-Copyright 2010 Adirelle (adirelle@tagada-team.net)
+Copyright 2010-2011 Adirelle (adirelle@tagada-team.net)
 All rights reserved.
 --]]
 
 local addonName, addon = ...
 local L = addon.L
 local safecall = addon.safecall
+
+--<GLOBALS
+local _G = _G
+local assert = _G.assert
+local ipairs = _G.ipairs
+local max = _G.max
+local pairs = _G.pairs
+local tinsert = _G.tinsert
+local tsort = _G.table.sort
+local type = _G.type
+local unpack = _G.unpack
+--GLOBALS>
 
 --------------------------------------------------------------------------------
 -- Abstract layered region
@@ -33,15 +45,13 @@ end
 
 function layeredRegionProto:OnShow()
 	if not self.isShown then
-		self:Debug('OnShow')
 		self.isShown = true
-		self:RequestLayout(true)
+		self:RequestLayout()
 	end
 end
 
 function layeredRegionProto:OnHide()
 	if self.isShown then
-		self:Debug('OnHide')
 		self.isShown = false
 		self:RequestLayout()
 	end
@@ -87,36 +97,24 @@ function layeredRegionProto:AddWidget(widget, ...)
 end
 
 function layeredRegionProto:Layout()
-	if not self.dirtyLayout then return end
---[===[@debug@
-	if self.widgets[1] then
-		self:Debug('Laying out children')
---@end-debug@]===]
-		for i, data in pairs(self.widgets) do
-			if data.layered then
-				data.widget:Layout()
-			end
-		end
---[===[@debug@
-	end
-	if self.OnLayout then
-		self:Debug('OnLayout')
---@end-debug@]===]
-		safecall(self, "OnLayout")
---[===[@debug@
-	end
---@end-debug@]===]
+	local wasDirty = self.dirtyLayout
 	self.dirtyLayout = nil
+	for i, data in pairs(self.widgets) do
+		if data.layered and data.widget:IsShown() then
+			data.widget:Layout()
+		end
+	end
 	self:SetScript('OnUpdate', nil)
+	if self.dirtyLayout or wasDirty then
+		self.dirtyLayout = nil
+		safecall(self, "OnLayout")
+	end
 end
 
-function layeredRegionProto:RequestLayout(immediate)
-	if self.dirtyLayout and not immediate then return end
+function layeredRegionProto:RequestLayout()
 	self.dirtyLayout = true
 	if self.container then
 		self.container:RequestLayout()
-	elseif self:IsVisible() then
-		self:Layout()
 	else
 		self:SetScript('OnUpdate', self.Layout)
 	end
@@ -175,11 +173,9 @@ function simpleLayeredRegionProto:OnWidgetAdded(data, order, size, xOffset, yOff
 	data.order = order or 0
 	data.size = size or nil
 	data.xOffset = xOffset or 0
-	data.yOffset = yOffser or 0
-	table.sort(self.widgets, CompareWidgets)
+	data.yOffset = yOffset or 0
+	tsort(self.widgets, CompareWidgets)
 end
-
-local max = math.max
 
 function simpleLayeredRegionProto:OnLayout()
 	local dx, dy, sx, sy = self.dx, self.dy, self.sx, self.sy

@@ -1,11 +1,16 @@
 --[[
 AdiBags - Adirelle's bag addon.
-Copyright 2010 Adirelle (adirelle@tagada-team.net)
+Copyright 2010-2011 Adirelle (adirelle@tagada-team.net)
 All rights reserved.
 --]]
 
 local addonName, addon = ...
 local L = addon.L
+
+--<GLOBALS
+local _G = _G
+local CreateFrame = _G.CreateFrame
+--GLOBALS>
 
 local mod = addon:NewModule('MoneyFrame', 'AceEvent-3.0')
 mod.uiName = L['Money']

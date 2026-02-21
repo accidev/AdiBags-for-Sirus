@@ -25,6 +25,7 @@ function mod:OnInitialize()
 			showGlow = true,
 			glowScale = 1.5,
 			glowColor = { 0.3, 1, 0.3, 0.7 },
+			ignoreJunk = false,			
 		},
 	})
 	addon:SetCategoryOrder(L['New'], 100)
@@ -100,6 +101,8 @@ end
 local function ResetButton_OnClick(button)
 	PlaySound("igMainMenuOptionCheckBoxOn")
 	mod:Reset(button.bagName)
+	mod:SendMessage('AdiBags_NewItemReset')
+
 end
 
 function mod:OnBagFrameCreated(bag)
@@ -155,6 +158,15 @@ function mod:GetOptions()
 			type = 'color',
 			order = 30,
 			hasAlpha = true,
+					},
+		ignoreJunk = {
+			name = L['Ignore low quality items'],
+			type = 'toggle',
+			order = 40,
+			set = function(info, ...)
+				info.handler:Set(info, ...)
+				self:UpdateBags(allBagIds, event)
+			end					
 		},
 	}, addon:GetOptionHandler(self)
 end
@@ -247,17 +259,22 @@ function mod:UpdateBags(bagIds, event)
 				end
 
 				-- Update counts and new statuses
-				local newItems, GetCount = bag.newItems, bag.GetCount
-				for itemId, oldCount in pairs(counts) do
-					local newCount = GetCount(itemId)
-					counts[itemId] = newCount
-					if oldCount ~= newCount then
-						if not bag.first and oldCount < newCount and not newItems[itemId] then
-							--[===[@debug@
-							self:Debug(itemId, GetItemInfo(itemId), ':', oldCount, '=>', newCount, 'NEW!')
-							--@end-debug@]===]
-							newItems[itemId] = true
-							bag.updated = true
+			local newItems, GetCount = bag.newItems, bag.GetCount
+			for itemId, oldCount in pairs(counts) do
+				local newCount = GetCount(itemId)
+				counts[itemId] = newCount
+				if self.db.profile.ignoreJunk and select(3, GetItemInfo(itemId)) == ITEM_QUALITY_POOR then
+					if newItems[itemId] then
+						newItems[itemId] = nil
+						bag.updated = true
+					end
+				elseif oldCount ~= newCount then
+					if not bag.first and oldCount < (newCount or 0) and not newItems[itemId] then
+						--[===[@debug@
+						self:Debug(itemId, GetItemInfo(itemId), ':', oldCount, '=>', newCount, 'NEW!')
+						--@end-debug@]===]
+						newItems[itemId] = true
+						bag.updated = true
 						end
 					end
 				end

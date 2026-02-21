@@ -1,11 +1,17 @@
 --[[
 AdiBags - Adirelle's bag addon.
-Copyright 2010 Adirelle (adirelle@tagada-team.net)
+Copyright 2010-2011 Adirelle (adirelle@tagada-team.net)
 All rights reserved.
 --]]
 
 local addonName, addon = ...
 local L = addon.L
+
+--<GLOBALS
+local _G = _G
+local CreateFrame = _G.CreateFrame
+local UIParent = _G.UIParent
+--GLOBALS>
 
 local anchorClass, anchorProto, anchorParentProto = addon:NewClass("Anchor", "Frame")
 
@@ -50,7 +56,6 @@ function anchorProto:OnCreate(parent, name, label, target)
 	self.corner = corner
 end
 
-local abs = math.abs
 function anchorProto:GetPosition()
 	local target = self.target
 	local scale = target:GetScale()
@@ -89,7 +94,12 @@ function anchorProto:SaveSettings()
 	db.point, db.xOffset, db.yOffset = self:GetPosition()
 end
 
-function anchorProto:StartMoving()
+function anchorProto:StartMoving(button)
+	if button == "RightButton" then
+		addon:ToggleAnchor()
+		return
+	end
+	
 	if self.moving then return end
 	self.moving = true
 	local target = self.target
@@ -108,7 +118,12 @@ function anchorProto:StartMoving()
 	end
 end
 
-function anchorProto:StopMoving()
+function anchorProto:StopMoving(button)
+	if button == "RightButton" then
+		addon:ToggleAnchor()
+		return
+	end
+	
 	if not self.moving then return end
 	self.moving = nil
 	local target = self.target

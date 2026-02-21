@@ -1,11 +1,25 @@
 --[[
 AdiBags - Adirelle's bag addon.
-Copyright 2010 Adirelle (adirelle@tagada-team.net)
+Copyright 2010-2011 Adirelle (adirelle@tagada-team.net)
 All rights reserved.
 --]]
 
 local addonName, addon = ...
 local L = addon.L
+
+--<GLOBALS
+local _G = _G
+local format = _G.format
+local GetContainerNumFreeSlots = _G.GetContainerNumFreeSlots
+local GetContainerNumSlots = _G.GetContainerNumSlots
+local ipairs = _G.ipairs
+local KEYRING_CONTAINER = _G.KEYRING_CONTAINER
+local pairs = _G.pairs
+local strjoin = _G.strjoin
+local tconcat = _G.table.concat
+local tinsert = _G.tinsert
+local wipe = _G.wipe
+--GLOBALS>
 
 local mod = addon:NewModule('DataSource', 'AceEvent-3.0', 'AceBucket-3.0')
 mod.uiName = L['LDB Plugin']
@@ -91,7 +105,7 @@ local function BuildSpaceString(bags)
 	wipe(free)
 	for bag in pairs(bags) do
 		local bagSize = GetContainerNumSlots(bag)
-		if bagSize and bagSize > 0 then
+		if bag ~= KEYRING_CONTAINER and bagSize and bagSize > 0 then
 			local bagFree, bagFamily = GetContainerNumFreeSlots(bag)
 			if mod.db.profile.mergeBags then bagFamily = 0 end
 			size[bagFamily] = (size[bagFamily] or 0) + bagSize
@@ -108,20 +122,20 @@ local function BuildSpaceString(bags)
 			local text = spaceformat:format(free[family], size[family], size[family] - free[family])
 			if showIcons and icon then
 				numIcons = numIcons + 1 -- fix a bug with fontstring embedding several textures
-				text = string.format("%s|T%s:0:0:0:%d:64:64:4:60:4:60|t", text, icon, -numIcons)
+				text = format("%s|T%s:0:0:0:%d:64:64:4:60:4:60|t", text, icon, -numIcons)
 			elseif (showIcons or showTags) and tag then
 				text = strjoin(':', tag, text)
 			end
 			tinsert(data, text)
 		end
 	end
-	return table.concat(data, " ")
+	return tconcat(data, " ")
 end
 
 function mod:Update(event)
 	local bags = BuildSpaceString(addon.BAG_IDS.BAGS)
 	if self.atBank and self.db.profile.showBank then
-		dataobj.text = string.format("%s |cff7777ff%s|r", bags, BuildSpaceString(addon.BAG_IDS.BANK))
+		dataobj.text = format("%s |cff7777ff%s|r", bags, BuildSpaceString(addon.BAG_IDS.BANK))
 	else
 		dataobj.text = bags
 	end

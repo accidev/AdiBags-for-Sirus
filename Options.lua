@@ -1,13 +1,24 @@
 --[[
 AdiBags - Adirelle's bag addon.
-Copyright 2010 Adirelle (adirelle@tagada-team.net)
+Copyright 2010-2011 Adirelle (adirelle@tagada-team.net)
 All rights reserved.
 --]]
 
 local addonName, addon = ...
 local L = addon.L
 
+--<GLOBALS
+local _G = _G
+local HideUIPanel = _G.HideUIPanel
+local InterfaceOptionsFrame = _G.InterfaceOptionsFrame
+local setmetatable = _G.setmetatable
+local strjoin = _G.strjoin
+local type = _G.type
+local unpack = _G.unpack
+--GLOBALS>
+
 local AceConfigDialog = LibStub('AceConfigDialog-3.0')
+local LSM = LibStub('LibSharedMedia-3.0')
 
 local options
 
@@ -66,6 +77,9 @@ function handlerProto:Set(info, value, ...)
 	else
 		self.dbHolder:SendMessage('AdiBags_ConfigChanged', path)
 	end
+	if type(self.PostSet) == "function" then
+		self:PostSet(path, value, ...)
+	end	
 end
 
 function handlerProto:IsDisabled(info)
@@ -73,9 +87,9 @@ function handlerProto:IsDisabled(info)
 end
 
 local handlers = {}
-function addon:GetOptionHandler(dbHolder, isFilter)
+function addon:GetOptionHandler(dbHolder, isFilter, postSet)
 	if not handlers[dbHolder] then
-		handlers[dbHolder] = setmetatable({dbHolder = dbHolder, isFilter = isFilter}, handlerMeta)
+		handlers[dbHolder] = setmetatable({dbHolder = dbHolder, isFilter = isFilter, PostSet = postSet}, handlerMeta)
 		dbHolder.SendMessage = LibStub('AceEvent-3.0').SendMessage
 	end
 	return handlers[dbHolder]
@@ -233,12 +247,19 @@ function addon:GetOptions()
 	local profiles = LibStub('AceDBOptions-3.0'):GetOptionsTable(self.db)
 	profiles.order = 600
 	profiles.disabled = false
+	local bagList = {}
+	for name, module in self:IterateModules() do
+		if module.isBag then
+			bagList[module.bagName] = L[module.bagName]
+		end
+	end
+
 	options = {
 		--[===[@debug@
 		name = addonName..' DEV',
 		--@end-debug@]===]
 		--@non-debug@
-		name = addonName..' v1.1-beta-7',
+		name = addonName..' v3.3.5',
 		--@end-non-debug@
 		type = 'group',
 		handler = addon:GetOptionHandler(addon),
@@ -258,6 +279,13 @@ function addon:GetOptions()
 				type = 'group',
 				order = 100,
 				args = {
+					bags = {
+						name = L[''],
+						desc = L[''],
+						type = 'multiselect',
+						order = 90,
+						values = bagList,
+					},
 					positionMode = {
 						name = L['Position mode'],
 						desc = L['Select how the bag are positionned.'],
@@ -294,11 +322,27 @@ function addon:GetOptions()
 					rowWidth = {
 						name = L['Maximum row width'],
 						desc = L['Adjust the maximum number of items per row.'],
-						type = 'range',
-						order = 145,
-						min = 4,
-						max = 16,
-						step = 1,
+						type = 'group',
+						inline = true,
+						order = 146,
+						args = {
+							Backpack = {
+								name = L['Backpack'],
+								type = 'range',
+								min = 4,
+								max = 16,
+								step = 1,
+								arg = { "rowWidth", "Backpack" },
+							},
+							Bank = {
+								name = L['Bank'],
+								type = 'range',
+								min = 4,
+								max = 16,
+								step = 1,
+								arg = { "rowWidth", "Bank" },
+							},
+						},
 					},
 					maxHeight = {
 						name = L['Maximum bag height'],
@@ -310,6 +354,32 @@ function addon:GetOptions()
 						max = 0.90,
 						step = 0.01,
 					},
+					clickMode = {
+						name = L["Manual mode click behavior"],
+						desc = L["Choose how mouse clicks work in manual mode:\n\nNormal: Left-click opens menu, Shift+Left-click moves bag\nSwapped: Left-click moves bag, Shift+Left-click opens menu"],
+						type = 'select',
+						-- width = "half",
+						order = 145,
+						values = {
+							[0] = L["Normal"],
+							[1] = L["Swapped"],
+						},
+							disabled = function(info) return (info.handler and info.handler:IsDisabled(info)) or addon.db.profile.positionMode == 'anchored' end,
+					},
+					showAnchorHighlight = {
+						name = L["Show anchor highlight"],
+						desc = L["Show green/orange highlight when hovering over bag anchors in manual mode"],
+						type = 'toggle',
+						order = 145.1,
+						disabled = function(info) return (info.handler and info.handler:IsDisabled(info)) end,
+					},
+					showAnchorTooltip = {
+						name = L["Show anchor tooltip"],
+						desc = L["Show tooltip when hovering over bag anchors in both modes"],
+						type = 'toggle',
+						order = 145.2,
+						disabled = function(info) return (info.handler and info.handler:IsDisabled(info)) end,
+					},					
 					laxOrdering = {
 						name = L['Layout priority'],
 						type = 'select',
@@ -321,25 +391,68 @@ function addon:GetOptions()
 							[2] = L['Fill lines at most'],
 						}
 					},
-					backgroundColors = {
-						name = L['Background colors'],
+				},
+			},
+			skin = {
+				name = 'Skin',
+				type = 'group',
+				order = 150,
+				args = {
+					bagFont = addon:CreateFontOptions(addon.bagFont, "Bag title", 10),
+					sectionFont = addon:CreateFontOptions(addon.sectionFont, "Section header", 15),
+					background = {
+						name = 'Bag background',
 						type = 'group',
 						inline = true,
-						order = 150,
+						order = 20,
 						args = {
+							texture = {
+								name = 'Texture',
+								type = 'select',
+								dialogControl = 'AdiBags_LSM30_Background',
+								values = AceGUIWidgetLSMlists.background,
+								order = 10,
+								arg = { "skin", "background" },
+							},
+							insets = {
+								name = 'Insets',
+								type = 'range',
+								order = 20,
+								arg = { "skin", "insets" },
+								min = -16,
+								max = 16,
+								step = 1,
+							},
+							border = {
+								name = 'Border',
+								type = 'select',
+								dialogControl = 'AdiBags_LSM30_Border',
+								values = AceGUIWidgetLSMlists.border,
+								order = 30,
+								arg = { "skin", "border" },
+							},
+							borderWidth = {
+								name = 'Border width',
+								type = 'range',
+								order = 40,
+								arg = { "skin", "borderWidth" },
+								min = 1,
+								max = 64,
+								step = 1,
+							},
 							backpackColor = {
-								name = L['Backpack'],
+								name = 'Backpack color',
 								type = 'color',
-								order = 150,
+								order = 50,
 								hasAlpha = true,
-								arg = { "backgroundColors", "Backpack" },
+								arg = { "skin", "BackpackColor" },
 							},
 							bankColor = {
-								name = L['Bank'],
+								name = 'Bank color',
 								type = 'color',
-								order = 160,
+								order = 60,
 								hasAlpha = true,
-								arg = { "backgroundColors", "Bank" },
+								arg = { "skin", "BankColor" },
 							},
 						},
 					}
@@ -412,15 +525,66 @@ function addon:GetOptions()
 					},
 					virtualStacks = {
 						name = L['Virtual stacks'],
-						desc = L['Virtual stacks display in one place items that actually spread over several bag slots.'],
-						type = 'multiselect',
+						type = 'group',
+						inline = true,
 						order = 300,
-						values = {
-							freeSpace = L['Free space'],
-							ammunition = L['Ammunition and soul shards'],
-							stackable = L['Stackable items'],
-							other = L['Other items'],
-							incomplete = L['Incomplete stacks'],
+						args = {
+							_desc = {
+								name = L['Virtual stacks display in one place items that actually spread over several bag slots.'],
+								type = 'description',
+								order = 1,
+							},
+							freeSpace = {
+								name = L['Merge free space'],
+								desc = L['Show only one free slot for each kind of bags.'],
+								order = 10,
+								type = 'toggle',
+								arg = {'virtualStacks', 'freeSpace'},
+							},
+							others = {
+								name = L['Merge unstackable items'],
+								desc = L['Show only one slot of items that cannot be stacked.'],
+								order = 15,
+								width = 'double',
+								type = 'toggle',
+								arg = {'virtualStacks', 'others'},
+							},
+							stackable = {
+								name = L['Merge stackable items'],
+								desc = L['Show only one slot of items that can be stacked.'],
+								order = 20,
+								width = 'double',
+								type = 'toggle',
+								arg = {'virtualStacks', 'stackable'},
+							},
+							incomplete = {
+								name = L['... including incomplete stacks'],
+								desc= L['Merge incomplete stacks with complete ones.'],
+								order = 30,
+								width = 'double',
+								type = 'toggle',
+								arg = {'virtualStacks', 'incomplete'},
+								disabled = function(info)
+									return info.handler:IsDisabled(info) or not addon.db.profile.virtualStacks.stackable
+								end
+							},
+							notWhenTrading = {
+								name = L['When trading:'],
+								desc = L["Change stacking at merchants', auction house, bank, mailboxes or when trading."],
+								order = 40,
+								width = 'double',
+								type = 'select',
+								arg = {'virtualStacks', 'notWhenTrading'},
+								values = {
+									L['Keep all stacks together.'],
+									L['Separate unstackable items.'],
+									L['Separate incomplete stacks.'],
+									L['Show every distinct item stacks.'],
+								},
+								disabled = function(info)
+									return info.handler:IsDisabled(info) or not (addon.db.profile.virtualStacks.stackable or addon.db.profile.virtualStacks.others)
+								end
+							},
 						}
 					},
 				},
@@ -443,6 +607,8 @@ function addon:GetOptions()
 		},
 		plugins = {}
 	}
+	options.args.skin.args.bagFont.args.size.step = 1
+	options.args.skin.args.sectionFont.args.size.step = 1
 	addon.OnModuleCreated = OnModuleCreated
 	for name, module in addon:IterateModules() do
 		addon:OnModuleCreated(module)
@@ -489,10 +655,27 @@ function addon:InitializeOptions()
 
 	AceConfig:RegisterOptionsTable(addonName, function() return self:GetOptions() end)
 
-	LibStub('AceConsole-3.0'):RegisterChatCommand("adibags", addon.OpenOptions, true)
+	LibStub('AceConsole-3.0'):RegisterChatCommand("ab", function(cmd)
+		addon:OpenOptions(strsplit(' ', cmd or ""))
+	end, true)
+	LibStub('AceConsole-3.0'):RegisterChatCommand("adibags", function(cmd)
+		addon:OpenOptions(strsplit(' ', cmd or ""))
+	end, true)
 end
 
-function addon.OpenOptions()
-	AceConfigDialog:SetDefaultSize(addonName, 800, 600)
-	AceConfigDialog:Open(addonName)
+-- Open Options Function with ability to open certain tab. Usage: addon:OpenOptions("module name") or ("module name", "submodule name")
+function addon:OpenOptions(...)
+	AceConfigDialog:SetDefaultSize(addonName, 650, 540)
+	if select('#', ...) > 0 then
+		self:Debug('OpenOptions =>', select('#', ...), ...)
+		AceConfigDialog:Open(addonName)
+		AceConfigDialog:SelectGroup(addonName, ...)
+	elseif not AceConfigDialog:Close(addonName) then
+		AceConfigDialog:Open(addonName)
+	end
+end
+
+-- Close Options Function
+function addon:CloseOptions()
+	AceConfigDialog:Close(addonName)
 end

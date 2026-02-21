@@ -1,13 +1,44 @@
 --[[
 AdiBags - Adirelle's bag addon.
-Copyright 2010 Adirelle (adirelle@tagada-team.net)
+Copyright 2010-2011 Adirelle (adirelle@tagada-team.net)
 All rights reserved.
 --]]
 
 local addonName, addon = ...
 local L = addon.L
 
-LibStub('AceAddon-3.0'):NewAddon(addon, addonName, 'AceEvent-3.0', 'AceBucket-3.0', 'AceHook-3.0')
+--<GLOBALS
+local _G = _G
+local assert = _G.assert
+local BACKPACK_CONTAINER = _G.BACKPACK_CONTAINER
+local BankFrame = _G.BankFrame
+local BANK_CONTAINER = _G.BANK_CONTAINER
+local KEYRING_CONTAINER = _G.KEYRING_CONTAINER
+local CloseBankFrame = _G.CloseBankFrame
+local ContainerFrame_GenerateFrame = _G.ContainerFrame_GenerateFrame
+local ContainerFrame_GetOpenFrame = _G.ContainerFrame_GetOpenFrame
+local GetContainerNumSlots = _G.GetContainerNumSlots
+local geterrorhandler = _G.geterrorhandler
+local ipairs = _G.ipairs
+local next = _G.next
+local NUM_BAG_SLOTS = _G.NUM_BAG_SLOTS
+local NUM_BANKBAGSLOTS = _G.NUM_BANKBAGSLOTS
+local NUM_BANKGENERIC_SLOTS = _G.NUM_BANKGENERIC_SLOTS
+local NUM_CONTAINER_FRAMES = _G.NUM_CONTAINER_FRAMES
+local pairs = _G.pairs
+local pcall = _G.pcall
+local strmatch = _G.strmatch
+local strsplit = _G.strsplit
+local tinsert = _G.tinsert
+local tsort = _G.table.sort
+local type = _G.type
+local UIParent = _G.UIParent
+local wipe = _G.wipe
+--GLOBALS>
+
+LibCompat = LibStub:GetLibrary("LibCompat-1.0")
+
+LibStub('AceAddon-3.0'):NewAddon(addon, addonName, 'AceEvent-3.0', 'AceBucket-3.0', 'AceHook-3.0', 'LibCompat-1.0')
 --[===[@debug@
 _G[addonName] = addon
 --@end-debug@]===]
@@ -16,35 +47,15 @@ _G[addonName] = addon
 -- Debug stuff
 --------------------------------------------------------------------------------
 
-if tekDebug then
-	local type, tostring, select, unpack, strjoin = type, tostring, select, unpack, string.join
-	local function TableToString(t)
-		return (t == addon and 'Core')
-			or (type(t.ToString) == "function" and t:ToString())
-			or (type(t.GetName) == "function" and t:GetName())
-			or t.moduleName
-			or t.name
-			or tostring(t)
-	end
-	local t = {}
-	local function MyToStringAll(...)
-		local n = select('#', ...)
-		if n > 0 then
-			for i = 1, n do
-				local value = select(i, ...)
-				t[i] = type(value) == "table" and TableToString(value) or tostring(value)
-			end
-			return unpack(t, 1, n)
-		end
-	end
-
-	local frame = tekDebug:GetFrame(addonName)
-	function addon:Debug(...)
-		frame:AddMessage(strjoin(" ", "|cffff7700["..TableToString(self).."]|r", MyToStringAll(...)))
-	end
+--[===[@alpha@
+if AdiDebug then
+	AdiDebug:Embed(addon, addonName)
 else
+--@end-alpha@]===]
 	function addon.Debug() end
+--[===[@alpha@
 end
+--@end-alpha@]===]
 
 addon:SetDefaultModulePrototype{Debug = addon.Debug}
 
@@ -53,8 +64,8 @@ addon:SetDefaultModulePrototype{Debug = addon.Debug}
 --------------------------------------------------------------------------------
 
 do
-	-- Backpack and bags
-	local BAGS = { [BACKPACK_CONTAINER] = BACKPACK_CONTAINER }
+	-- Keyring, backpack, and bag
+	local BAGS = { [KEYRING_CONTAINER] = KEYRING_CONTAINER, [BACKPACK_CONTAINER] = BACKPACK_CONTAINER }
 	for i = 1, NUM_BAG_SLOTS do BAGS[i] = i end
 
 	-- Bank bags
@@ -82,6 +93,7 @@ local FAMILY_TAGS = {
   [0x0100] = L["KEYRING_TAG"], -- Keyring
   [0x0200] = L["GEM_BAG_TAG"], -- Gem Bag
   [0x0400] = L["MINING_BAG_TAG"], -- Mining Bag
+  [0x100000] = L["TACKLE_BOX_TAG"], -- Tackle Box
 --@noloc]]
 }
 
@@ -97,12 +109,14 @@ local FAMILY_ICONS = {
   [0x0100] = [[Interface\Icons\INV_Misc_Key_14]], -- Keyring
   [0x0200] = [[Interface\Icons\INV_Misc_Gem_BloodGem_01]], -- Gem Bag
   [0x0400] = [[Interface\Icons\Trade_Mining]], -- Mining Bag
+  [0x100000] = [[Interface\Icons\Trade_Fishing]], -- Tackle Box
 }
 
+local band = _G.bit.band
 function addon:GetFamilyTag(family)
 	if family and family ~= 0 then
 		for mask, tag in pairs(FAMILY_TAGS) do
-			if bit.band(family, mask) ~= 0 then
+			if band(family, mask) ~= 0 then
 				return tag, FAMILY_ICONS[mask]
 			end
 		end
@@ -114,26 +128,36 @@ addon.ITEM_SPACING = 4
 addon.SECTION_SPACING = addon.ITEM_SIZE / 3 + addon.ITEM_SPACING
 addon.BAG_INSET = 8
 addon.TOP_PADDING = 32
+addon.HEADER_SIZE = 14 + addon.ITEM_SPACING
 
-addon.BACKDROP = {
+local BACKDROP = {
 	bgFile = [[Interface\Tooltips\UI-Tooltip-Background]],
 	edgeFile = [[Interface\Tooltips\UI-Tooltip-Border]],
-	tile = true, tileSize = 16, edgeSize = 16,
+	tile = false,
+	edgeSize = 16,
 	insets = { left = 3, right = 3, top = 3, bottom = 3 },
 }
+
+local LSM = LibStub('LibSharedMedia-3.0')
 
 local DEFAULT_SETTINGS = {
 	profile = {
 		enabled = true,
+		bags = {
+			["*"] = true,
+		},
 		positionMode = "anchored",
 		positions = {
-			anchor = { point = "BOTTOMRIGHT", xOffset = -32, yOffset = 200 },
-			Backpack = { point = "BOTTOMRIGHT", xOffset = -32, yOffset = 200 },
+			anchor = { point = "BOTTOMRIGHT", xOffset = -111, yOffset = 220 },
+			Backpack = { point = "BOTTOMRIGHT", xOffset = -111, yOffset = 220 },
 			Bank = { point = "TOPLEFT", xOffset = 32, yOffset = -104 },
 		},
 		scale = 0.8,
-		rowWidth = 9,
+		rowWidth = { ['*'] = 9 },
 		maxHeight = 0.60,
+		clickMode = 1,
+		showAnchorHighlight = false,
+		showAnchorTooltip = true,
 		laxOrdering = 1,
 		qualityHighlight = true,
 		qualityOpacity = 1.0,
@@ -144,14 +168,18 @@ local DEFAULT_SETTINGS = {
 		filterPriorities = {},
 		sortingOrder = 'default',
 		modules = { ['*'] = true },
-		backgroundColors = {
-			Backpack = { 0, 0, 0, 1 },
-			Bank = { 0, 0, 0.5, 1 },
-		},
 		virtualStacks = {
 			['*'] = false,
 			freeSpace = true,
-			ammunition = true,
+			notWhenTrading = 1,
+		},
+		skin = {		
+			background = "Blizzard Tooltip",
+			border = "Blizzard Tooltip",
+			borderWidth = 16,
+			insets = 3,
+			BackpackColor = { 0, 0, 0, 1 },
+			BankColor = { 0, 0, 0.5, 1 },			
 		},
 	},
 	char = {
@@ -165,11 +193,22 @@ local DEFAULT_SETTINGS = {
 -- Addon initialization and enabling
 --------------------------------------------------------------------------------
 
+addon:SetDefaultModuleState(false)
+
 function addon:OnInitialize()
-	self.db = LibStub('AceDB-3.0'):New(addonName.."DB", DEFAULT_SETTINGS, true)
-	self.db.RegisterCallback(self, "OnProfileChanged", "Reconfigure")
-	self.db.RegisterCallback(self, "OnProfileCopied", "Reconfigure")
+	local bfd = self:GetFontDefaults(GameFontHighlightLarge)
+	bfd.r, bfd.g, bfd.b = 1, 1, 1
+	DEFAULT_SETTINGS.profile.bagFont = bfd
+	DEFAULT_SETTINGS.profile.sectionFont = self:GetFontDefaults(GameFontNormalLeft)
+
+	self.db = LibStub('AceDB-3.0'):New(addonName.."DB", DEFAULT_SETTINGS, true)	
+	self.db.RegisterCallback(self, "OnProfileChanged")
+	self.db.RegisterCallback(self, "OnProfileCopied", "OnProfileChanged")
 	self.db.RegisterCallback(self, "OnProfileReset", "Reconfigure")
+		-- self.db.RegisterCallback(self, "OnLayoutBagsChanged", "LayoutBags")
+
+	self.bagFont = self:CreateFont(addonName.."BagFont", GameFontHighlightLarge, function() return self.db.profile.bagFont end)
+	self.sectionFont = self:CreateFont(addonName.."SectionFont", GameFontNormalLeft, function() return self.db.profile.sectionFont end)		
 
 	self.itemParentFrames = {}
 
@@ -177,66 +216,83 @@ function addon:OnInitialize()
 	self:CreateBagAnchor()
 	addon:InitializeOptions()
 
-	self:SetEnabledState(self.db.profile.enabled)
+	self:SetEnabledState(false)
 
-	-- Persistent handler
+	-- Persistant handlers
 	self.RegisterBucketMessage(addonName, 'AdiBags_ConfigChanged', 0.2, function(...) addon:ConfigChanged(...) end)
+	self.RegisterEvent(addonName, 'PLAYER_ENTERING_WORLD', function() if self.db.profile.enabled then self:Enable() end end)
+
+	self:UpgradeProfile()
+
+	-- ProfessionVault support
+	local PV  =_G.ProfessionsVault
+	if PV then
+		self:Debug('Installing ProfessionsVault callback')
+		self.RegisterMessage(PV, "AdiBags_UpdateButton", function(_, button)
+			PV:SlotColor(button.itemId, button.IconTexture)
+		end)
+	end
+
+	self:Debug('Initialized')
 end
 
-local function NOOP() end
-
 function addon:OnEnable()
-	-- Convert old ordering setting
-	if self.db.profile.laxOrdering == true then
-		self.db.profile.laxOrdering = 1
-	end
 
-	-- Convert old anchor settings
-	local oldData = self.db.profile.anchor
-	if oldData then
-		local scale = oldData.scale or 0.8
-		self.db.profile.scale = scale 
-		
-		local newData = self.db.profile.positions.anchor
-		newData.point = oldData.pointFrom or "BOTTOMRIGHT"
-		newData.xOffset = (oldData.xOffset or -32) / scale
-		newData.yOffset = (oldData.yOffset or 200) / scale
-		
-		self.db.profile.anchor = nil
-	end
-
-	self:RegisterEvent('BANKFRAME_OPENED')
-	self:RegisterEvent('BANKFRAME_CLOSED')
+	self.globalLock = false
 
 	self:RegisterEvent('BAG_UPDATE')
 	self:RegisterBucketEvent('PLAYERBANKSLOTS_CHANGED', 0, 'BankUpdated')
+
+	self:RegisterEvent('PLAYER_LEAVING_WORLD', 'Disable')
 
 	self:RegisterMessage('AdiBags_BagOpened', 'LayoutBags')
 	self:RegisterMessage('AdiBags_BagClosed', 'LayoutBags')
 
 	self:RawHook("OpenAllBags", true)
 	self:RawHook("CloseAllBags", true)
+	self:RawHook("ToggleBackpack", true)
+	self:RawHook("ToggleBag", true)
+	self:RawHook("OpenBackpack", true)
+	self:RawHook("CloseBackpack", true)
 	self:RawHook('CloseSpecialWindows', true)
-	
-	self:RegisterEvent('MAIL_CLOSED', 'CloseAllBags')
-	self:RegisterEvent('MERCHANT_CLOSED', 'CloseAllBags')
+
+	-- Track most windows involving items
+	self:RegisterEvent('BANKFRAME_OPENED', 'UpdateInteractingWindow')
+	self:RegisterEvent('BANKFRAME_CLOSED', 'UpdateInteractingWindow')
+	self:RegisterEvent('MAIL_SHOW', 'UpdateInteractingWindow')
+	self:RegisterEvent('MAIL_CLOSED', 'UpdateInteractingWindow')
+	self:RegisterEvent('MERCHANT_SHOW', 'UpdateInteractingWindow')
+	self:RegisterEvent('MERCHANT_CLOSED', 'UpdateInteractingWindow')
+	self:RegisterEvent('AUCTION_HOUSE_SHOW', 'UpdateInteractingWindow')
+	self:RegisterEvent('AUCTION_HOUSE_CLOSED', 'UpdateInteractingWindow')
+	self:RegisterEvent('TRADE_SHOW', 'UpdateInteractingWindow')
+	self:RegisterEvent('TRADE_CLOSED', 'UpdateInteractingWindow')
+	self:RegisterEvent('GUILDBANKFRAME_OPENED', 'UpdateInteractingWindow')
+	self:RegisterEvent('GUILDBANKFRAME_CLOSED', 'UpdateInteractingWindow')
 
 	self:SetSortingOrder(self.db.profile.sortingOrder)
 
 	for name, module in self:IterateModules() do
 		if module.isFilter then
 			module:SetEnabledState(self.db.profile.filters[module.moduleName])
+		elseif module.isBag then
+			module:SetEnabledState(self.db.profile.bags[module.bagName])
 		else
 			module:SetEnabledState(self.db.profile.modules[module.moduleName])
 		end
 	end
 
-	 self:UpdatePositionMode()
+	self.bagFont:ApplySettings()
+	self.sectionFont:ApplySettings()
+	self:UpdatePositionMode()
+
+	self:Debug('Enabled')
 end
 
 function addon:OnDisable()
 	self.anchor:Hide()
 	self:CloseAllBags()
+	self:Debug('Disabled')
 end
 
 function addon:Reconfigure()
@@ -247,17 +303,81 @@ function addon:Reconfigure()
 	self:UpdateFilters()
 end
 
+function addon:OnProfileChanged()
+	self:UpgradeProfile()
+	return self:Reconfigure()
+end
+
+function addon:UpgradeProfile()
+	local profile = self.db.profile
+
+	-- Convert old ordering setting
+	if profile.laxOrdering == true then
+		profile.laxOrdering = 1
+	end
+
+	-- Convert old anchor settings
+	local oldData = profile.anchor
+	if oldData then
+		local scale = oldData.scale or 0.8
+		profile.scale = scale
+
+		local newData = profile.positions.anchor
+		newData.point = oldData.pointFrom or "BOTTOMRIGHT"
+		newData.xOffset = (oldData.xOffset or -32) / scale
+		newData.yOffset = (oldData.yOffset or 200) / scale
+
+		profile.anchor = nil
+	end
+
+	-- Convert old "notWhenTrading" setting
+	if profile.virtualStacks.notWhenTrading == true then
+		profile.virtualStacks.notWhenTrading = 3
+	end
+
+	-- Convert old "rowWidth"
+	if type(profile.rowWidth) == "number" then
+		local rowWidth = profile.rowWidth
+		profile.rowWidth = { Bank = rowWidth, Backpack = rowWidth }
+	end
+
+	-- Convert old "backgroundColors"
+	if type(profile.backgroundColors) == "table" then
+		profile.skin.BackpackColor = profile.backgroundColors.Backpack
+		profile.skin.BankColor = profile.backgroundColors.Bank
+		profile.backgroundColors = nil
+	end
+
+	-- Convert old font settings
+	if type(profile.skin) == "table" then
+		local skin = profile.skin
+		if type(skin.font) == "string" then
+			profile.bagFont.name = skin.font
+			profile.sectionFont.name = skin.font
+			skin.font = nil
+		end
+		if skin.fontSize then
+			profile.bagFont.size = skin.fontSize
+			profile.sectionFont.size = skin.fontSize - 4
+			skin.fontSize = nil
+		end
+		if skin.fontBagColor then
+			local bagFont = profile.bagFont
+			bagFont.r, bagFont.g, bagFont.r = unpack(skin.fontBagColor)
+			skin.fontBagColor = nil
+		end
+		if skin.fontSectionColor then
+			local sectionFont = profile.sectionFont
+			sectionFont.r, sectionFont.g, sectionFont.b = unpack(skin.fontSectionColor)
+			skin.fontSectionColor = nil
+		end
+	end
+
+end
+
 --------------------------------------------------------------------------------
 -- Event handlers
 --------------------------------------------------------------------------------
-
-function addon:BANKFRAME_OPENED()
-	self.atBank = true
-end
-
-function addon:BANKFRAME_CLOSED()
-	self.atBank = false
-end
 
 function addon:BAG_UPDATE(event, bag)
 	self:SendMessage('AdiBags_BagUpdated', bag)
@@ -265,7 +385,12 @@ end
 
 function addon:BankUpdated(slots)
 	-- Wrap several PLAYERBANKSLOTS_CHANGED into one AdiBags_BagUpdated message
-	self:SendMessage('AdiBags_BagUpdated', BANK_CONTAINER)
+	for slot in pairs(slots) do
+		if slot > 0 and slot <= NUM_BANKGENERIC_SLOTS then
+			self:SendMessage('AdiBags_BagUpdated', BANK_CONTAINER)
+			return
+		end
+	end
 end
 
 function addon:CloseSpecialWindows()
@@ -282,6 +407,20 @@ local function DebugTable(t, prevKey)
 end
 --@end-debug@]===]
 
+function addon:GetContainerSkin(containerName)
+	local skin = self.db.profile.skin
+	local r, g, b, a = unpack(skin[containerName..'Color'], 1, 4)
+	BACKDROP.bgFile = LSM:Fetch(LSM.MediaType.BACKGROUND, skin.background)
+	BACKDROP.edgeFile = LSM:Fetch(LSM.MediaType.BORDER, skin.border)
+	BACKDROP.edgeSize = skin.borderWidth
+	BACKDROP.insets.left = skin.insets
+	BACKDROP.insets.right = skin.insets
+	BACKDROP.insets.top = skin.insets
+	BACKDROP.insets.bottom = skin.insets
+	return BACKDROP, r, g, b, a
+end
+
+
 function addon:ConfigChanged(vars)
 	--[===[@debug@
 	self:Debug('ConfigChanged', DebugTable(vars))
@@ -293,20 +432,33 @@ function addon:ConfigChanged(vars)
 			self:Disable()
 		end
 		return
-	elseif not self.db.profile.enabled then
+	elseif not self:IsEnabled() then
 		return
 	elseif vars.filter then
 		return self:SendMessage('AdiBags_FiltersChanged')
 	else
 		for name in pairs(vars) do
-			if name:match('virtualStacks') then
+			if strmatch(name, 'virtualStacks') then
 				return self:SendMessage('AdiBags_FiltersChanged')
+			elseif strmatch(name, 'bags%.') then
+				local _, bagName = strsplit('.', name)
+				local bag = self:GetModule(bagName)
+				local enabled = self.db.profile.bags[bagName]
+				if enabled and not bag:IsEnabled() then
+					bag:Enable()
+				elseif not enabled and bag:IsEnabled() then
+					bag:Disable()
+				end
+			elseif strmatch(name, 'rowWidth') then
+				return self:SendMessage('AdiBags_LayoutChanged')
+			elseif strmatch(name, '^skin%.font') then
+				return self:UpdateFonts()				
 			end
 		end
 	end
 	if vars.sortingOrder then
 		return self:SetSortingOrder(self.db.profile.sortingOrder)
-	elseif vars.rowWidth or vars.maxHeight or vars.laxOrdering then
+	elseif vars.maxHeight or vars.laxOrdering then
 		return self:SendMessage('AdiBags_LayoutChanged')
 	elseif vars.scale then
 		return self:LayoutBags()
@@ -317,83 +469,184 @@ function addon:ConfigChanged(vars)
 	end
 end
 
---------------------------------------------------------------------------------
--- Miscellaneous helpers
---------------------------------------------------------------------------------
-
-function addon.GetSlotId(bag, slot)
-	if bag and slot then
-		return bag * 100 + slot
-	end
-end
-
-function addon.GetBagSlotFromId(slotId)
-	if slotId then
-		return math.floor(slotId / 100), slotId % 100
-	end
-end
-
-local function safecall_return(success, ...)
-	if success then
-		return ...
-	else
-		geterrorhandler()((...))
-	end
-end
-
-local function safecall(funcOrSelf, argOrMethod, ...)
-	local func, arg
-	if type(funcOrSelf) == "table" and type(argOrMethod) == "string" then
-		func, arg = funcOrSelf[argOrMethod], funcOrSelf
-	else
-		func, arg = funcOrSelf, argOrMethod
-	end
-	if type(func) == "function" then
-		return safecall_return(pcall(func, arg, ...))
-	end
-end
-addon.safecall = safecall
-
-local function WidgetTooltip_OnEnter(self)
-	GameTooltip:SetOwner(self, self.tooltipAnchor, self.tootlipAnchorXOffset, self.tootlipAnchorYOffset)
-	self:UpdateTooltip(self)
-end
-
-local function WidgetTooltip_OnLeave(self)
-	if GameTooltip:GetOwner() == self then
-		GameTooltip:Hide()
-	end
-end
-
-local function WidgetTooltip_Update(self)
-	GameTooltip:ClearLines()
-	safecall(self, "tooltipCallback", GameTooltip)
-	GameTooltip:Show()
-end
-
-function addon.SetupTooltip(widget, content, anchor, xOffset, yOffset)
-	if type(content) == "string" then
-		widget.tooltipCallback = function(self, tooltip)
-			tooltip:AddLine(content)
+function addon:SetGlobalLock(locked)
+	locked = not not locked
+	if locked ~= self.globalLock then
+		self.globalLock = locked
+		self:SendMessage('AdiBags_GlobalLockChanged', locked)
+		if not locked then
+			self:SendMessage('AdiBags_LayoutChanged')
 		end
-	elseif type(content) == "table" then
-		widget.tooltipCallback = function(self, tooltip)
-			tooltip:AddLine(tostring(content[1]), 1, 1, 1)
-			for i = 2, #content do
-				tooltip:AddLine(tostring(content[i]))
+		return true
+	end
+end
+
+--------------------------------------------------------------------------------
+-- Bag-related function hooks
+--------------------------------------------------------------------------------
+
+local hookedBags = {}
+local containersFrames = {}
+do
+	for i = 1, NUM_CONTAINER_FRAMES, 1 do
+		containersFrames[i] = _G["ContainerFrame"..i]
+	end
+end
+
+local IterateBuiltInContainers
+do
+	local GetContainerNumSlots = GetContainerNumSlots
+	local function iter(maxContainer, id)
+		while id < maxContainer do
+			id = id + 1
+			if not hookedBags[id] and GetContainerNumSlots(id) > 0 then
+				return id
 			end
 		end
-	elseif type(content) == "function" then
-		widget.tooltipCallback = content
+	end
+
+	function IterateBuiltInContainers()
+		if addon:GetInteractingWindow() == "BANKFRAME" then
+			return iter, NUM_BAG_SLOTS + NUM_BANKBAGSLOTS, -1
+		else
+			return iter, NUM_BAG_SLOTS, -1
+		end
+	end
+end
+
+local function GetContainerFrame(id, spawn)
+	for _, frame in pairs(containersFrames) do
+		if frame:IsShown() and frame:GetID() == id then
+			return frame
+		end
+	end
+	if spawn then
+		local size = GetContainerNumSlots(id)
+		if size > 0 then
+			local frame = ContainerFrame_GetOpenFrame()
+			ContainerFrame_GenerateFrame(frame, size, id)
+		end
+	end
+end
+
+function addon:OpenAllBags(forceOpen)
+	local total, open = 0, 0
+	for i, bag in self:IterateBags() do
+		if bag:CanOpen() then
+			total = total + 1
+			if bag:IsOpen() then
+				open = open + 1
+			end
+		end
+	end
+	for id in IterateBuiltInContainers() do
+		total = total + 1
+		if GetContainerFrame(id) then
+			open = open + 1
+		end
+	end
+	if open == total and not forceOpen then
+		return self:CloseAllBags()
+	end
+
+
+
+	for _, bag in self:IterateBags() do
+		bag:Open()
+	end
+	for id in IterateBuiltInContainers() do
+		GetContainerFrame(id, true)
+	end
+end
+
+function addon:CloseAllBags()
+	for i, bag in self:IterateBags() do
+		bag:Close()
+	end
+	for id in IterateBuiltInContainers() do
+		local frame = GetContainerFrame(id)
+		if frame then
+			frame:Hide()
+		end
+	end
+end
+
+function addon:ToggleBag(id)
+	local ourBag = hookedBags[id]
+	if ourBag then
+		return ourBag:Toggle()
 	else
+		local frame = GetContainerFrame(id, true)
+		if frame then
+			frame:Hide()
+		end
+	end
+end
+
+function addon:OpenBackpack()
+	local ourBackpack = hookedBags[BACKPACK_CONTAINER]
+	if ourBackpack then
+		self.backpackWasOpen = ourBackpack:IsOpen()
+		ourBackpack:Open()
+	else
+		local frame = GetContainerFrame(BACKPACK_CONTAINER, true)
+		self.backpackWasOpen = not not frame
+	end
+	return self.backpackWasOpen
+end
+
+function addon:CloseBackpack()
+	if self.backpackWasOpen then
 		return
 	end
-	widget.tooltipAnchor = anchor or "ANCHOR_TOPLEFT"
-	widget.tootlipAnchorXOffset = xOffset or 0
-	widget.tootlipAnchorYOffset = yOffset or 0
-	widget.UpdateTooltip = WidgetTooltip_Update
-	widget:HookScript('OnEnter', WidgetTooltip_OnEnter)
-	widget:HookScript('OnLeave', WidgetTooltip_OnLeave)
+	local ourBackpack = hookedBags[BACKPACK_CONTAINER]
+	if ourBackpack then
+		return ourBackpack:Close()
+	else
+		local frame = GetContainerFrame(BACKPACK_CONTAINER)
+		if frame then
+			frame:Hide()
+		end
+	end
+end
+
+function addon:ToggleBackpack()
+	local ourBackpack = hookedBags[BACKPACK_CONTAINER]
+	if ourBackpack then
+		return ourBackpack:Toggle()
+	end
+	local frame = GetContainerFrame(BACKPACK_CONTAINER)
+	if frame then
+		self:CloseAllBags()
+	else
+		self:OpenBackpack()
+	end
+end
+
+--------------------------------------------------------------------------------
+-- Track windows related to item interaction (merchant, mail, bank, ...)
+--------------------------------------------------------------------------------
+
+do
+	local current
+	function addon:UpdateInteractingWindow(event, ...)
+		local new = strmatch(event, '^([_%w]+)_OPENED$') or strmatch(event, '^([_%w]+)_SHOW$')
+		self:Debug('UpdateInteractingWindow', event, current, '=>', new, '|', ...)
+		if new ~= current then
+			local old = current
+			current = new
+			self.atBank = (current == "BANKFRAME")
+			if self.db.profile.virtualStacks.notWhenTrading then
+				self:SendMessage('AdiBags_FiltersChanged', 0)
+			end
+			self:SendMessage('AdiBags_InteractingWindowChanged', new, old)
+			self:SendMessage('AdiBags_TimeToCheckAnchorMode')
+		end
+	end
+
+	function addon:GetInteractingWindow()
+		return current
+	end
 end
 
 --------------------------------------------------------------------------------
@@ -406,8 +659,38 @@ local bagProto = {
 }
 addon.bagProto = bagProto
 
+function bagProto:OnEnable()
+	local open = false
+	for id in pairs(self.bagIds) do
+		local frame = GetContainerFrame(id)
+		if frame then
+			open = true
+			frame:Hide()
+		end
+		hookedBags[id] = self
+	end
+	if self.PostEnable then
+		self:PostEnable()
+	end
+	self:Debug('Enabled')
+	if open then
+		self:Open()
+	end
+end
+
 function bagProto:OnDisable()
+	local open = self:IsOpen()
 	self:Close()
+	for id in pairs(self.bagIds) do
+		hookedBags[id] = nil
+		if open then
+			GetContainerFrame(id, true)
+		end
+	end
+	if self.PostDisable then
+		self:PostDisable()
+	end
+	self:Debug('Disabled')
 end
 
 function bagProto:Open()
@@ -416,7 +699,7 @@ function bagProto:Open()
 	if not frame:IsShown() then
 		self:Debug('Open')
 		frame:Show()
-		addon:SendMessage('AdiBags_BagOpened', name, self)
+		addon:SendMessage('AdiBags_BagOpened', self.bagName, self)
 		return true
 	end
 end
@@ -425,7 +708,11 @@ function bagProto:Close()
 	if self.frame and self.frame:IsShown() then
 		self:Debug('Close')
 		self.frame:Hide()
-		addon:SendMessage('AdiBags_BagClosed', name, self)
+		CloseMenus()
+		addon:SendMessage('AdiBags_BagClosed', self.bagName, self)
+		if self.PostClose then
+			self:PostClose()
+		end
 		return true
 	end
 end
@@ -436,6 +723,14 @@ end
 
 function bagProto:CanOpen()
 	return self:IsEnabled()
+end
+
+function bagProto:Toggle()
+	if self:IsOpen() then
+		self:Close()
+	elseif self:CanOpen() then
+		self:Open()
+	end
 end
 
 function bagProto:HasFrame()
@@ -473,54 +768,38 @@ function addon:NewBag(name, order, bagIds, isBank, ...)
 	bag.isBank = isBank
 	bag.order = order
 	tinsert(bags, bag)
-	table.sort(bags, CompareBags)
+	tsort(bags, CompareBags)
 	return bag
 end
 
-local function IterateOpenBags(bags, index)
-	local bag
-	repeat
-		index = index + 1
-		bag = bags[index]
-	until not bag or bag:IsOpen()
-	if bag then
-		return index, bag
-	end
-end
-
-function addon:IterateBags(onlyOpen)
-	if onlyOpen then
-		return IterateOpenBags, bags, 0
-	else
-		return ipairs(bags)
-	end
-end
-
-function addon:AreAllBagsOpen()
-	for i, bag in ipairs(bags) do
-		if bag:CanOpen() and not bag:IsOpen() then
-			return false
+do
+	local function iterateOpenBags(numBags, index)
+		while index < numBags do
+			index = index + 1
+			local bag = bags[index]
+			if bag:IsEnabled() and bag:IsOpen() then
+				return index, bag
+			end
 		end
 	end
-	return true
+
+	local function iterateBags(numBags, index)
+		while index < numBags do
+			index = index + 1
+			local bag = bags[index]
+			if bag:IsEnabled() then
+				return index, bag
+			end
+		end
+	end
+
+	function addon:IterateBags(onlyOpen)
+		return onlyOpen and iterateOpenBags or iterateBags, #bags, 0
+	end
 end
 
-function addon:OpenAllBags(forceOpen)
-	if not forceOpen and self:AreAllBagsOpen() then
-		self:CloseAllBags()
-		return
-	end
-	for i, bag in ipairs(bags) do
-		bag:Open()
-	end
-end
-
-function addon:CloseAllBags()
-	local closed = false
-	for i, bag in ipairs(bags) do
-		closed = bag:Close() or closed
-	end
-	return closed
+function addon:IterateDefinedBags()
+	return ipairs(bags)
 end
 
 --------------------------------------------------------------------------------
@@ -568,31 +847,20 @@ end
 do
 	-- L["Backpack"]
 	local backpack = addon:NewBag("Backpack", 10, addon.BAG_IDS.BAGS, false, 'AceHook-3.0')
-	
-	function backpack:OnEnable()
-		self:RegisterEvent('BANKFRAME_OPENED', 'Open')
-		self:RegisterEvent('BANKFRAME_CLOSED', 'Close')
-		self:RawHook('OpenBackpack', 'Open', true)
-		self:RawHook('CloseBackpack', 'Close', true)
-		self:RawHook('ToggleBackpack', true)
 
-		for i = 1, NUM_CONTAINER_FRAMES do
-			local container = _G['ContainerFrame'..i]
-			self:RawHook(container, "Show", 'ContainerShow', true)
-			container:Hide()
-		end
-	end
-	
-	function backpack:ContainerShow(container, ...)
-		if container:GetID() == KEYRING_CONTAINER then
-			return self.hooks[container].Show(container)
-		else
-			return self:Open()
-		end
+	function backpack:PostEnable()
+		self:RegisterMessage('AdiBags_InteractingWindowChanged')
 	end
 
-	function backpack:ToggleBackpack()
-		if self:IsOpen() then self:Close() else self:Open() end
+	function backpack:AdiBags_InteractingWindowChanged(event, window)
+		if window then
+			self.wasOpen = self:IsOpen()
+			if not self.wasOpen then
+				self:Open()
+			end
+		elseif not window and self:IsOpen() and not self.wasOpen then
+			self:Close()
+		end
 	end
 
 end
@@ -607,44 +875,40 @@ do
 
 	local function NOOP() end
 
-	function bank:OnEnable()
-		self:RegisterEvent('BANKFRAME_OPENED')
-		self:RegisterEvent('BANKFRAME_CLOSED')
+	function bank:PostEnable()
+		self:RegisterMessage('AdiBags_InteractingWindowChanged')
 
+		BankFrame:Hide()
 		self:RawHookScript(BankFrame, "OnEvent", NOOP, true)
 		self:RawHook(BankFrame, "Show", "Open", true)
-		BankFrame:Hide()
+		self:RawHook(BankFrame, "Hide", "Close", true)
+		self:RawHook(BankFrame, "IsShown", "IsOpen", true)
 
-		if addon.atBank then
-			self:BANKFRAME_OPENED()
+		if addon:GetInteractingWindow() == "BANKFRAME" then
+			self:Open()
 		end
 	end
 
-	function bank:OnDisable()
-		bagProto.OnDisable(self)
-		if self.atBank then
+	function bank:PostDisable()
+		if addon:GetInteractingWindow() == "BANKFRAME" then
 			self.hooks[BankFrame].Show(BankFrame)
 		end
 	end
 
-	function bank:BANKFRAME_OPENED()
-		self.atBank = true
-		self:Open()
-	end
-
-	function bank:BANKFRAME_CLOSED()
-		self.atBank = false
-		self:Close()
+	function bank:AdiBags_InteractingWindowChanged(event, new, old)
+		if new == 'BANKFRAME' and not self:IsOpen() then
+			self:Open()
+		elseif old == 'BANKFRAME' and self:IsOpen() then
+			self:Close()
+		end
 	end
 
 	function bank:CanOpen()
-		return self:IsEnabled() and self.atBank
+		return self:IsEnabled() and addon:GetInteractingWindow() == "BANKFRAME"
 	end
 
-	function bank:Close()
-		if bagProto.Close(self) and self.atBank then
-			CloseBankFrame()
-		end
+	function bank:PostClose()
+		CloseBankFrame()
 	end
 
 end
@@ -683,8 +947,8 @@ end
 local function AnchoredBagLayout(self)
 	self.anchor:ApplySettings()
 
-	local nextBag, data, index, bag = self:IterateBags(true)
-	index, bag = nextBag(data, index)
+	local nextBag, data, firstIndex = self:IterateBags(true)
+	local index, bag = nextBag(data, firstIndex)
 	if not bag then return end
 
 	local anchor = self.anchor
@@ -711,7 +975,7 @@ local function AnchoredBagLayout(self)
 		local frame = bag:GetFrame()
 		frame:ClearAllPoints()
 		frame:SetPoint(fromPoint, lastFrame, toPoint, x / frame:GetScale(), 0)
-		lastFrame, index, bag = frame, nextBag(bag, index)
+		lastFrame, index, bag = frame, nextBag(data, index)
 	end
 end
 
@@ -720,6 +984,9 @@ local function ManualBagLayout(self)
 		bag:GetFrame().Anchor:ApplySettings()
 	end
 end
+
+
+--===== Sets position of either anchored or manual layout =====--
 
 function addon:LayoutBags()
 	local scale = self.db.profile.scale
@@ -730,10 +997,76 @@ function addon:LayoutBags()
 	end
 	if self.db.profile.positionMode == 'anchored' then
 		AnchoredBagLayout(self)
+		-- print("anchored layout")
+		self:SendMessage('AdiBags_AnchoredLayout')
 	else
 		ManualBagLayout(self)
+		-- print("manual layout")
+		self:SendMessage('AdiBags_ManualLayout')
 	end
 end
+
+
+
+--===== Toggles current position mode to the opposite one.  =====--
+--===== Made for bag menus Alt+LeftClick in ContainerFrame.lua =====--
+
+function addon:ToggleCurrentLayout()
+
+	if self.db.profile.positionMode == 'anchored' then
+
+		--===== Set position of current layout =====--
+		ManualBagLayout(self)
+
+		--===== Change DB setting to opposite layout =====--
+		self.db.profile.positionMode = 'manual'
+
+		--===== Add Message to error frame about chaning anchoring mode. =====--
+		UIErrorsFrame:AddMessage("\124cFFFFA500"..L["Manual"].."\124r \124cff00bfff"..L["mode."].."\124r", 1.0, 0.0, 0.0, 53, 1);
+
+
+		-- First call with a duration of 0.5 seconds to remove delay of AdiBags message.
+		UIErrorsFrame:SetTimeVisible(0.5)
+
+		-- After 0.6 second, change to default UI ErrorsFrame timing.
+		LibCompat.After(0.6, function() 
+			UIErrorsFrame:SetTimeVisible(3)
+		end)
+
+		--===== Close Bag Menu =====--
+		CloseMenus()
+
+		--===== Send message to Container.lua menu frames =====--
+		self:SendMessage('AdiBags_ManualLayout')
+
+		-- print("Anchored layout")
+
+	elseif self.db.profile.positionMode == 'manual' then
+
+		UIErrorsFrame:AddMessage("\124cFF00FF00"..L["Anchored"].."\124r\124cff00bfff "..L["mode."].."\124r", 1.0, 0.0, 0.0, 53, 1);
+
+
+		UIErrorsFrame:SetTimeVisible(0.5)
+
+
+		LibCompat.After(0.6, function() 
+			UIErrorsFrame:SetTimeVisible(5)
+		end)
+
+		AnchoredBagLayout(self)
+
+		self.db.profile.positionMode = 'anchored'
+
+		CloseMenus()
+
+		self:SendMessage('AdiBags_AnchoredLayout')
+
+		-- print("manual layout")
+	end
+end
+
+
+--===== Toggles Anchor for the anchored position mode =====--
 
 function addon:ToggleAnchor()
 	if self.db.profile.positionMode == 'anchored' and not self.anchor:IsShown() then
@@ -742,6 +1075,9 @@ function addon:ToggleAnchor()
 		self.anchor:Hide()
 	end
 end
+
+
+--=====  =====--
 
 function addon:UpdatePositionMode()
 	if self.db.profile.positionMode == 'anchored' then
@@ -789,6 +1125,9 @@ local filterProto = {
 	isFilter = true,
 	priority = 0,
 	Debug = addon.Debug,
+	OpenOptions = function(self)
+		return addon:OpenOptions("filters", self.filterName)
+	end,
 }
 addon.filterProto = filterProto
 
@@ -808,6 +1147,36 @@ function filterProto:SetPriority(value)
 	if value ~= self:GetPriority() then
 		addon.db.profile.filterPriorities[self.filterName] = (value ~= self.priority) and value or nil
 		addon:UpdateFilters()
+	end
+end
+
+--------------------------------------------------------------------------------
+-- Virtual stacks
+--------------------------------------------------------------------------------
+
+function addon:ShouldStack(slotData)
+	local conf = self.db.profile.virtualStacks
+	if not slotData.link then
+		return conf.freeSpace, "*Free*"
+	end
+	local window, unstack = self:GetInteractingWindow(), 0
+	if window then
+		unstack = conf.notWhenTrading
+		if unstack >= 4 and window ~= "BANKFRAME" then
+			return
+		end
+	end
+	local maxStack = slotData.maxStack or 1
+	if maxStack > 1 then
+		if conf.stackable then
+			if (slotData.count or 1) == maxStack then
+				return true, slotData.itemId
+			elseif unstack < 3 then
+				return conf.incomplete, slotData.itemId
+			end
+		end
+	elseif conf.others and unstack < 2 then
+		return true, self.GetDistinctItemID(slotData.link)
 	end
 end
 
@@ -838,7 +1207,7 @@ function addon:UpdateFilters()
 			tinsert(allFilters, filter)
 		end
 	end
-	table.sort(allFilters, CompareFilters)
+	tsort(allFilters, CompareFilters)
 	wipe(activeFilters)
 	for i, filter in ipairs(allFilters) do
 		if filter:IsEnabled() then
@@ -867,24 +1236,11 @@ function addon:RegisterFilter(name, priority, Filter, ...)
 	return filter
 end
 
-function addon:ShouldStack(slotData)
-	if not slotData.link then
-		return self.db.profile.virtualStacks.freeSpace, "*Free*"
-	elseif not self.db.profile.virtualStacks.incomplete and (slotData.count or 1) < (slotData.maxStack or 1) then
-		return false
-	elseif slotData.itemId == 6265 or slotData.equipSlot == "INVTYPE_AMMO" then
-		return self.db.profile.virtualStacks.ammunition, slotData.itemId
-	elseif slotData.maxStack > 1 then
-		return self.db.profile.virtualStacks.stackable, slotData.itemId
-	elseif self.db.profile.virtualStacks.others then
-		return true, slotData.link:match("item:(%d+:%d+:%d+:%d+:%d+)")
-	end
-end
-
 --------------------------------------------------------------------------------
 -- Filtering process
 --------------------------------------------------------------------------------
 
+local safecall = addon.safecall
 function addon:Filter(slotData, defaultSection, defaultCategory)
 	for i, filter in ipairs(activeFilters) do
 		local sectionName, category = safecall(filter.Filter, filter, slotData)
@@ -898,3 +1254,4 @@ function addon:Filter(slotData, defaultSection, defaultCategory)
 	end
 	return defaultSection, defaultCategory
 end
+

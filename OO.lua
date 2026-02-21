@@ -1,11 +1,25 @@
 --[[
 AdiBags - Adirelle's bag addon.
-Copyright 2010 Adirelle (adirelle@tagada-team.net)
+Copyright 2010-2011 Adirelle (adirelle@tagada-team.net)
 All rights reserved.
 --]]
 
 local addonName, addon = ...
 local safecall = addon.safecall
+
+--<GLOBALS
+local _G = _G
+local assert = _G.assert
+local CreateFrame = _G.CreateFrame
+local format = _G.format
+local next = _G.next
+local pairs = _G.pairs
+local print = _G.print
+local select = _G.select
+local setmetatable = _G.setmetatable
+local SlashCmdList = _G.SlashCmdList
+local tostring = _G.tostring
+--GLOBALS>
 
 --------------------------------------------------------------------------------
 -- Classes
@@ -136,6 +150,13 @@ function poolProto:Release(object)
 	self.heap[object] = true
 end
 
+function poolProto:PreSpawn(number)
+	for i = 1, number do
+		local object = self.class:Create()
+		self.heap[object] = true
+	end
+end
+
 local function PoolIterator(data, current)
 	current = next(data.pool[data.attribute], current)
 	if current == nil and data.attribute == "heap" then
@@ -181,11 +202,12 @@ function addon:GetPool(name)
 end
 
 --[===[@debug@
+-- Globals: SLASH_ADIBAGSOODEBUG1
 SLASH_ADIBAGSOODEBUG1 = "/aboo"
 function SlashCmdList.ADIBAGSOODEBUG()
 	print('Classes:')
 	for name, class in pairs(classes) do
-		print(string.format("- %s: type: %s, template: %s, serial: %d", name, class.frameType, tostring(class.frameTemplate), class.serial))
+		print(format("- %s: type: %s, template: %s, serial: %d", name, class.frameType, tostring(class.frameTemplate), class.serial))
 	end
 	print('Pools:')
 	for name, pool in pairs(pools) do
@@ -196,7 +218,28 @@ function SlashCmdList.ADIBAGSOODEBUG()
 		for k in pairs(pool.heap) do
 			heapSize = heapSize + 1
 		end
-		print(string.format("- %s: heap size: %d, number of active objects: %d", name, heapSize, numActives))
+		print(format("- %s: heap size: %d, number of active objects: %d", name, heapSize, numActives))
 	end
 end
 --@end-debug@]===]
+
+-- Define a global flag to keep track of debug state
+addon.debugEnabled = false
+
+-- Slash command to toggle debug
+SLASH_ADIBAGSOODEBUG1 = "/aboo"
+function SlashCmdList.ADIBAGSOODEBUG()
+	-- Toggle the debug state
+	if addon.debugEnabled then
+		-- Disable debugging
+		addon.debugEnabled = false
+		addon.Debug = function() end -- Set it to a no-op function
+		print("Debugging is now disabled.")
+	else
+		-- Enable debugging
+		addon.debugEnabled = true
+		addon.Debug = function(...) print("AdiBags Debug:", ...) end -- Enable debug printing
+		print("Debugging is now enabled.")
+	end
+end
+
