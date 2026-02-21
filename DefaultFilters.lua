@@ -11,6 +11,7 @@ function addon:SetupDefaultFilters()
 
 	-- Define global ordering
 	self:SetCategoryOrders{
+		[L['Mythic Keystone']] = 35,
 		[L['Quest']] = 30,
 		[L['Trade Goods']] = 20,
 		[L['Equipment']] = 10,
@@ -111,6 +112,20 @@ function addon:SetupDefaultFilters()
 	end)
 	ammoFilter.uiName = L['Ammunition and soul shards']
 	ammoFilter.uiDesc = L['Put ammunition and soul shards in their own sections.']
+
+	-- [85] Mythic Keystone
+	do
+		local keystoneFilter = addon:RegisterFilter('MythicKeystone', 85, function(self, slotData)
+			if slotData.itemId and C_Item and C_Item.IsItemKeystoneByID then
+				local ok, result = pcall(C_Item.IsItemKeystoneByID, slotData.itemId)
+				if ok and result then
+					return L['Mythic Keystone']
+				end
+			end
+		end)
+		keystoneFilter.uiName = L['Mythic Keystone']
+		keystoneFilter.uiDesc = L['Put mythic keystone items into their own section.']
+	end
 
 	-- [70] Low quality items
 	do

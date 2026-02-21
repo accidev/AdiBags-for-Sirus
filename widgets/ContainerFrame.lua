@@ -493,9 +493,22 @@ function containerProto:UpdateContent(bag)
 		local itemId = GetContainerItemID(bag, slot)
 		local link = GetContainerItemLink(bag, slot)
 		local _, count, _, _, _, _, link2 = GetContainerItemInfo(bag, slot)
-		local name, _, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice = GetItemInfo(link or itemId or "")
+		local isKeystoneItem = false
+		if link and itemId and C_Item and C_Item.IsItemKeystoneByID then
+			local ok, isKeystone = pcall(C_Item.IsItemKeystoneByID, itemId)
+			if ok and isKeystone then
+				isKeystoneItem = true
+				if C_Item.GetContainerItemLink then
+					local keystoneLink = C_Item.GetContainerItemLink(bag, slot)
+					if keystoneLink then
+						link = keystoneLink
+					end
+				end
+			end
+		end
+		local name, _, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice = GetItemInfo(isKeystoneItem and itemId or (link or itemId or ""))
 		local inconsistent = false
-		if (itemId or ((count or 0) > 0)) and (not name or not link or link ~= link2) then
+		if not isKeystoneItem and (itemId or ((count or 0) > 0)) and (not name or not link or link ~= link2) then
 			self:Debug('Weird item information, bag,slot=', bag, slot, 'id=', itemId, 'count=', count, 'GetContainerItemLink=', link, 'GetContainerItemInfo link=', link2)
 			inconsistent = true
 			inconsistencyCount = inconsistencyCount + 1
