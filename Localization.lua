@@ -720,7 +720,7 @@ elseif locale == 'deDE' then
 
     ------------------------ ruRU ------------------------
 elseif locale == 'ruRU' then
-    L["Mythic Keystone"] = "Мифический Ключ"
+    L["Mythic Keystone"] = "М+ Ключ"
     L["Put mythic keystone items into their own section."] = "Поместить мифические ключи в отдельную секцию."
     L["Add a dropdown menu to bags that allow to hide the sections."] = "Добавить выпадающее меню для сумок, в котором можно настроить отображение секций."
     L["Add association"] = "Добавить объединение"
