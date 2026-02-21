@@ -36,13 +36,16 @@ function addon:SetupDefaultFilters()
     local ARMOR = BI["Armor"]
     local KEY = L['Keyring']
     local JEWELRY = L["Jewelry"]
+    local TRINKET = L["Trinket"]
     local EQUIPMENT = L['Equipment']
     local AMMUNITION = L['Ammunition']
     local MYTHIC_KEYSTONE = L['Mythic Keystone']
-	local DECOR =  BI["Decorate"]
+    local SIRUS = L['Sirus']
+	local DECOR =  L["Decorate."]
 
     -- Define global ordering
     self:SetCategoryOrders {
+        [SIRUS] = 40,
         [MYTHIC_KEYSTONE] = 35,
         [QUEST] = 30,
         [TRADE_GOODS] = 20,
@@ -207,6 +210,31 @@ function addon:SetupDefaultFilters()
         keyFilter.uiDesc = L['Put items categorized as keys in their own section.']
     end
 
+    -- [80] Sirus
+    do
+        local sirusItems = {
+            [280505] = true,
+            [104001] = true,
+            [280513] = true,
+            [104022] = true,
+            [280514] = true,
+            [260071] = true,
+            [150600] = true,
+            [150609] = true,
+        }
+        local sirusFilter = addon:RegisterFilter('Sirus', 80, function(self, slotData)
+            if slotData.itemId and sirusItems[slotData.itemId] then
+                return SIRUS
+            end
+            if slotData.class == GEM and slotData.quality == 5 then
+                return SIRUS
+            end
+            return false
+        end)
+        sirusFilter.uiName = SIRUS
+        sirusFilter.uiDesc = L["Put Sirus-specific items (Black Diamonds, legendary gems) in their own section."]
+    end
+
     -- [75] Quest Items
     do
         local questItemFilter = addon:RegisterFilter('Quest', 75, function(self, slotData)
@@ -222,7 +250,7 @@ function addon:SetupDefaultFilters()
     end
     do
 		local TransmogFilter = addon:RegisterFilter('Decorate', 65, function(self, slotData)
-			if (slotData.class == ARMOR and slotData.subclass == "Декоративный предмет") then
+			if (slotData.class == ARMOR and slotData.subclass == L["Decorative item"]) then
 					return DECOR
 			elseif slotData.class == WEAPON then
 				if slotData.quality == 4 and slotData.iLevel == 1 then
@@ -261,7 +289,7 @@ function addon:SetupDefaultFilters()
             INVTYPE_SHOULDER = ARMOR,
             INVTYPE_TABARD = MISCELLANEOUS,
             INVTYPE_THROWN = WEAPON,
-            INVTYPE_TRINKET = JEWELRY,
+            INVTYPE_TRINKET = TRINKET,
             INVTYPE_WAIST = ARMOR,
             INVTYPE_WEAPON = WEAPON,
             INVTYPE_WEAPONMAINHAND = WEAPON,
