@@ -43,6 +43,8 @@ jobs:
           rm -rf release/AdiBags/.github
           cd release
           zip -r ../AdiBags-v${{ env.VERSION }}.zip AdiBags
+          # Создаем копию со статичным именем для постоянной ссылки
+          cp ../AdiBags-v${{ env.VERSION }}.zip ../AdiBags-latest.zip
           cd ..
 
       - name: Create Release
@@ -51,5 +53,7 @@ jobs:
         with:
           tag_name: "v${{ env.VERSION }}"
           name: "Release v${{ env.VERSION }}"
-          files: "AdiBags-v${{ env.VERSION }}.zip"
+          files: |
+            AdiBags-v${{ env.VERSION }}.zip
+            AdiBags-latest.zip
           generate_release_notes: true
