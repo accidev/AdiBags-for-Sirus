@@ -88,6 +88,8 @@ L["Put items belonging to one or more sets of the built-in gear manager in speci
 L["Put items in sections depending on their first-level category at the Auction House."] = true
 L["Put quest-related items in their own section."] = true
 L["Quest Items"] = true
+L["Mythic Keystone"] = true
+L["Put mythic keystone items into their own section."] = true
 L["Section setup"] = true
 L["Select the sections in which the items should be dispatched."] = true
 L["Select which first-level categories should be split by sub-categories."] = true
@@ -718,6 +720,8 @@ elseif locale == 'deDE' then
 
     ------------------------ ruRU ------------------------
 elseif locale == 'ruRU' then
+    L["Mythic Keystone"] = "Мифический Ключ"
+    L["Put mythic keystone items into their own section."] = "Поместить мифические ключи в отдельную секцию."
     L["Add a dropdown menu to bags that allow to hide the sections."] = "Добавить выпадающее меню для сумок, в котором можно настроить отображение секций."
     L["Add association"] = "Добавить объединение"
     L["Add more information in tooltips related to items in your bags."] = "Добавить Дополнительную информацию во всплывающих подсказках, касающихся предметов, в вашей сумке"

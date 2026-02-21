@@ -901,14 +901,21 @@ function containerProto:UpdateContent(bag)
 				end
 
 				local name, count, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice
+				local isKeystoneLink = link and link:find("keystone:")
 				if link then
-					name, _, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice = GetItemInfo(link)
+					if isKeystoneLink and itemId then
+						name, _, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice = GetItemInfo(itemId)
+					else
+						name, _, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice = GetItemInfo(link)
+					end
 					count = select(2, GetContainerItemInfo(bag, slot)) or 0
 				else
 					link, count = false, 0
 				end
 
-				if GetDistinctItemID(slotData.link) ~= GetDistinctItemID(link) then
+				local distinctOld = GetDistinctItemID(slotData.link)
+				local distinctNew = isKeystoneLink and itemId or GetDistinctItemID(link)
+				if distinctOld ~= distinctNew then
 					removed[slotData.slotId] = slotData.link
 					slotData.count = count
 					slotData.link = link

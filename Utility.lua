@@ -121,8 +121,13 @@ end
 --------------------------------------------------------------------------------
 
 function addon.IsValidItemLink(link)
-	if type(link) == "string" and strmatch(link, 'item:[-:%d]+') and not strmatch(link, 'item:%d+:0:0:0:0:0:0:0:0:0') then
-		return true
+	if type(link) == "string" then
+		if strmatch(link, 'keystone:') then
+			return true
+		end
+		if strmatch(link, 'item:[-:%d]+') and not strmatch(link, 'item:%d+:0:0:0:0:0:0:0:0:0') then
+			return true
+		end
 	end
 end
 

@@ -38,9 +38,11 @@ function addon:SetupDefaultFilters()
     local JEWELRY = L["Jewelry"]
     local EQUIPMENT = L['Equipment']
     local AMMUNITION = L['Ammunition']
+    local MYTHIC_KEYSTONE = L['Mythic Keystone']
 
     -- Define global ordering
     self:SetCategoryOrders {
+        [MYTHIC_KEYSTONE] = 35,
         [QUEST] = 30,
         [TRADE_GOODS] = 20,
         [EQUIPMENT] = 10,
@@ -174,6 +176,21 @@ function addon:SetupDefaultFilters()
 
     end
 
+
+    -- [85] Mythic Keystone
+    do
+        local keystoneFilter = addon:RegisterFilter('MythicKeystone', 85, function(self, slotData)
+            if slotData.itemId and C_Item and C_Item.IsItemKeystoneByID then
+                local ok, result = pcall(C_Item.IsItemKeystoneByID, slotData.itemId)
+                if ok and result then
+                    return MYTHIC_KEYSTONE
+                end
+            end
+            return false
+        end)
+        keystoneFilter.uiName = MYTHIC_KEYSTONE
+        keystoneFilter.uiDesc = L['Put mythic keystone items into their own section.']
+    end
 
     -- [90] Key
     do
