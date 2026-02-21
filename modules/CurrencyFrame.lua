@@ -1,15 +1,38 @@
 --[[
 AdiBags - Adirelle's bag addon.
-Copyright 2010 Adirelle (adirelle@tagada-team.net)
+Copyright 2010-2011 Adirelle (adirelle@tagada-team.net)
 All rights reserved.
 --]]
 
 local addonName, addon = ...
 local L = addon.L
 
+--<GLOBALS
+local _G = _G
+local CreateFrame = _G.CreateFrame
+local ExpandCurrencyList = _G.ExpandCurrencyList
+local format = _G.format
+local GetCurrencyListInfo = _G.GetCurrencyListInfo
+local GetCurrencyListSize = _G.GetCurrencyListSize
+local hooksecurefunc = _G.hooksecurefunc
+local ipairs = _G.ipairs
+local IsAddOnLoaded = _G.IsAddOnLoaded
+local tconcat = _G.table.concat
+local tinsert = _G.tinsert
+local wipe = _G.wipe
+--GLOBALS>
+
 local mod = addon:NewModule('CurrencyFrame', 'AceEvent-3.0')
 mod.uiName = L['Currency']
 mod.uiDesc = L['Display character currency at bottom left of the backpack.']
+
+function mod:OnInitialize()
+	self.db = addon.db:RegisterNamespace(self.moduleName, {
+		profile = {
+			shown = { ['*'] = false },
+		},
+	})
+end
 
 function mod:OnEnable()
 	addon:HookBagFrameCreation(self, 'OnBagFrameCreated')
@@ -53,64 +76,99 @@ function mod:OnBagFrameCreated(bag)
 	self:Update()
 end
 
-local ICON_STRING = "\124T%s:16:16:0:0\124t"
-local HONOR_ICON_STRING
-local ARENA_ICON_STRING = ICON_STRING:format([[Interface\PVPFrame\PVP-ArenaPoints-Icon]])
+local IterateCurrencies
+do
+	local function iterator(collapse, index)
+		if not index then return end
+		repeat
+			index = index + 1
+			local name, isHeader, isExpanded, isUnused, isWatched, count, extraCurrencyType, icon, itemID = GetCurrencyListInfo(index)
+			if name then
+				if isHeader then
+					if not isExpanded then
+						tinsert(collapse, 1, index)
+						ExpandCurrencyList(index, true)
+					end
+				else
+					if ( extraCurrencyType == 1 ) then	--Arena points
+						icon = "Interface\\PVPFrame\\PVP-ArenaPoints-Icon"
+					elseif ( extraCurrencyType == 2 ) then --Honor points
+						local factionGroup = UnitFactionGroup("player");
+						if ( factionGroup ) then
+							icon = "Interface\\TargetingFrame\\UI-PVP-"..factionGroup
+						end
+					end
+					return index, name, isHeader, isExpanded, isUnused, isWatched, count, extraCurrencyType, icon
+				end
+			end
+		until index > GetCurrencyListSize()
+		for i, index in ipairs(collapse) do
+			ExpandCurrencyList(index, false)
+		end
+	end
+	
+	local collapse = {}
+	function IterateCurrencies()
+		wipe(collapse)
+		return iterator, collapse, 0
+	end
+end
 
-local collapse = {}
+local ICON_STRING_HONOR = "%d\124T%s:0:0:0:0:128:180:20:70:20:70\124t"
+local ICON_STRING = "%d\124T%s:0:0:0:0:64:64:5:59:5:59\124t"
+
 local values = {}
 local updating
 function mod:Update()
-	if not self.widget or updating then return end
-	updating = true
-
-	for index = 1, GetCurrencyListSize() do
-		local name, isHeader, isExpanded, isUnused, isWatched, count, extraCurrencyType, icon = GetCurrencyListInfo(index)
-		if isHeader then
-			if not isExpanded then
-				tinsert(collapse, index)
-				ExpandCurrencyList(index, true)
-				self:Debug('Expanded', name)
-			end
-		elseif isWatched then
-			local iconString
-			if extraCurrencyType == 1 then
-				-- Arena points
-				iconString = ARENA_ICON_STRING
-			elseif extraCurrencyType == 2 then
-				-- Honor points
-				if HONOR_ICON_STRING == nil then
-					local factionGroup = UnitFactionGroup("player")
-					if factionGroup then
-						HONOR_ICON_STRING = ICON_STRING:format([[Interface\AddOns\Broker_SimpleCurrency\images\]]..factionGroup)
-					end
-				end
-				iconString = HONOR_ICON_STRING or " "..HONOR
-			else
-				-- "Standard" token
-				iconString = icon and ICON_STRING:format(icon) or ""
-			end
-			self:Debug('name', count, icon, iconString)
-			tinsert(values, ("%d%s"):format(count, iconString))
-		end
-	end
-
-	for i = #collapse, 1, -1 do
-		ExpandCurrencyList(collapse[i], false)
-		collapse[i] = nil
-		self:Debug('Collapsed', collapse[i])
-	end
-
-	local widget, fs = self.widget, self.fontstring
-	if #values > 0 then
-		widget:Show()
-		fs:SetText(table.concat(values, " "))
-		widget:SetWidth(fs:GetStringWidth())
-		widget:SetHeight(fs:GetStringHeight())
-		wipe(values)
-	else
-		widget:Hide()
-	end
-
-	updating = false
+    if not self.widget or updating then return end
+    updating = true
+    
+    for i, name, _, _, _, _, count, extraCurrencyType, icon in IterateCurrencies() do
+        if self.db.profile.shown[name] then
+            if extraCurrencyType == 2 then -- Honor points
+                tinsert(values, format(ICON_STRING_HONOR, count, icon))
+            else
+                tinsert(values, format(ICON_STRING, count, icon))
+            end
+        end
+    end
+    
+    local widget, fs = self.widget, self.fontstring
+    if #values > 0 then
+        widget:Show()
+        fs:SetText(tconcat(values, " "))
+        widget:SetWidth(fs:GetStringWidth())
+        widget:SetHeight(fs:GetStringHeight())
+        wipe(values)
+    else
+        widget:Hide()
+    end
+    
+    updating = false
 end
+
+
+function mod:GetOptions()
+	local values = {}
+	local function GetValueList()
+		wipe(values)
+		for i, name in IterateCurrencies() do
+			values[name] = name
+		end
+		return values
+	end
+	
+	return {
+		shown = {
+			name = L['Currencies to show'],
+			type = 'multiselect',
+			order = 10,
+			values = GetValueList,
+			set = function(info, ...)
+				info.handler:Set(info, ...)
+				mod:Update()
+			end
+		},
+	}, addon:GetOptionHandler(self)
+end
+
