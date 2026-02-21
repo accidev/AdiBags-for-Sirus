@@ -1,0 +1,54 @@
+name: Auto Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'AdiBags.toc'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract Version
+        id: get_version
+        run: |
+          VERSION=$(grep -i "^## Version:" AdiBags.toc | sed 's/.*: *//' | tr -d '\r' | xargs)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Found version: $VERSION"
+
+      - name: Check if tag already exists
+        id: check_tag
+        run: |
+          if git ls-remote --tags origin | grep -q "refs/tags/v${{ env.VERSION }}$"; then
+            echo "Tag v${{ env.VERSION }} already exists."
+            echo "EXISTS=true" >> $GITHUB_ENV
+          else
+            echo "Tag v${{ env.VERSION }} does not exist."
+            echo "EXISTS=false" >> $GITHUB_ENV
+          fi
+
+      - name: Create Archive
+        if: env.EXISTS == 'false'
+        run: |
+          mkdir -p release/AdiBags
+          git archive HEAD | tar -x -C release/AdiBags
+          cd release
+          zip -r ../AdiBags-v${{ env.VERSION }}.zip AdiBags
+          cd ..
+
+      - name: Create Release
+        if: env.EXISTS == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v${{ env.VERSION }}"
+          name: "Release v${{ env.VERSION }}"
+          files: "AdiBags-v${{ env.VERSION }}.zip"
+          generate_release_notes: true
