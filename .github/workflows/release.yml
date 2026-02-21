@@ -20,7 +20,7 @@ jobs:
       - name: Extract Version
         id: get_version
         run: |
-          VERSION=$(grep -i "^## Version:" AdiBags.toc | sed 's/.*: *//' | tr -d '\r' | xargs)
+          VERSION=$(grep -i "^## Version:" AdiBags.toc | sed 's/.*: *//' | tr -d '\r' | xargs | sed 's/^[vV]//')
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "Found version: $VERSION"
 
@@ -40,6 +40,7 @@ jobs:
         run: |
           mkdir -p release/AdiBags
           git archive HEAD | tar -x -C release/AdiBags
+          rm -rf release/AdiBags/.github
           cd release
           zip -r ../AdiBags-v${{ env.VERSION }}.zip AdiBags
           cd ..

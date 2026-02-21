@@ -2,7 +2,7 @@
 ## Title: |cffA335EEAdiBags|r
 ## Notes: Adirelle's bag addon. Adapted for Sirus by |cffA335EEAccidev|r
 ## Author: Adirelle, Sattva, |cffA335EEAccidev|r
-## Version: v1.1-Sirus
+## Version: 1.1-Sirus
 ## SavedVariables: AdiBagsDB
 ## OptionalDeps: LibStub, CallbackHandler-1.0, Ace3, LibBabble-Inventory-3.0, AdiDebug, LibSharedMedia-3.0, Scrap, BrainDead, ProfessionsVault, Masque
 
