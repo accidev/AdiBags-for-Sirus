@@ -689,13 +689,16 @@ function containerProto:CanUpdate()
 end
 
 function containerProto:FiltersChanged(event, forceLayout)
+	if addon._updatingFilters then return end
 	if forceLayout then
 		self.forceLayout = true
 	end
 	self.filtersChanged = true
 	if self:CanUpdate() then
+		addon._updatingFilters = true
 		self:RedispatchAllItems()
 		self:LayoutSections(1)
+		addon._updatingFilters = nil
 	end
 end
 

@@ -69,6 +69,9 @@ function buttonProto:OnAcquire(container, bag, slot)
     self.slot = slot
     self.stack = nil
     self:SetParent(addon.itemParentFrames[bag])
+    if self.SetBagID then
+        self:SetBagID(bag)
+    end
     self:SetID(slot)
     self:FullUpdate()
 end
@@ -82,13 +85,14 @@ do
         orig_OnAcquire(self, container, bag, slot)
 
         -- 2) only if AddOnSkins is present, retrigger OnCreate hooks
-        if IsAddOnLoaded("ElvUI") then
+        if not self.isSkinnedByElvUI and IsAddOnLoaded("ElvUI") then
             -- safely unpack ElvUI (won't error if ElvUI is nil)
             local E, L, V, P, G = unpack(_G.ElvUI or {})
             local AS = E and E:GetModule("AddOnSkins", true)
             if AS then
                 -- this will fire every hooksecurefunc(*, "OnCreate", …)
                 self:OnCreate()
+                self.isSkinnedByElvUI = true
             end
         end
     end
@@ -246,6 +250,25 @@ end
 function buttonProto:UNIT_QUEST_LOG_CHANGED(event, unit)
     if unit == "player" then
         self:UpdateBorder(event)
+    end
+end
+
+function buttonProto:CURRENT_SPELL_CAST_CHANGED(event)
+    if not SpellCanTargetItem() and CONTAINER_ATTENTION_ITEM_LINK then
+        StaticPopup_Hide("ATTENTION_ON_USE_CONFIRM")
+        CONTAINER_ATTENTION_ITEM_LINK = nil
+        self:UnregisterEvent(event)
+    end
+end
+
+function buttonProto:ITEM_LOCKED(event, bagID, slotID)
+    local frame = StaticPopup_FindVisible("ATTENTION_ON_USE_CONFIRM")
+    if frame and CONTAINER_ATTENTION_BAG_ID and CONTAINER_ATTENTION_BAG_ID == bagID
+       and CONTAINER_ATTENTION_SLOT_ID and CONTAINER_ATTENTION_SLOT_ID == slotID then
+        CONTAINER_ATTENTION_BAG_ID = nil
+        CONTAINER_ATTENTION_SLOT_ID = nil
+        frame:Hide()
+        self:UnregisterEvent(event)
     end
 end
 
