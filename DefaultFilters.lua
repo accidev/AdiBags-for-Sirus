@@ -1,8 +1,3 @@
---[[
-AdiBags - Adirelle's bag addon.
-Copyright 2010-2011 Adirelle (adirelle@tagada-team.net)
-All rights reserved.
---]]
 
 local addonName, addon = ...
 
@@ -41,10 +36,12 @@ function addon:SetupDefaultFilters()
     local AMMUNITION = L['Ammunition']
     local MYTHIC_KEYSTONE = L['Mythic Keystone']
     local SIRUS = L['Sirus']
-	local DECOR =  L["Decorate."]
+	local DECOR = L["Decorate."]
+    local TEMPORARY_ITEMS = L["Temporary items"]
 
     -- Define global ordering
     self:SetCategoryOrders {
+        [TEMPORARY_ITEMS] = 50,
         [SIRUS] = 40,
         [MYTHIC_KEYSTONE] = 35,
         [QUEST] = 30,

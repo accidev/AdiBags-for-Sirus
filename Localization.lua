@@ -1,9 +1,3 @@
---[[
-AdiBags - Adirelle's bag addon.
-Copyright 2010-2011 Adirelle (adirelle@tagada-team.net)
-All rights reserved.
---]]
-
 local addonName, addon = ...
 
 --<GLOBALS
@@ -104,6 +98,12 @@ L["Decorate."] = true
 L["Put decorated items in their own section."] = true
 L["Decorative item"] = true
 
+-- modules/ExpiringItems.lua
+L["Expiring Items"] = true
+L["Put items that have an expiration time or lifetime in a specific section."] = true
+L["Enable Expiring Items Category"] = true
+L["Check this to automatically group items that have an expiration time or lifetime."] = true
+L["Temporary items"] = true
 
 -- Options.lua
 L["... including incomplete stacks"] = true
@@ -456,6 +456,11 @@ if locale == 'ruRU' then
 	L["Item search"] = "Поиск предмета"
 	L["Jewelry"] = "Бижутерия"
 	L["Trinket"] = "Аксессуары"
+	L["Temporary items"] = "Временные предметы"
+	L["Expiring Items"] = "Временные предметы"
+	L["Put items that have an expiration time or lifetime in a specific section."] = "Поместите предметы, у которых есть время или срок действия в специальную секцию."
+	L["Enable Expiring Items Category"] = "Включить категорию временных предметов"
+	L["Check this to automatically group items that have an expiration time or lifetime."] = "Включите это, чтобы автоматически группировать предметы, у которых есть срок действия."
 	L["KEYRING_TAG"] = "Клч"
 	L["Keyring"] = "Связка ключей"
 	L["Layout priority"] = "Приоритет слоя"

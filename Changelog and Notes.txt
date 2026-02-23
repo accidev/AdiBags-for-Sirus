@@ -1,3 +1,13 @@
+Changelog by Accidev 24th February 2026 #12;
+- Исправлены отображение валют
+- Добавлены отображения капов при наведение на валюту
+- Добавлена категория временных предметов.
+- Чистка кода
+
+Changelog by Accidev 23th February 2026 #11;
+- Добавлена совместимость с ElvUI https://github.com/accidev/ElvUI-for-Sirus
+- Добавлены интеграции с кнопками сумки ElvUI (Deconstruct, Sell Junk, Sort Bags) https://github.com/accidev/ElvUI_AddOnSkins
+
 Changelog by Accidev 21th February 2026 #10;
 - Исправил ошибку со скином ElvUI если жать много раз на "Мои сумки", то рекурсивный вызов функции OnCreate приводил к ошибке.
 - Исправил отображение ключей Мифик данжей

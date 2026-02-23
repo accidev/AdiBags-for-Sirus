@@ -1,11 +1,3 @@
---[[
-AdiBags - Adirelle's bag addon.
-Copyright 2010-2011 Adirelle (adirelle@tagada-team.net)
-All rights reserved.
---]]
-
--- Various utility functions
-
 local addonName, addon = ...
 local L = addon.L
 
