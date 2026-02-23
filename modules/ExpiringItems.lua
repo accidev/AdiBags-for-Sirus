@@ -3,10 +3,6 @@ local L = addon.L
 
 --<GLOBALS
 local _G = _G
-local setmetatable = _G.setmetatable
-local string = _G.string
-local CreateFrame = _G.CreateFrame
-local UIParent = _G.UIParent
 --GLOBALS>
 
 local mod = addon:RegisterFilter("ExpiringItems", 99, "AceEvent-3.0")
@@ -23,59 +19,17 @@ function mod:OnInitialize()
 	})
 end
 
-local tooltip = CreateFrame("GameTooltip", "AdiBagsExpiringItemsTooltip", UIParent, "GameTooltipTemplate")
-tooltip:SetOwner(UIParent, "ANCHOR_NONE")
-
-local cache = setmetatable({}, { __index = function(t, itemId)
-	local isExpiring = mod:CheckItem(itemId)
-	t[itemId] = isExpiring
-	return isExpiring
-end})
-
-function mod:OnEnable()
-	addon:UpdateFilters()
-end
-
-function mod:OnDisable()
-	addon:UpdateFilters()
-end
-
-function mod:CheckItem(itemId)
-	if not itemId then return false end
-
-	tooltip:ClearLines()
-	tooltip:SetHyperlink("item:" .. itemId)
-
-	for i = 1, tooltip:NumLines() do
-		local leftLine = _G["AdiBagsExpiringItemsTooltipTextLeft" .. i]
-		if leftLine then
-			local text = leftLine:GetText()
-			if text then
-				if string.find(text, "Исчезнет через") or string.find(text, "срок жизни") then
-					return true
-				end
-			end
-		end
-		
-		local rightLine = _G["AdiBagsExpiringItemsTooltipTextRight" .. i]
-		if rightLine then
-			local text = rightLine:GetText()
-			if text then
-				if string.find(text, "Исчезнет через") or string.find(text, "срок жизни") then
-					return true
-				end
-			end
-		end
-	end
-
-	return false
-end
-
 function mod:Filter(slotData)
 	if not self.db.profile.enabled then return nil end
 
-	if cache[slotData.itemId] then
-		return TEMP_CATEGORY
+	if slotData.bag and slotData.slot and _G.GetContainerItemGUID and _G.GetItemExpirationTimeLeft then
+		local itemGUID = _G.GetContainerItemGUID(slotData.bag, slotData.slot)
+		if itemGUID then
+			local hasExpiration, expirationTimeLeft = _G.GetItemExpirationTimeLeft(itemGUID)
+			if hasExpiration and expirationTimeLeft and expirationTimeLeft > 0 then
+				return TEMP_CATEGORY
+			end
+		end
 	end
 
 	return nil
