@@ -259,7 +259,7 @@ function addon:GetOptions()
 		name = addonName..' DEV',
 		--@end-debug@]===]
 		--@non-debug@
-		name = addonName..' v3.3.5',
+		name = addonName .. ' ' .. (GetAddOnMetadata(addonName, "Version") or ""),
 		--@end-non-debug@
 		type = 'group',
 		handler = addon:GetOptionHandler(addon),

@@ -1,5 +1,5 @@
-# AdiBags-WoTLK-3.3.5
-**AdiBags** backport with improved UI and functions for 3.3.5 WoTLK client.
+# AdiBags-for-Sirus
+**AdiBags** backport with improved UI and functions for Sirus client.
 
 ![wow_CNgtiMLTXH](https://user-images.githubusercontent.com/74269253/229909788-3782f7b8-a995-4095-b997-37bf895675b6.png)
 
@@ -7,16 +7,13 @@
 ## 📦 Download & Installation
 
 1. Click the green `Code` button at the top of this page, then select  
-   **[Download ZIP](https://github.com/Sattva-108/AdiBags/archive/refs/heads/main.zip)**
+   **[Download ZIP](https://github.com/accidev/AdiBags-for-Sirus/releases/latest/download/AdiBags-latest.zip)**
 
 2. Extract the downloaded `.zip` file. You’ll get a folder named:  
    **`AdiBags-main`**
 
 3. Move the `AdiBags-main` folder into your WoW AddOns directory:  
    `World of Warcraft\Interface\AddOns\`
-
-4. Rename the folder to exactly:  
-   **`AdiBags`** ← (⚠️ Must match this name exactly — no `-main`, no extra spaces!)
 
 ✅ Done! The addon should now appear in your in-game addon list.
 
@@ -57,11 +54,5 @@
 ## Conclusion
 Interesting extra-modules for AdiBags, you can download them here - [AdiBags-WoTLK-3.3.5-Mods](https://github.com/Sattva-108/AdiBags-WoTLK-3.3.5-Mods) 
 
-#### `Changelog`, `To Do List` and `known bugs` can be viewed in [Changelog and Notes.txt](https://github.com/Sattva-108/AdiBags/blob/main/AdiBags/Changelog%20and%20Notes.txt) inside addon folder.
-
-## Support
-- Show **Love and Support** my goals **[Boosty](https://boosty.to/sattva108)**
-
-## Credit
-- Credit to [AdiAddons](https://github.com/AdiAddons)    
-- Code from [AdiBags](https://github.com/AdiAddons/AdiBags)    
+#### `Changelog`, `To Do List` and `known bugs` can be viewed in [Changelog and Notes.txt](https://github.com/accidev/AdiBags-for-Sirus/blob/main/AdiBags/Changelog%20and%20Notes.txt) inside addon folder.
+  

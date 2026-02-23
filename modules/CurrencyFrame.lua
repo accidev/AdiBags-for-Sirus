@@ -43,7 +43,10 @@ function mod:OnEnable()
 	self:RegisterEvent('CURRENCY_DISPLAY_UPDATE', "Update")
 	self:RegisterEvent('HONOR_CURRENCY_UPDATE', "Update")
 	if not self.hooked then
-		if IsAddOnLoaded('Blizzard_TokenUI') then
+		if _G.TokenFrame_Update then
+			hooksecurefunc('TokenFrame_Update', function() self:Update() end)
+			self.hooked = true
+		elseif IsAddOnLoaded('Blizzard_TokenUI') then
 			self:ADDON_LOADED('OnEnable', 'Blizzard_TokenUI')
 		else
 			self:RegisterEvent('ADDON_LOADED')
@@ -55,8 +58,10 @@ end
 function mod:ADDON_LOADED(_, name)
 	if name ~= 'Blizzard_TokenUI' then return end
 	self:UnregisterEvent('ADDON_LOADED')
-	hooksecurefunc('TokenFrame_Update', function() self:Update() end)
-	self.hooked = true
+	if not self.hooked and _G.TokenFrame_Update then
+		hooksecurefunc('TokenFrame_Update', function() self:Update() end)
+		self.hooked = true
+	end
 end
 
 function mod:OnDisable()
@@ -69,10 +74,26 @@ function mod:OnBagFrameCreated(bag)
 	if bag.bagName ~= "Backpack" then return end
 	local frame = bag:GetFrame()
 	self.widget = CreateFrame("Frame", addonName.."CurrencyFrame", frame)
+	self.widget:EnableMouse(true)
 	self.fontstring = self.widget:CreateFontString(nil, "OVERLAY","NumberFontNormalLarge")
 	self.fontstring:SetPoint("BOTTOMLEFT", 0 ,1)
 	--AddBottomWidget(widget, side, order, height, xOffset, yOffset)
 	frame:AddBottomWidget(self.widget, "LEFT", 50, 13)
+
+	self.widget:SetScript("OnEnter", function(self)
+		if not mod.tooltipData then return end
+		GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
+		GameTooltip:ClearLines()
+		for _, data in ipairs(mod.tooltipData) do
+			GameTooltip:AddDoubleLine(data.left, data.right, 1, 1, 1, 1, 1, 1)
+		end
+		GameTooltip:Show()
+	end)
+
+	self.widget:SetScript("OnLeave", function()
+		GameTooltip:Hide()
+	end)
+
 	self:Update()
 end
 
@@ -90,15 +111,7 @@ do
 						ExpandCurrencyList(index, true)
 					end
 				else
-					if ( extraCurrencyType == 1 ) then	--Arena points
-						icon = "Interface\\PVPFrame\\PVP-ArenaPoints-Icon"
-					elseif ( extraCurrencyType == 2 ) then --Honor points
-						local factionGroup = UnitFactionGroup("player");
-						if ( factionGroup ) then
-							icon = "Interface\\TargetingFrame\\UI-PVP-"..factionGroup
-						end
-					end
-					return index, name, isHeader, isExpanded, isUnused, isWatched, count, extraCurrencyType, icon
+					return index, name, isHeader, isExpanded, isUnused, isWatched, count, extraCurrencyType, icon, itemID
 				end
 			end
 		until index > GetCurrencyListSize()
@@ -114,8 +127,8 @@ do
 	end
 end
 
-local ICON_STRING_HONOR = "%d\124T%s:0:0:0:0:128:180:20:70:20:70\124t"
-local ICON_STRING = "%d\124T%s:0:0:0:0:64:64:5:59:5:59\124t"
+local ICON_STRING = "%s\124T%s:0:0:0:0:64:64:5:59:5:59\124t"
+local CURRENCY_STRING = "\124T%s:14:14:0:0:64:64:5:59:5:59\124t %s"
 
 local values = {}
 local updating
@@ -123,13 +136,23 @@ function mod:Update()
     if not self.widget or updating then return end
     updating = true
     
-    for i, name, _, _, _, _, count, extraCurrencyType, icon in IterateCurrencies() do
+    mod.tooltipData = mod.tooltipData or {}
+    wipe(mod.tooltipData)
+
+    for i, name, _, _, _, _, count, extraCurrencyType, icon, itemID in IterateCurrencies() do
         if self.db.profile.shown[name] then
-            if extraCurrencyType == 2 then -- Honor points
-                tinsert(values, format(ICON_STRING_HONOR, count, icon))
-            else
-                tinsert(values, format(ICON_STRING, count, icon))
-            end
+			tinsert(values, format(ICON_STRING, count, icon))
+
+			local limitText = count
+			if itemID and _G.C_CurrencyInfo and _G.C_CurrencyInfo.GetCurrencyInfo then
+				local _, _, _, earnedThisWeek, weeklyMax, maxQuantity = _G.C_CurrencyInfo.GetCurrencyInfo(itemID)
+				if weeklyMax and weeklyMax > 0 then
+					limitText = format("%s / %s (Неделя: %s / %s)", count, maxQuantity > 0 and maxQuantity or "?", earnedThisWeek, weeklyMax)
+				elseif maxQuantity and maxQuantity > 0 then
+					limitText = format("%s / %s", count, maxQuantity)
+				end
+			end
+			tinsert(mod.tooltipData, {left = format(CURRENCY_STRING, icon, name), right = limitText})
         end
     end
     
