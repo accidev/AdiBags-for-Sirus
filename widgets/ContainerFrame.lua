@@ -197,14 +197,6 @@ function containerProto:OnCreate(name, bagIds, isBank)
 	}, "ANCHOR_BOTTOMLEFT", -8, 0)
 	headerLeftRegion:AddWidget(bagSlotButton, 50)
 
-	if select(4, GetBuildInfo()) == 40300 then
-		-- Search boxes are provided by the 4.3 client
-		local searchBox = CreateFrame("EditBox", self:GetName().."SearchBox", self, "BagSearchBoxTemplate")
-		searchBox:SetSize(130, 20)
-		searchBox:SetFrameLevel(minFrameLevel)
-		headerRightRegion:AddWidget(searchBox, -10, 130, 0, -1)
-		tinsert(_G.ITEM_SEARCHBAR_LIST, searchBox:GetName())
-	end
 
 	local title = self:CreateFontString(self:GetName().."Title","OVERLAY")
 	self.Title = title
@@ -592,9 +584,9 @@ function containerProto:OnCreate(name, bagIds, isBank)
 		end
 	end
 
-	self.RegisterMessage(anchor, "AdiBags_ManualLayout", UpdateAnchorVisibility)
-	self.RegisterMessage(AdiBagsBagMenu, "AdiBags_AnchoredLayout", UpdateAnchorVisibility)
-	self.RegisterMessage(anchor, "AdiBags_TimeToCheckAnchorMode", UpdateAnchorVisibility)
+	self:RegisterMessage("AdiBags_ManualLayout", UpdateAnchorVisibility)
+	self:RegisterMessage("AdiBags_AnchoredLayout", UpdateAnchorVisibility)
+	self:RegisterMessage("AdiBags_TimeToCheckAnchorMode", UpdateAnchorVisibility)
 
 
 

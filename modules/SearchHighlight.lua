@@ -1,7 +1,3 @@
-if select(4, GetBuildInfo()) == 40300 then
-	return
-end
-
 local addonName, addon = ...
 local L = addon.L
 
