@@ -1,10 +1,10 @@
-Changelog by Accidev 24th February 2026 #12;
+Changelog by Accidev 23th February 2026 #12;
 - Исправлены отображение валют
 - Добавлены отображения капов при наведение на валюту
 - Добавлена категория временных предметов.
 - Чистка кода
 
-Changelog by Accidev 23th February 2026 #11;
+Changelog by Accidev 22th February 2026 #11;
 - Добавлена совместимость с ElvUI https://github.com/accidev/ElvUI-for-Sirus
 - Добавлены интеграции с кнопками сумки ElvUI (Deconstruct, Sell Junk, Sort Bags) https://github.com/accidev/ElvUI_AddOnSkins
 
