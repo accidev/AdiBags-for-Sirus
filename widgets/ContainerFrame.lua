@@ -582,60 +582,19 @@ function containerProto:OnCreate(name, bagIds, isBank)
 
 	local RegisterMessage = LibStub('AceEvent-3.0').RegisterMessage
 
-	self.RegisterMessage(anchor, "AdiBags_ManualLayout", function()
+	local function UpdateAnchorVisibility()
 		if addon.db.profile.positionMode == 'manual' then
-			-- If positionMode is 'anchored', show the frame
 			AdiBagsBagMenu:Hide()
 			anchor:Show()
-
 		else
-			-- If positionMode is NOT 'anchored', hide the frame
 			AdiBagsBagMenu:Show()
 			anchor:Hide()
 		end
-	end)
+	end
 
-
-	self.RegisterMessage(AdiBagsBagMenu, "AdiBags_AnchoredLayout", function()
-		if addon.db.profile.positionMode == 'anchored' then
-			-- If positionMode is 'manual', show the frame
-			anchor:Hide()
-			AdiBagsBagMenu:Show()
-		else
-			-- If positionMode is NOT 'manual', hide the frame
-			anchor:Show()
-			AdiBagsBagMenu:Hide()
-		end
-	end)
-
-
-
-	self.RegisterMessage(anchor, "AdiBags_TimeToCheckAnchorMode", function()
-		if addon.db.profile.positionMode == 'manual' then
-			-- If positionMode is 'anchored', show the frame
-			AdiBagsBagMenu:Hide()
-			anchor:Show()
-
-		else
-			-- If positionMode is NOT 'anchored', hide the frame
-			AdiBagsBagMenu:Show()
-			anchor:Hide()
-		end
-	end)
-
-
-
-		self.RegisterMessage(AdiBagsBagMenu, "AdiBags_TimeToCheckAnchorMode", function()
-		if addon.db.profile.positionMode == 'anchored' then
-			-- If positionMode is 'manual', show the frame
-			anchor:Hide()
-			AdiBagsBagMenu:Show()
-		else
-			-- If positionMode is NOT 'manual', hide the frame
-			anchor:Show()
-			AdiBagsBagMenu:Hide()
-		end
-	end)
+	self.RegisterMessage(anchor, "AdiBags_ManualLayout", UpdateAnchorVisibility)
+	self.RegisterMessage(AdiBagsBagMenu, "AdiBags_AnchoredLayout", UpdateAnchorVisibility)
+	self.RegisterMessage(anchor, "AdiBags_TimeToCheckAnchorMode", UpdateAnchorVisibility)
 
 
 

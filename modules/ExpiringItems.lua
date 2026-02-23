@@ -51,7 +51,7 @@ function mod:CheckItem(itemId)
 		if leftLine then
 			local text = leftLine:GetText()
 			if text then
-				if string.find(text, "Исчезнет через") or string.find(text, "срок жизни") or string.find(text, "ВНИМАНИЕ! Предмет имеет срок жизни") then
+				if string.find(text, "Исчезнет через") or string.find(text, "срок жизни") then
 					return true
 				end
 			end

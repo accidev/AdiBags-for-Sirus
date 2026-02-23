@@ -126,20 +126,8 @@ function sectionProto:OnAcquire(container, name, category)
 	self.dirtyLevel = 0
 	self.container = container
 	self:RegisterMessage('AdiBags_OrderChanged')
-	-- self:RegisterMessage('AdiBags_ConfigChanged')
-	-- self:UpdateFont()
 	self:UpdateHeaderScripts()
 end
-
--- function sectionProto:UpdateFont()
--- 	local font, size = addon:GetFont()
--- 	local fontstring = self.Header:GetFontString()
--- 	local width = fontstring:GetStringWidth()
--- 	sectionFont:SetFont(font, size-4)
--- 	if self:IsShown() and fontstring:GetStringWidth() ~= width then
--- 		self:SetDirtyLevel(2)
--- 	end
--- end
 
 function sectionProto:OnRelease()
 	wipe(self.freeSlots)
@@ -149,12 +137,6 @@ function sectionProto:OnRelease()
 	self.category = nil
 	self.container = nil
 end
-
--- function sectionProto:AdiBags_ConfigChanged(_, name)
--- 	if name == 'skin.font' or name == 'skin.fontSize' then
--- 		return self:UpdateFont()
--- 	end
--- end
 
 function sectionProto:AdiBags_OrderChanged()
 	self:ReorderButtons()

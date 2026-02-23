@@ -111,7 +111,6 @@ function buttonProto:OnRelease()
     self.beingSold = nil
     -- Reset Masque flags on button release
     self.masqueInitialized = false
-    self.cachedNormalRegion = nil
 end
 
 function buttonProto:ToString()
@@ -260,35 +259,12 @@ function buttonProto:OnEvent(event, ...)
         if self.UpdateSearch then self:UpdateSearch() end
     elseif event == "UNIT_QUEST_LOG_CHANGED" then
         self:UNIT_QUEST_LOG_CHANGED(event, ...)
-    elseif event == "CURRENT_SPELL_CAST_CHANGED" then
-        self:CURRENT_SPELL_CAST_CHANGED(event, ...)
-    elseif event == "ITEM_LOCKED" then
-        self:ITEM_LOCKED(event, ...)
     end
 end
 
 function buttonProto:UNIT_QUEST_LOG_CHANGED(event, unit)
     if unit == "player" then
         self:UpdateBorder(event)
-    end
-end
-
-function buttonProto:CURRENT_SPELL_CAST_CHANGED(event)
-    if not SpellCanTargetItem() and CONTAINER_ATTENTION_ITEM_LINK then
-        StaticPopup_Hide("ATTENTION_ON_USE_CONFIRM")
-        CONTAINER_ATTENTION_ITEM_LINK = nil
-        self:UnregisterEvent(event)
-    end
-end
-
-function buttonProto:ITEM_LOCKED(event, bagID, slotID)
-    local frame = StaticPopup_FindVisible("ATTENTION_ON_USE_CONFIRM")
-    if frame and CONTAINER_ATTENTION_BAG_ID and CONTAINER_ATTENTION_BAG_ID == bagID
-       and CONTAINER_ATTENTION_SLOT_ID and CONTAINER_ATTENTION_SLOT_ID == slotID then
-        CONTAINER_ATTENTION_BAG_ID = nil
-        CONTAINER_ATTENTION_SLOT_ID = nil
-        frame:Hide()
-        self:UnregisterEvent(event)
     end
 end
 
@@ -497,7 +473,6 @@ if Masque then
         }
         -- Optimization flags
         self.masqueInitialized = false
-        self.cachedNormalRegion = nil
     end)
 
     hooksecurefunc(buttonProto, "UpdateBorder", function(self)
@@ -554,9 +529,8 @@ if Masque then
                 a = addon.db.profile.qualityOpacity or 1
             end
 
-            local msqAPI = LibStub("Masque", true)
-            if msqAPI and msqAPI.GetNormal then
-                local normalRegion = msqAPI:GetNormal(self)
+            if Masque and Masque.GetNormal then
+                local normalRegion = Masque:GetNormal(self)
                 if normalRegion then
                     if r then
                         normalRegion:SetVertexColor(r, g, b, a)
@@ -625,7 +599,6 @@ if Masque then
                     for buttonInstance, _ in pairs(self_group.Buttons) do
                         if buttonInstance and buttonInstance.UpdateBorder then
                             buttonInstance.masqueInitialized = false
-                            buttonInstance.cachedNormalRegion = nil
                             buttonInstance:UpdateBorder()
                         end
                     end
@@ -643,7 +616,6 @@ if Masque then
                     for buttonInstance, _ in pairs(self_group.Buttons) do
                         if buttonInstance and buttonInstance.UpdateBorder then
                             buttonInstance.masqueInitialized = false
-                            buttonInstance.cachedNormalRegion = nil
                             buttonInstance:UpdateBorder()
                         end
                     end
