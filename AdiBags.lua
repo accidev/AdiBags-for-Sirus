@@ -213,16 +213,16 @@ function addon:OnInitialize()
 	self:SetEnabledState(false)
 
 	-- Persistant handlers
-	self:RegisterBucketMessage('AdiBags_ConfigChanged', 0.2, function(...) self:ConfigChanged(...) end)
-	self:RegisterEvent('PLAYER_ENTERING_WORLD', function() if self.db.profile.enabled then self:Enable() end end)
+	self.RegisterBucketMessage(addonName, 'AdiBags_ConfigChanged', 0.2, function(...) addon:ConfigChanged(...) end)
+	self.RegisterEvent(addonName, 'PLAYER_ENTERING_WORLD', function() if self.db.profile.enabled then self:Enable() end end)
 
 	self:UpgradeProfile()
 
 	-- ProfessionVault support
-	local PV = _G.ProfessionsVault
+	local PV  =_G.ProfessionsVault
 	if PV then
 		self:Debug('Installing ProfessionsVault callback')
-		self:RegisterMessage("AdiBags_UpdateButton", function(_, button)
+		self.RegisterMessage(PV, "AdiBags_UpdateButton", function(_, button)
 			PV:SlotColor(button.itemId, button.IconTexture)
 		end)
 	end
