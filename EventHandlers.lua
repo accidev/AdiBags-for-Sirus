@@ -88,7 +88,7 @@ local function RegisterBucket(target, event, delay, callback, regFunc, unregFunc
 		received[arg] = (received[arg] or 0) + 1
 		if not timer then
 			timer = true
-			C_Timer.After(delay, Fire)
+			C_Timer:After(delay, Fire)
 		end
 	end
 
