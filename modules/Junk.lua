@@ -13,7 +13,7 @@ local type = _G.type
 local wipe = _G.wipe
 --GLOBALS>
 
-local JUNK = addon.BI['Junk']
+local JUNK = addon.BI["Junk"]
 
 local mod = addon:RegisterFilter("Junk", 85, "AceEvent-3.0", "AceHook-3.0")
 mod.uiName = JUNK
@@ -21,7 +21,7 @@ mod.uiDesc = L['Put items of poor quality or labeled as junk in the "Junk" secti
 
 local DEFAULTS = {
 	profile = {
-		sources = { ['*'] = true },
+		sources = { ["*"] = true },
 		include = {},
 		exclude = {
 			[6948] = true,
@@ -31,11 +31,13 @@ local DEFAULTS = {
 
 local prefs
 
-local cache = setmetatable({}, { __index = function(t, itemId)
-	local isJunk = mod:CheckItem(itemId)
-	t[itemId] = isJunk
-	return isJunk
-end})
+local cache = setmetatable({}, {
+	__index = function(t, itemId)
+		local isJunk = mod:CheckItem(itemId)
+		t[itemId] = isJunk
+		return isJunk
+	end,
+})
 
 function mod:OnInitialize()
 	self.db = addon.db:RegisterNamespace(self.moduleName, DEFAULTS)
@@ -44,15 +46,22 @@ end
 
 function mod:OnEnable()
 	prefs = self.db.profile
-	self:RegisterMessage('AdiBags_OverrideFilter')
-	self:Hook(addon, 'IsJunk')
+	self:RegisterMessage("AdiBags_OverrideFilter")
+	self:Hook(addon, "IsJunk")
 	wipe(cache)
 end
 
 function mod:BaseCheckItem(itemId, force)
 	local _, _, quality, _, _, class, subclass = GetItemInfo(itemId)
-	if ((force or prefs.sources.lowQuality) and quality == ITEM_QUALITY_POOR)
-		or ((force or prefs.sources.junkCategory) and quality and quality < ITEM_QUALITY_UNCOMMON and (class == JUNK or subclass == JUNK)) then
+	if
+		((force or prefs.sources.lowQuality) and quality == ITEM_QUALITY_POOR)
+		or (
+			(force or prefs.sources.junkCategory)
+			and quality
+			and quality < ITEM_QUALITY_UNCOMMON
+			and (class == JUNK or subclass == JUNK)
+		)
+	then
 		return true
 	end
 	return false
@@ -90,7 +99,7 @@ end
 function mod:AdiBags_OverrideFilter(event, section, category, ...)
 	local changed = false
 	local include, exclude = prefs.include, prefs.exclude
-	for i = 1, select('#', ...) do
+	for i = 1, select("#", ...) do
 		local id = select(i, ...)
 		local incFlag, exclFlag
 		if section == JUNK then
@@ -110,8 +119,8 @@ end
 
 function mod:Update()
 	wipe(cache)
-	self:SendMessage('AdiBags_FiltersChanged')
-	local acr = LibStub('AceConfigRegistry-3.0', true)
+	self:SendMessage("AdiBags_FiltersChanged")
+	local acr = LibStub("AceConfigRegistry-3.0", true)
 	if acr then
 		acr:NotifyChange(addonName)
 	end
@@ -120,8 +129,8 @@ end
 -- Options
 
 local sourceList = {
-	lowQuality = L['Low quality items'],
-	junkCategory = L['Junk category'],
+	lowQuality = L["Low quality items"],
+	junkCategory = L["Junk category"],
 }
 function mod:GetOptions()
 	local handler = addon:GetOptionHandler(self)
@@ -140,42 +149,45 @@ function mod:GetOptions()
 		return self:Set(info, key, value and true or nil)
 	end
 
-	local function True() return true end
+	local function True()
+		return true
+	end
 
 	return {
 		sources = {
-			type = 'multiselect',
-			name = L['Included categories'],
+			type = "multiselect",
+			name = L["Included categories"],
 			values = sourceList,
 			order = 10,
 		},
 		include = {
-			type = 'multiselect',
-			dialogControl = 'ItemList',
-			name = L['Include list'],
-			desc = L['Items in this list are always considered as junk. Click an item to remove it from the list.'],
+			type = "multiselect",
+			dialogControl = "ItemList",
+			name = L["Include list"],
+			desc = L["Items in this list are always considered as junk. Click an item to remove it from the list."],
 			order = 20,
-			values = 'ListItems',
+			values = "ListItems",
 			get = True,
-			set = 'SetItem',
+			set = "SetItem",
 		},
 		exclude = {
-			type = 'multiselect',
-			dialogControl = 'ItemList',
-			name = L['Exclude list'],
-			desc = L['Items in this list are never considered as junk. Click an item to remove it from the list.'],
+			type = "multiselect",
+			dialogControl = "ItemList",
+			name = L["Exclude list"],
+			desc = L["Items in this list are never considered as junk. Click an item to remove it from the list."],
 			order = 30,
-			values = 'ListItems',
+			values = "ListItems",
 			get = True,
-			set = 'SetItem',
+			set = "SetItem",
 		},
-	}, handler
+	},
+		handler
 end
 
 -- Third-party addon support
 
 local Scrap = _G.Scrap
-local BrainDead = LibStub('AceAddon-3.0'):GetAddon('BrainDead', true)
+local BrainDead = LibStub("AceAddon-3.0"):GetAddon("BrainDead", true)
 
 if Scrap and type(Scrap.IsJunk) == "function" then
 	-- Scrap support
@@ -184,7 +196,7 @@ if Scrap and type(Scrap.IsJunk) == "function" then
 		return (force or prefs.sources.Scrap) and Scrap:IsJunk(itemId)
 	end
 
-	Scrap:HookScript('OnReceiveDrag', function()
+	Scrap:HookScript("OnReceiveDrag", function()
 		if prefs.sources.Scrap then
 			wipe(cache)
 			addon:SendMessage("AdiBags_FiltersChanged")
@@ -192,11 +204,10 @@ if Scrap and type(Scrap.IsJunk) == "function" then
 	end)
 
 	sourceList.Scrap = "Scrap"
-
 elseif BrainDead then
 	-- BrainDead support
 
-	local SellJunk = BrainDead:GetModule('SellJunk')
+	local SellJunk = BrainDead:GetModule("SellJunk")
 
 	function mod:ExtendedCheckItem(itemId, force)
 		return (force or prefs.sources.BrainDead) and SellJunk.db.profile.items[itemId]
@@ -204,4 +215,3 @@ elseif BrainDead then
 
 	sourceList.BrainDead = "BrainDead"
 end
-

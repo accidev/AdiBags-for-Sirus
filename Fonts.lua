@@ -10,7 +10,7 @@ local setmetatable = _G.setmetatable
 local type = _G.type
 --GLOBALS>
 
-local LSM = LibStub('LibSharedMedia-3.0')
+local LSM = LibStub("LibSharedMedia-3.0")
 local FONT = LSM.MediaType.FONT
 local ALL_FONTS = LSM:HashTable(FONT)
 
@@ -26,7 +26,7 @@ local ALL_NAMES = setmetatable({}, {
 				return n
 			end
 		end
-	end
+	end,
 })
 
 local function GetFontSettings(font)
@@ -38,7 +38,7 @@ end
 -- Font prototype
 --------------------------------------------------------------------------------
 
-local proto = CreateFont(addonName.."BaseFont")
+local proto = CreateFont(addonName .. "BaseFont")
 local meta = { __index = proto }
 
 function proto:SetSetting(info, value, ...)
@@ -119,42 +119,42 @@ function addon:CreateFontOptions(font, title, order)
 	local _, mediumSize = font.template:GetFont()
 	mediumSize = floor(mediumSize)
 	return {
-		name = title or 'Text',
-		type = 'group',
+		name = title or "Text",
+		type = "group",
 		order = order or 0,
 		inline = true,
 		handler = font,
-		set = 'SetSetting',
-		get = 'GetSetting',
+		set = "SetSetting",
+		get = "GetSetting",
 		disabled = false,
 		args = {
 			name = {
-				name = 'Font',
-				type = 'select',
+				name = "Font",
+				type = "select",
 				order = 10,
-				dialogControl = 'LSM30_Font',
+				dialogControl = "LSM30_Font",
 				values = ALL_FONTS,
 			},
 			size = {
-				name = 'Size',
-				type = 'range',
+				name = "Size",
+				type = "range",
 				order = 20,
 				min = mediumSize - 8,
 				max = mediumSize + 8,
 				step = 4,
 			},
 			color = {
-				name = 'Color',
-				type = 'color',
+				name = "Color",
+				type = "color",
 				order = 30,
 				hasAlpha = false,
 			},
 			reset = {
-				name = 'Reset',
-				type = 'execute',
+				name = "Reset",
+				type = "execute",
 				order = 40,
-				disabled  = 'IsDefault',
-				func = 'ResetSettings',
+				disabled = "IsDefault",
+				func = "ResetSettings",
 			},
 		},
 	}

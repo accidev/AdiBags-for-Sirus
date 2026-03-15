@@ -1,6 +1,6 @@
 ## Interface: 30300
 ## Title: |cffA335EEAdiBags|r
-## Notes: Adirelle's bag addon. Adapted for Sirus by |cffA335EEAccidev|r
+## Notes: Адаптированно под Sirus - |cffA335EEAccidev|r
 ## Author: Adirelle, Sattva, |cffA335EEAccidev|r
 ## Version: 1.15-Sirus
 ## SavedVariables: AdiBagsDB
@@ -57,6 +57,7 @@ modules\SectionVisibilityDropdown.lua
 modules\ItemLevel.lua
 modules\BankSwitcher.lua
 modules\ExpiringItems.lua
+modules\CrossCharacter.lua
 
 DefaultFilters.lua
 

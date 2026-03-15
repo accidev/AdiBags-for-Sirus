@@ -7,25 +7,26 @@ local CreateFrame = _G.CreateFrame
 local GetItemInfo = _G.GetItemInfo
 --GLOBALS>
 
-local mod = addon:NewModule('SearchHighlight', 'AceEvent-3.0')
-mod.uiName = L['Item search']
-mod.uiDesc = L['Provides a text widget at top of the backpack where you can type (part of) an item name to locate it in your bags.']
+local mod = addon:NewModule("SearchHighlight", "AceEvent-3.0")
+mod.uiName = L["Item search"]
+mod.uiDesc =
+	L["Provides a text widget at top of the backpack where you can type (part of) an item name to locate it in your bags."]
 
 function mod:OnEnable()
-	addon:HookBagFrameCreation(self, 'OnBagFrameCreated')
+	addon:HookBagFrameCreation(self, "OnBagFrameCreated")
 	if self.widget then
 		self.widget:Show()
-		self:SendMessage('AdiBags_UpdateAllButtons')
+		self:SendMessage("AdiBags_UpdateAllButtons")
 	end
-	self:RegisterMessage('AdiBags_UpdateButton', 'UpdateButton')
-	self:RegisterMessage('AdiBags_UpdateLock', 'UpdateButton')
-	self:RegisterMessage('AdiBags_UpdateBorder', 'UpdateButton')
+	self:RegisterMessage("AdiBags_UpdateButton", "UpdateButton")
+	self:RegisterMessage("AdiBags_UpdateLock", "UpdateButton")
+	self:RegisterMessage("AdiBags_UpdateBorder", "UpdateButton")
 end
 
 function mod:OnDisable()
 	if self.widget then
 		self.widget:Hide()
-		self:SendMessage('AdiBags_UpdateAllButtons')
+		self:SendMessage("AdiBags_UpdateAllButtons")
 	end
 end
 
@@ -36,7 +37,7 @@ local function SearchEditBox_OnTextChanged(editBox)
 	else
 		editBox.clearButton:Show()
 	end
-	mod:SendMessage('AdiBags_UpdateAllButtons')
+	mod:SendMessage("AdiBags_UpdateAllButtons")
 end
 
 local function SearchEditBox_OnEnterPressed(editBox)
@@ -46,15 +47,17 @@ end
 
 local function SearchEditBox_OnEscapePressed(editBox)
 	editBox:ClearFocus()
-	editBox:SetText('')
+	editBox:SetText("")
 	return SearchEditBox_OnTextChanged(editBox)
 end
 
 function mod:OnBagFrameCreated(bag)
-	if bag.bagName ~= "Backpack" then return end
+	if bag.bagName ~= "Backpack" then
+		return
+	end
 	local frame = bag:GetFrame()
 
-	local searchEditBox = CreateFrame("EditBox", addonName.."SearchFrame", frame, "InputBoxTemplate")
+	local searchEditBox = CreateFrame("EditBox", addonName .. "SearchFrame", frame, "InputBoxTemplate")
 	searchEditBox:SetSize(100, 18)
 	searchEditBox:SetAutoFocus(false)
 	searchEditBox:SetPoint("TOPLEFT")
@@ -76,22 +79,28 @@ function mod:OnBagFrameCreated(bag)
 	searchClearButton:SetSize(20, 20)
 	searchClearButton:SetText("X")
 	searchClearButton:Hide()
-	searchClearButton:SetScript('OnClick', function() SearchEditBox_OnEscapePressed(searchEditBox) end)
+	searchClearButton:SetScript("OnClick", function()
+		SearchEditBox_OnEscapePressed(searchEditBox)
+	end)
 
 	searchEditBox.clearButton = searchClearButton
 
 	addon.SetupTooltip(searchEditBox, {
 		L["Item search"],
-		L["Enter a text to search in item names."]
+		L["Enter a text to search in item names."],
 	}, "ANCHOR_TOPLEFT", 0, 8)
 
 	frame:AddHeaderWidget(searchEditBox, -10, 100, -1)
 end
 
 function mod:UpdateButton(event, button)
-	if not self.widget then return end
+	if not self.widget then
+		return
+	end
 	local text = self.widget:GetText()
-	if not text or text:trim() == "" then return end
+	if not text or text:trim() == "" then
+		return
+	end
 	text = text:lower():trim()
 	local name = button.itemId and GetItemInfo(button.itemId)
 	if name and not name:lower():match(text) then
@@ -101,5 +110,3 @@ function mod:UpdateButton(event, button)
 		button.Stock:Hide()
 	end
 end
-
-

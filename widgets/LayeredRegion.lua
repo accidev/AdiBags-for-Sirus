@@ -29,8 +29,8 @@ function layeredRegionProto:OnCreate(parent)
 	self:SetHeight(0.1)
 	self.widgets = {}
 
-	self:SetScript('OnShow', self.OnShow)
-	self:SetScript('OnHide', self.OnHide)
+	self:SetScript("OnShow", self.OnShow)
+	self:SetScript("OnHide", self.OnHide)
 end
 
 function layeredRegionProto:SetContainer(container)
@@ -52,12 +52,12 @@ function layeredRegionProto:OnHide()
 end
 
 function layeredRegionProto:AddWidget(widget, ...)
-	self:Debug('Adding widget', widget, ...)
+	self:Debug("Adding widget", widget, ...)
 
 	local data = { widget = widget }
 	tinsert(self.widgets, data)
 	safecall(self, "OnWidgetAdded", data, ...)
-	widget:SetFrameLevel(self:GetFrameLevel()+1)
+	widget:SetFrameLevel(self:GetFrameLevel() + 1)
 
 	if type(widget.SetContainer) == "function" and type(widget.Layout) == "function" then
 		data.layered = true
@@ -75,16 +75,15 @@ function layeredRegionProto:AddWidget(widget, ...)
 			end
 		end
 
-		widget:HookScript('OnShow', visibility_callback)
-		widget:HookScript('OnHide', visibility_callback)
-		widget:HookScript('OnSizeChanged', function()
+		widget:HookScript("OnShow", visibility_callback)
+		widget:HookScript("OnHide", visibility_callback)
+		widget:HookScript("OnSizeChanged", function()
 			local width, height = widget:GetWidth(), widget:GetHeight()
 			if width and height and (data.width ~= width or data.height ~= height) then
 				data.width, data.height = width, height
 				self:RequestLayout()
 			end
 		end)
-
 	end
 
 	self:RequestLayout()
@@ -98,7 +97,7 @@ function layeredRegionProto:Layout()
 			data.widget:Layout()
 		end
 	end
-	self:SetScript('OnUpdate', nil)
+	self:SetScript("OnUpdate", nil)
 	if self.dirtyLayout or wasDirty then
 		self.dirtyLayout = nil
 		safecall(self, "OnLayout")
@@ -110,7 +109,7 @@ function layeredRegionProto:RequestLayout()
 	if self.container then
 		self.container:RequestLayout()
 	else
-		self:SetScript('OnUpdate', self.Layout)
+		self:SetScript("OnUpdate", self.Layout)
 	end
 end
 
@@ -121,10 +120,10 @@ end
 local simpleLayeredRegionClass, simpleLayeredRegionProto = addon:NewClass("SimpleLayeredRegion", "LayeredRegion")
 
 local DIRECTIONS = {
-	UP    = {  0,  1, 1, 0 },
-	DOWN  = {  0, -1, 1, 0 },
-	LEFT  = { -1,  0, 0, 1 },
-	RIGHT = {  1,  0, 0, 1 },
+	UP = { 0, 1, 1, 0 },
+	DOWN = { 0, -1, 1, 0 },
+	LEFT = { -1, 0, 0, 1 },
+	RIGHT = { 1, 0, 0, 1 },
 }
 
 function simpleLayeredRegionProto:OnCreate(parent, anchorPoint, direction, spacing)
@@ -138,7 +137,7 @@ end
 function simpleLayeredRegionProto:SetDirection(direction)
 	if self.direction ~= direction then
 		local dirData = direction and DIRECTIONS[direction]
-		assert(dirData, "Invalid direction for SimpleLayeredRegion: "..direction)
+		assert(dirData, "Invalid direction for SimpleLayeredRegion: " .. direction)
 		self.direction = direction
 		self.dx, self.dy, self.sx, self.sy = unpack(dirData)
 		self:RequestLayout()

@@ -104,8 +104,8 @@ function addon.SetupTooltip(widget, content, anchor, xOffset, yOffset)
 	widget.tootlipAnchorXOffset = xOffset or 0
 	widget.tootlipAnchorYOffset = yOffset or 0
 	widget.UpdateTooltip = WidgetTooltip_Update
-	widget:HookScript('OnEnter', WidgetTooltip_OnEnter)
-	widget:HookScript('OnLeave', WidgetTooltip_OnLeave)
+	widget:HookScript("OnEnter", WidgetTooltip_OnEnter)
+	widget:HookScript("OnLeave", WidgetTooltip_OnLeave)
 end
 
 --------------------------------------------------------------------------------
@@ -114,10 +114,10 @@ end
 
 function addon.IsValidItemLink(link)
 	if type(link) == "string" then
-		if strmatch(link, 'keystone:') then
+		if strmatch(link, "keystone:") then
 			return true
 		end
-		if strmatch(link, 'item:[-:%d]+') and not strmatch(link, 'item:%d+:0:0:0:0:0:0:0:0:0') then
+		if strmatch(link, "item:[-:%d]+") and not strmatch(link, "item:%d+:0:0:0:0:0:0:0:0:0") then
 			return true
 		end
 	end
@@ -128,26 +128,31 @@ end
 --------------------------------------------------------------------------------
 
 local function __GetDistinctItemID(link)
-	if not link or not addon.IsValidItemLink(link) then return end
-	local itemString, id, enchant, gem1, gem2, gem3, gem4, suffix, reforge = strmatch(link, '(item:(%-?%d+):(%-?%d+):(%-?%d+):(%-?%d+):(%-?%d+):(%-?%d+):(%-?%d+):%-?%d+:%-?%d+:(%-?%d+))')
+	if not link or not addon.IsValidItemLink(link) then
+		return
+	end
+	local itemString, id, enchant, gem1, gem2, gem3, gem4, suffix, reforge =
+		strmatch(link, "(item:(%-?%d+):(%-?%d+):(%-?%d+):(%-?%d+):(%-?%d+):(%-?%d+):(%-?%d+):%-?%d+:%-?%d+:(%-?%d+))")
 	id = tonumber(id)
 	local equipSlot = id and select(9, GetItemInfo(id))
 	if equipSlot and equipSlot ~= "" and equipSlot ~= "INVTYPE_BAG" then
 		-- Rebuild an item link without noise
-		id = strjoin(':', 'item', id, enchant, gem1, gem2, gem3, gem4, suffix, "0", "0", reforge)
+		id = strjoin(":", "item", id, enchant, gem1, gem2, gem3, gem4, suffix, "0", "0", reforge)
 	end
 	return id
 end
 
-local distinctIDs = setmetatable({}, {__index = function(t, link)
-	local result = __GetDistinctItemID(link)
-	if result then
-		t[link] = result
-		return result
-	else
-		return link
-	end
-end})
+local distinctIDs = setmetatable({}, {
+	__index = function(t, link)
+		local result = __GetDistinctItemID(link)
+		if result then
+			t[link] = result
+			return result
+		else
+			return link
+		end
+	end,
+})
 
 function addon.GetDistinctItemID(link)
 	return link and distinctIDs[link]
@@ -157,10 +162,11 @@ end
 -- Basic junk test
 --------------------------------------------------------------------------------
 
-local JUNK = addon.BI['Junk']
+local JUNK = addon.BI["Junk"]
 function addon:IsJunk(itemId)
 	local _, _, quality, _, _, class, subclass = GetItemInfo(itemId)
-	return quality == ITEM_QUALITY_POOR or (quality and quality < ITEM_QUALITY_UNCOMMON and (class == JUNK or subclass == JUNK))
+	return quality == ITEM_QUALITY_POOR
+		or (quality and quality < ITEM_QUALITY_UNCOMMON and (class == JUNK or subclass == JUNK))
 end
 
 --------------------------------------------------------------------------------
@@ -176,5 +182,8 @@ end
 function addon.CanPutItemInContainer(item, container)
 	local freeSlots, containerFamily = GetContainerNumFreeSlots(container)
 	local itemFamily = addon.GetItemFamily(item)
-	return freeSlots > 0 and (containerFamily == 0 or band(itemFamily, containerFamily) ~= 0), freeSlots, itemFamily, containerFamily
+	return freeSlots > 0 and (containerFamily == 0 or band(itemFamily, containerFamily) ~= 0),
+		freeSlots,
+		itemFamily,
+		containerFamily
 end

@@ -17,21 +17,24 @@ local tsort = _G.table.sort
 local wipe = _G.wipe
 --GLOBALS>
 
-local mod = addon:NewModule('TooltipInfo', 'AceEvent-3.0', 'AceHook-3.0')
-mod.uiName = L['Tooltip information']
-mod.uiDesc = L['Add more information in tooltips related to items in your bags.']
+local mod = addon:NewModule("TooltipInfo", "AceEvent-3.0", "AceHook-3.0")
+mod.uiName = L["Tooltip information"]
+mod.uiDesc = L["Add more information in tooltips related to items in your bags."]
 
 function mod:OnInitialize()
-	self.db = addon.db:RegisterNamespace(self.name, {profile={
-		item = 'ctrl',
-		container = 'ctrl',
-		filter = 'ctrl',
-	}})
+	self.db = addon.db:RegisterNamespace(
+		self.name,
+		{ profile = {
+			item = "ctrl",
+			container = "ctrl",
+			filter = "ctrl",
+		} }
+	)
 end
 
 function mod:OnEnable()
 	if not self.hooked then
-		GameTooltip:HookScript('OnTooltipSetItem', function(...)
+		GameTooltip:HookScript("OnTooltipSetItem", function(...)
 			if self:IsEnabled() then
 				return self:OnTooltipSetItem(...)
 			end
@@ -41,18 +44,20 @@ function mod:OnEnable()
 end
 
 function mod:GetOptions()
-	local modMeta = { __index = {
-		type = "select",
-		width = "double",
-		values = {
-			never = L["Never"],
-			shift = L["When shift is held down"],
-			ctrl = L["When ctrl is held down"],
-			alt = L["When alt is held down"],
-			any = L["When any modifier key is held down"],
-			always = L["Always"],
+	local modMeta = {
+		__index = {
+			type = "select",
+			width = "double",
+			values = {
+				never = L["Never"],
+				shift = L["When shift is held down"],
+				ctrl = L["When ctrl is held down"],
+				alt = L["When alt is held down"],
+				any = L["When any modifier key is held down"],
+				always = L["Always"],
+			},
 		},
-	}}
+	}
 	return {
 		item = setmetatable({
 			name = L["Show item information..."],
@@ -66,12 +71,15 @@ function mod:GetOptions()
 			name = L["Show filtering information..."],
 			order = 30,
 		}, modMeta),
-	}, addon:GetOptionHandler(self)
+	},
+		addon:GetOptionHandler(self)
 end
 
 local modifierTests = {
 	never = function() end,
-	always = function() return true end,
+	always = function()
+		return true
+	end,
 	any = IsModifierKeyDown,
 	shift = IsShiftKeyDown,
 	ctrl = IsControlKeyDown,
@@ -87,9 +95,13 @@ local GetBagSlotFromId = addon.GetBagSlotFromId
 
 function mod:OnTooltipSetItem(tt)
 	local button = tt:GetOwner()
-	if not button then return end
+	if not button then
+		return
+	end
 	local bag, slot, container = button.bag, button.slot, button.container
-	if not (bag and slot and container) then return end
+	if not (bag and slot and container) then
+		return
+	end
 
 	local slotData = container.content[bag][slot]
 

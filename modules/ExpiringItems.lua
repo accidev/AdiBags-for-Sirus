@@ -15,12 +15,14 @@ function mod:OnInitialize()
 	self.db = addon.db:RegisterNamespace(self.moduleName, {
 		profile = {
 			enabled = true,
-		}
+		},
 	})
 end
 
 function mod:Filter(slotData)
-	if not self.db.profile.enabled then return nil end
+	if not self.db.profile.enabled then
+		return nil
+	end
 
 	if slotData.bag and slotData.slot and _G.GetContainerItemGUID and _G.GetItemExpirationTimeLeft then
 		local itemGUID = _G.GetContainerItemGUID(slotData.bag, slotData.slot)
@@ -43,5 +45,6 @@ function mod:GetOptions()
 			type = "toggle",
 			order = 10,
 		},
-	}, addon:GetOptionHandler(self)
+	},
+		addon:GetOptionHandler(self)
 end

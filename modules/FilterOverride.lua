@@ -22,13 +22,13 @@ local wipe = _G.wipe
 --GLOBALS>
 
 local mod = addon:RegisterFilter("FilterOverride", 95, "AceEvent-3.0")
-mod.uiName = L['Manual filtering']
-mod.uiDesc = L['Allow you manually redefine the section in which an item should be put. Simply drag an item on the section title.']
+mod.uiName = L["Manual filtering"]
+mod.uiDesc =
+	L["Allow you manually redefine the section in which an item should be put. Simply drag an item on the section title."]
 
 local buttons = {}
 
 function mod:OnInitialize()
-
 	-- This module was named "mod" for quite a while, retrieve the old data if they exists
 	if addon.db.sv.namespaces and addon.db.sv.namespaces.mod ~= nil then
 		addon.db.sv.namespaces[self.moduleName] = addon.db.sv.namespaces.mod
@@ -40,8 +40,8 @@ end
 
 function mod:OnEnable()
 	self:UpdateOptions()
-	self:RegisterEvent('CURSOR_UPDATE')
-	self:CURSOR_UPDATE()	
+	self:RegisterEvent("CURSOR_UPDATE")
+	self:CURSOR_UPDATE()
 end
 
 function mod:OnDisable()
@@ -51,19 +51,19 @@ end
 function mod:Filter(slotData)
 	local override = self.db.profile.overrides[slotData.itemId]
 	if override then
-		return strsplit('#', override)
+		return strsplit("#", override)
 	end
 end
 
 function mod:AssignItems(section, category, ...)
-	local key = section and category and (section..'#'..category) or nil
-	for i = 1, select('#', ...) do
+	local key = section and category and (section .. "#" .. category) or nil
+	for i = 1, select("#", ...) do
 		local itemId = select(i, ...)
 		mod.db.profile.overrides[itemId] = key
 	end
-	self:SendMessage('AdiBags_OverrideFilter', section, category, ...)
-	self:SendMessage('AdiBags_FiltersChanged')
-	local acr = LibStub('AceConfigRegistry-3.0', true)
+	self:SendMessage("AdiBags_OverrideFilter", section, category, ...)
+	self:SendMessage("AdiBags_FiltersChanged")
+	local acr = LibStub("AceConfigRegistry-3.0", true)
 	if acr then
 		acr:NotifyChange(addonName)
 	end
@@ -80,7 +80,7 @@ local function GetItemId(str)
 	return link and tonumber(link:match("item:(%d+)"))
 end
 
-local AceConfigRegistry = LibStub('AceConfigRegistry-3.0')
+local AceConfigRegistry = LibStub("AceConfigRegistry-3.0")
 
 local options
 function mod:GetOptions()
@@ -92,42 +92,58 @@ function mod:GetOptions()
 		local newItemId, newSection, newCategory
 		options = {
 			newAssoc = {
-				type = 'group',
+				type = "group",
 				name = L["New Override"],
 				desc = L["Use this section to define any item-section association."],
 				order = 10,
 				inline = true,
 				args = {
 					item = {
-						type = 'input',
-						name = L['Item'],
+						type = "input",
+						name = L["Item"],
 						desc = L["Enter the name, link or itemid of the item to associate with the section. You can also drop an item into this box."],
 						order = 10,
-						get = function() return newItemId and select(2, GetItemInfo(newItemId)) end,
-						set = function(_, value) newItemId = GetItemId(value) end,
-						validate = function(_, value) return not not GetItemId(value) end,
+						get = function()
+							return newItemId and select(2, GetItemInfo(newItemId))
+						end,
+						set = function(_, value)
+							newItemId = GetItemId(value)
+						end,
+						validate = function(_, value)
+							return not not GetItemId(value)
+						end,
 					},
 					section = {
-						type = 'input',
-						name = L['Section'],
+						type = "input",
+						name = L["Section"],
 						desc = L["Enter the name of your custom section"],
 						order = 20,
-						get = function() return newSection end,
-						set = function(_, value) newSection = value end,
-						validate = function(_, value) return value and value:trim() ~= "" end,
+						get = function()
+							return newSection
+						end,
+						set = function(_, value)
+							newSection = value
+						end,
+						validate = function(_, value)
+							return value and value:trim() ~= ""
+						end,
 					},
 					category = {
-						type = 'select',
-						name = L['Section category'],
+						type = "select",
+						name = L["Section category"],
 						desc = L["Select the category of the section to associate. This is used to group sections together."],
 						order = 30,
-						get = function() return newCategory end,
-						set = function(_, value) newCategory = value end,
+						get = function()
+							return newCategory
+						end,
+						set = function(_, value)
+							newCategory = value
+						end,
 						values = categoryValues,
 					},
 					add = {
-						type = 'execute',
-						name = L['Add association'],
+						type = "execute",
+						name = L["Add association"],
 						desc = L["Click on this button to create the new association."],
 						order = 40,
 						func = function()
@@ -149,7 +165,7 @@ function mod:GetOptions()
 end
 
 do
-	local AceConfigDialog = LibStub('AceConfigDialog-3.0')
+	local AceConfigDialog = LibStub("AceConfigDialog-3.0")
 
 	local t = {}
 	local handlerProto = {
@@ -164,14 +180,30 @@ do
 				mod:UpdateOptions(self.category, category)
 			end
 		end,
-		GetName = function(self) return self.name end,
-		SetName = function(self, info, input) return self:SetItemAssoc(input, self.category) end,
-		ValidateName = function(self, info, input) return type(input) == "string" and strtrim(input) ~= "" end,
-		GetCategory = function(self) return self.category end,
-		SetCategory = function(self, info, input) return self:SetItemAssoc(self.name, input) end,
-		ListCategories = function() return categoryValues end,
-		Remove = function(self) return self:SetItemAssoc() end,
-		ValidateItem = function(self, info, input) return not not GetItemId(input) end,
+		GetName = function(self)
+			return self.name
+		end,
+		SetName = function(self, info, input)
+			return self:SetItemAssoc(input, self.category)
+		end,
+		ValidateName = function(self, info, input)
+			return type(input) == "string" and strtrim(input) ~= ""
+		end,
+		GetCategory = function(self)
+			return self.category
+		end,
+		SetCategory = function(self, info, input)
+			return self:SetItemAssoc(self.name, input)
+		end,
+		ListCategories = function()
+			return categoryValues
+		end,
+		Remove = function(self)
+			return self:SetItemAssoc()
+		end,
+		ValidateItem = function(self, info, input)
+			return not not GetItemId(input)
+		end,
 		AddItem = function(self, info, input, ...)
 			mod:AssignItems(self.name, self.category, GetItemId(input))
 			mod:UpdateOptions()
@@ -196,52 +228,54 @@ do
 	}
 	local handlerMeta = { __index = handlerProto }
 	local optionProto = {
-		type = 'group',
+		type = "group",
 		inline = true,
 		args = {
 			name = {
-				name = L['Section'],
-				type = 'input',
+				name = L["Section"],
+				type = "input",
 				order = 10,
-				get = 'GetName',
-				set = 'SetName',
-				validate = 'ValidateName',
+				get = "GetName",
+				set = "SetName",
+				validate = "ValidateName",
 			},
 			category = {
-				name = L['Category'],
-				type = 'select',
+				name = L["Category"],
+				type = "select",
 				order = 20,
-				get = 'GetCategory',
-				set = 'SetCategory',
-				values = 'ListCategories',
+				get = "GetCategory",
+				set = "SetCategory",
+				values = "ListCategories",
 			},
-        remove = {
-            name = "Remove",
-            type = "execute",
-            order = 30,
-            confirm = true,
-            confirmText = "Are you sure you want to remove this section?",
-            func = "Remove",
-        },
-        emptyTable = {
-            name = "",
-            type = "group",
-            inline = true,
-            width = "full",
-            order = 40,
-            args = {},
-        },
-        items = {
-            name = "Items",
-            desc = "Click on an item to remove it from the list. You can drop an item on the empty slot to add it to the list.",
-            type = "multiselect",
-            dialogControl = "ItemList",
-            width = "full",
-            order = 50,
-            get = function() return true end,
-            set = "SetItem",
-            values = "ListItems",
-        },
+			remove = {
+				name = "Remove",
+				type = "execute",
+				order = 30,
+				confirm = true,
+				confirmText = "Are you sure you want to remove this section?",
+				func = "Remove",
+			},
+			emptyTable = {
+				name = "",
+				type = "group",
+				inline = true,
+				width = "full",
+				order = 40,
+				args = {},
+			},
+			items = {
+				name = "Items",
+				desc = "Click on an item to remove it from the list. You can drop an item on the empty slot to add it to the list.",
+				type = "multiselect",
+				dialogControl = "ItemList",
+				width = "full",
+				order = 50,
+				get = function()
+					return true
+				end,
+				set = "SetItem",
+				values = "ListItems",
+			},
 		},
 	}
 	local optionMeta = { __index = optionProto }
@@ -250,7 +284,9 @@ do
 	local categoryHeap = {}
 
 	function mod:UpdateOptions(selectCategory, fallbackSelectCategory)
-		if not options then return end
+		if not options then
+			return
+		end
 		setmetatable(handlerProto, { __index = addon:GetOptionHandler(self) })
 		for category, categoryGroup in pairs(categories) do
 			options[category] = nil
@@ -263,12 +299,12 @@ do
 		end
 		wipe(categories)
 		for itemId, override in pairs(self.db.profile.overrides) do
-			local section, category = strsplit('#', tostring(override))
+			local section, category = strsplit("#", tostring(override))
 			local categoryGroup = categories[category]
 			if not categoryGroup then
 				categoryGroup = tremove(categoryHeap)
 				if not categoryGroup then
-					categoryGroup = { name = category, type = 'group', args = {} }
+					categoryGroup = { name = category, type = "group", args = {} }
 				end
 				categoryGroup.name, categoryGroup.order = category, addon:GetCategoryOrder(category)
 				categories[category] = categoryGroup
@@ -281,7 +317,7 @@ do
 			if not sectionGroup then
 				sectionGroup = tremove(sectionHeap)
 				if not sectionGroup then
-					sectionGroup = setmetatable({handler = setmetatable({values = {}}, handlerMeta)}, optionMeta)
+					sectionGroup = setmetatable({ handler = setmetatable({ values = {} }, handlerMeta) }, optionMeta)
 				end
 				sectionGroup.name = section
 				sectionGroup.handler.key = override
@@ -330,7 +366,9 @@ end
 
 function mod:OnClickSectionHeader(_, header)
 	local contentType, itemId = GetCursorInfo()
-	if contentType ~= "item" then return end
+	if contentType ~= "item" then
+		return
+	end
 	ClearCursor()
 	mod:AssignItems(header.section.name, header.section.category, itemId)
 	mod:UpdateOptions()
@@ -338,10 +376,10 @@ end
 
 function mod:CURSOR_UPDATE()
 	if GetCursorInfo() == "item" then
-		addon.RegisterSectionHeaderScript(self, 'OnEnter', 'OnEnterSectionHeader')
-		addon.RegisterSectionHeaderScript(self, 'OnLeave', 'OnLeaveSectionHeader')
-		addon.RegisterSectionHeaderScript(self, 'OnClick', 'OnClickSectionHeader')
-		addon.RegisterSectionHeaderScript(self, 'OnReceiveDrag', 'OnClickSectionHeader')
+		addon.RegisterSectionHeaderScript(self, "OnEnter", "OnEnterSectionHeader")
+		addon.RegisterSectionHeaderScript(self, "OnLeave", "OnLeaveSectionHeader")
+		addon.RegisterSectionHeaderScript(self, "OnClick", "OnClickSectionHeader")
+		addon.RegisterSectionHeaderScript(self, "OnReceiveDrag", "OnClickSectionHeader")
 	else
 		addon.UnregisterAllSectionHeaderScripts(self)
 	end

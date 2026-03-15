@@ -9,7 +9,9 @@ local UIParent = _G.UIParent
 
 local anchorClass, anchorProto, anchorParentProto = addon:NewClass("Anchor", "Frame")
 
-function addon:CreateAnchorWidget(...) return anchorClass:Create(...) end
+function addon:CreateAnchorWidget(...)
+	return anchorClass:Create(...)
+end
 
 local function Corner_OnUpdate(self)
 	local x, y = self.anchor:GetCenter()
@@ -24,7 +26,9 @@ local function Corner_OnUpdate(self)
 end
 
 local BACKDROP = {
-	bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 16
+	bgFile = [[Interface\Tooltips\UI-Tooltip-Background]],
+	tile = true,
+	tileSize = 16,
 }
 addon.ANCHOR_BACKDROP = BACKDROP
 
@@ -36,7 +40,7 @@ function anchorProto:OnCreate(parent, name, label, target)
 	self.label = label
 	self.target = target
 
-	self:SetScript('OnHide', self.StopMoving)
+	self:SetScript("OnHide", self.StopMoving)
 
 	local corner = CreateFrame("Frame", nil, self)
 	corner:SetFrameStrata("TOOLTIP")
@@ -45,7 +49,7 @@ function anchorProto:OnCreate(parent, name, label, target)
 	corner:SetBackdropBorderColor(0, 0, 0, 0)
 	corner:SetSize(12, 12)
 	corner:Hide()
-	corner:SetScript('OnUpdate', Corner_OnUpdate)
+	corner:SetScript("OnUpdate", Corner_OnUpdate)
 	corner.anchor = self
 	self.corner = corner
 end
@@ -59,15 +63,15 @@ function anchorProto:GetPosition()
 	x, y = x * scale, y * scale
 
 	local vPos, hPos
-	if x > w/2 then
-		hPos, x = "RIGHT", target:GetRight()*scale - w
+	if x > w / 2 then
+		hPos, x = "RIGHT", target:GetRight() * scale - w
 	else
-		hPos, x = "LEFT", target:GetLeft()*scale
+		hPos, x = "LEFT", target:GetLeft() * scale
 	end
-	if y > h/2 then
-		vPos, y = "TOP", target:GetTop()*scale - h
+	if y > h / 2 then
+		vPos, y = "TOP", target:GetTop() * scale - h
 	else
-		vPos, y = "BOTTOM", target:GetBottom()*scale
+		vPos, y = "BOTTOM", target:GetBottom() * scale
 	end
 
 	return vPos .. hPos, x, y
@@ -93,8 +97,10 @@ function anchorProto:StartMoving(button)
 		addon:ToggleAnchor()
 		return
 	end
-	
-	if self.moving then return end
+
+	if self.moving then
+		return
+	end
 	self.moving = true
 	local target = self.target
 	if not target:IsMovable() then
@@ -117,8 +123,10 @@ function anchorProto:StopMoving(button)
 		addon:ToggleAnchor()
 		return
 	end
-	
-	if not self.moving then return end
+
+	if not self.moving then
+		return
+	end
 	self.moving = nil
 	local target = self.target
 	if self.toggleMovable then

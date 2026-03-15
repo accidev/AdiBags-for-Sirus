@@ -36,7 +36,7 @@ L["MINING_BAG_TAG"] = "Mi"
 L["TACKLE_BOX_TAG"] = "Fi"
 
 -- Get LibBabble-Inventory-3.0
-addon.BI = LibStub('LibBabble-Inventory-3.0'):GetLookupTable()
+addon.BI = LibStub("LibBabble-Inventory-3.0"):GetLookupTable()
 
 --------------------------------------------------------------------------------
 -- Locales from localization system
@@ -51,7 +51,6 @@ addon.BI = LibStub('LibBabble-Inventory-3.0'):GetLookupTable()
 
 ------------------------ enUS ------------------------
 
-
 -- AdiBags.lua
 L["AdiBags Anchor"] = true
 L["Backpack"] = true
@@ -59,9 +58,10 @@ L["Bank"] = true
 
 -- DefaultFilters.lua
 L["Ammunition"] = true
-L["Check sets that should be merged into a unique \"Sets\" section. This is obviously a per-character setting."] = true
+L['Check sets that should be merged into a unique "Sets" section. This is obviously a per-character setting.'] = true
 L["Check this so armors are dispatched in four sections by type."] = true
-L["Check this to display one individual section per set. If this is disabled, there will be one big \"Sets\" section."] = true
+L['Check this to display one individual section per set. If this is disabled, there will be one big "Sets" section.'] =
+	true
 L["Consider gems as a subcategory of trade goods"] = true
 L["Consider glyphs as a subcategory of trade goods"] = true
 L["Equipment"] = true
@@ -77,7 +77,7 @@ L["One section per item slot."] = true
 L["One section per set"] = true
 L["Only one section."] = true
 L["Please note this filter matchs every item. Any filter with lower priority than this one will have no effect."] = true
-L["Put any item that can be equipped (including bags) into the \"Equipment\" section."] = true
+L['Put any item that can be equipped (including bags) into the "Equipment" section.'] = true
 L["Put items categorized as keys in their own section."] = true
 L["Put items belonging to one or more sets of the built-in gear manager in specific sections."] = true
 L["Put items in sections depending on their first-level category at the Auction House."] = true
@@ -128,7 +128,8 @@ L["Configure"] = true
 L["Dim junk"] = true
 L["Enabled"] = true
 L["Fill lines at most"] = true
-L["Filters are used to dispatch items in bag sections. One item can only appear in one section. If the same item is selected by several filters, the one with the highest priority wins."] = true
+L["Filters are used to dispatch items in bag sections. One item can only appear in one section. If the same item is selected by several filters, the one with the highest priority wins."] =
+	true
 L["Filters"] = true
 L["Group sections of same category"] = true
 L["Items"] = true
@@ -177,7 +178,6 @@ L["Display character currency at bottom left of the backpack."] = true
 L["Hide zeroes"] = true
 L["Ignore currencies with null amounts."] = true
 
-
 -- modules/DataSource.lua
 L["Bag usage format"] = true
 L["Check this to display an icon after usage of each type of bags."] = true
@@ -208,17 +208,18 @@ L["Related to player level"] = true
 L["Ignore heirloom items"] = true
 L["Only equippable items"] = true
 
-
 -- modules/FilterOverride.lua
 L["Add association"] = true
-L["Allow you manually redefine the section in which an item should be put. Simply drag an item on the section title."] = true
+L["Allow you manually redefine the section in which an item should be put. Simply drag an item on the section title."] =
+	true
 L["Are you sure you want to remove this section ?"] = true
 L["Category"] = true
 L["Click on a item to remove it from the list. You can drop an item on the empty slot to add it to the list."] = true
 L["Click on this button to create the new association."] = true
 L["Drop your item there to add it to this section."] = true
 L["Enter the name of your custom section"] = true
-L["Enter the name, link or itemid of the item to associate with the section. You can also drop an item into this box."] = true
+L["Enter the name, link or itemid of the item to associate with the section. You can also drop an item into this box."] =
+	true
 L["Item"] = true
 L["Manual filtering"] = true
 L["New Override"] = true
@@ -236,7 +237,7 @@ L["Items in this list are always considered as junk. Click an item to remove it 
 L["Items in this list are never considered as junk. Click an item to remove it from the list."] = true
 L["Junk category"] = true
 L["Low quality items"] = true
-L["Put items of poor quality or labeled as junk in the \"Junk\" section."] = true
+L['Put items of poor quality or labeled as junk in the "Junk" section.'] = true
 
 -- modules/MoneyFrame.lua
 L["Display character money at bottom right of the backpack."] = true
@@ -250,13 +251,15 @@ L["Ignore low quality items"] = true
 L["New item highlight"] = true
 L["New"] = true
 L["Reset new items"] = true
-L["Track new items in each bag, displaying a glowing aura over them and putting them in a special section. \"New\" status can be reset by clicking on the small \"N\" button at top left of bags."] = true
+L['Track new items in each bag, displaying a glowing aura over them and putting them in a special section. "New" status can be reset by clicking on the small "N" button at top left of bags.'] =
+	true
 L["Track new items"] = true
 
 -- modules/SearchHighlight.lua
 L["Enter a text to search in item names."] = true
 L["Item search"] = true
-L["Provides a text widget at top of the backpack where you can type (part of) an item name to locate it in your bags."] = true
+L["Provides a text widget at top of the backpack where you can type (part of) an item name to locate it in your bags."] =
+	true
 
 -- modules/SectionVisibilityDropdown.lua
 L["Add a dropdown menu to bags that allow to hide the sections."] = true
@@ -271,7 +274,24 @@ L["Check this so tidying is performed when you close the loot windows or you lea
 L["Click to tidy bags."] = true
 L["Semi-automated tidy"] = true
 L["Tidy bags"] = true
-L["Tidy your bags by clicking on the small \"T\" button at the top left of bags. Special bags with free slots will be filled with matching items and stackable items will be stacked to save space."] = true
+L['Tidy your bags by clicking on the small "T" button at the top left of bags. Special bags with free slots will be filled with matching items and stackable items will be stacked to save space.'] =
+	true
+
+L["Cross-character items"] = true
+L["Show item and currency counts from other characters in tooltips."] = true
+L["Show items on other characters"] = true
+L["Show item counts from other characters in item tooltips."] = true
+L["Show money on other characters"] = true
+L["Show gold from other characters in the money tooltip."] = true
+L["Show currencies on other characters"] = true
+L["Show currency counts from other characters in the currency tooltip."] = true
+L["Delete character data"] = true
+L["Are you sure you want to delete data for %s?"] = true
+L["Other characters"] = true
+L["Total"] = true
+L["Equipped"] = true
+L["Show other realms"] = true
+L["Show characters from other realms. When disabled, only characters from the current realm are shown."] = true
 
 -- modules/TooltipInfo.lua
 L["AH category"] = true
@@ -316,7 +336,8 @@ L["Unlock Anchor"] = true
 L["Manual Filtering"] = true
 L["Settings"] = true
 L["Manual mode click behavior"] = true
-L["Choose how mouse clicks work in manual mode:\n\nNormal: Left-click opens menu, Shift+Left-click moves bag\nSwapped: Left-click moves bag, Shift+Left-click opens menu"] = true
+L["Choose how mouse clicks work in manual mode:\n\nNormal: Left-click opens menu, Shift+Left-click moves bag\nSwapped: Left-click moves bag, Shift+Left-click opens menu"] =
+	true
 L["Normal"] = true
 L["Swapped"] = true
 L["Show anchor highlight"] = true
@@ -339,21 +360,28 @@ L["mode."] = true
 
 local locale = GetLocale()
 
-	------------------------ ruRU ------------------------
-if locale == 'ruRU' then
+------------------------ ruRU ------------------------
+if locale == "ruRU" then
 	L["Mythic Keystone"] = "М+ Ключ"
-	L["Put mythic keystone items into their own section."] = "Поместить мифические ключи в отдельную секцию."
+	L["Put mythic keystone items into their own section."] =
+		"Поместить мифические ключи в отдельную секцию."
 	L["Sirus"] = "Sirus"
-	L["Put Sirus-specific items (Black Diamonds, legendary gems) in their own section."] = "Поместить специфичные для Sirus предметы (Чёрные бриллианты, легендарные самоцветы) в отдельную секцию."
-	L["Add a dropdown menu to bags that allow to hide the sections."] = "Добавить выпадающее меню для сумок, в котором можно настроить отображение секций."
+	L["Put Sirus-specific items (Black Diamonds, legendary gems) in their own section."] =
+		"Поместить специфичные для Sirus предметы (Чёрные бриллианты, легендарные самоцветы) в отдельную секцию."
+	L["Add a dropdown menu to bags that allow to hide the sections."] =
+		"Добавить выпадающее меню для сумок, в котором можно настроить отображение секций."
 	L["Add association"] = "Добавить объединение"
-	L["Add more information in tooltips related to items in your bags."] = "Добавить Дополнительную информацию во всплывающих подсказках, касающихся предметов, в вашей сумке"
+	L["Add more information in tooltips related to items in your bags."] =
+		"Добавить Дополнительную информацию во всплывающих подсказках, касающихся предметов, в вашей сумке"
 	L["AdiBags Anchor"] = "AdiBags Якорь"
-	L["Adjust the maximum height of the bags, relative to screen size."] = "Регулировка максимальной высоты сумок, относительно размеру экрана."
-	L["Adjust the maximum number of items per row."] = "регулировка максимально количества предметов в ряду."
+	L["Adjust the maximum height of the bags, relative to screen size."] =
+		"Регулировка максимальной высоты сумок, относительно размеру экрана."
+	L["Adjust the maximum number of items per row."] =
+		"регулировка максимально количества предметов в ряду."
 	L["AH category"] = "Категория аукциона"
 	L["AH subcategory"] = "Подкатегория аукциона"
-	L["Allow you manually redefine the section in which an item should be put. Simply drag an item on the section title."] = "Позволяет вручную изменять секцию в которую следует помещать предмет. Просто перетащите элемент на название раздела."
+	L["Allow you manually redefine the section in which an item should be put. Simply drag an item on the section title."] =
+		"Позволяет вручную изменять секцию в которую следует помещать предмет. Просто перетащите элемент на название раздела."
 	L["Always"] = "Всегда"
 	L["AMMO_TAG"] = "Бп"
 	L["Ammunition"] = "Боеприпасы"
@@ -367,74 +395,109 @@ if locale == 'ruRU' then
 	L["Bag usage format"] = "Формат использования сумки"
 	L["Bank"] = "Банк"
 	L["Bank bag #%d"] = "Сумка банка #%d"
-	L["By category, subcategory, quality and item level (default)"] = "По категории, под-категории, качеству и уровню предмета (по умолчанию)"
+	L["By category, subcategory, quality and item level (default)"] =
+		"По категории, под-категории, качеству и уровню предмета (по умолчанию)"
 	L["By name"] = "По имени"
 	L["By quality and item level"] = "По качеству и уровню"
 	L["Category"] = "Категория"
-	L["Check sets that should be merged into a unique \"Sets\" section. This is obviously a per-character setting."] = "Отметьте какие наборы должны быть объединены в особую секцию \"Наборы\". Конечно же это настройка, для каждого персонажа отдельно."
-	L["Check this so armors are dispatched in four sections by type."] = "Отметьте это, и броня будет разделяться на четыре секции в зависимости от ее типа."
-	L["Check this so tidying is performed when you close the loot windows or you leave merchants, mailboxes, etc."] = "Отметьте это, если хотите что бы уборка в сумках происходила при каждом закрытии окна сбора добычи, торговли, почтового ящика и т.п."
-	L["Check this to display a bag type tag in the top left corner of items."] = "Поставте галочку, чтобы отображать тег сумки в левом верхнем углу иконки предмета."
-	L["Check this to display a colored border around items, based on item quality."] = "Отметьте это, чтобы подкрашивать края предметов исходя из их качества."
-	L["Check this to display an icon after usage of each type of bags."] = "Поставьте тут галочку для отображения иконки после использования каждого из видов сумок." -- Needs review
-	L["Check this to display an indicator on quest items."] = "Поставьте тут галочку чтобы отображать индикатор на предметах, необходимых для задания."
-	L["Check this to display an textual tag before usage of each type of bags."] = "Отметьте это, если хотите что бы отображалась текстовая пометка перед использованием каждого из типов сумок."
-	L["Check this to display one individual section per set. If this is disabled, there will be one big \"Sets\" section."] = "Отметьте это, если хотите что бы для каждого набора вещей была отдельная секция. Если этот пункт отключен, используется одна большая секция \"Наборы\"."
-	L["Check this to display only one value counting all equipped bags, ignoring their type."] = "Отметьте это, если хотите что бы отображалась только количество пустых слотов во всех сумках, несмотря на тип сумок."
-	L["Check this to have poor quality items dimmed."] = "Поставьте галочку, для отабражения низкова уровня вешей затемнёным цветом."
-	L["Check this to show space at your bank in the plugin."] = "Отметьте это, если хотите чтобы отображались промежутки в окне банка вашего плагина." -- Needs review
-	L["Check this to show this section. Uncheck to hide it."] = "Отметьте это что бы показывать эту секцию, или снимите отметку что бы ее скрыть."
-	L["Check to enable this module."] = "Поставьте галочку для включения данного модуля."
-	L["Click on this button to create the new association."] = "Кликните на кнопку, что бы создать новую ассоциацию."
-	L["Click there to reset the bag positions and sizes."] = "Кликните тут чтобы сбросить расположение сумок и их размер."
+	L['Check sets that should be merged into a unique "Sets" section. This is obviously a per-character setting.'] =
+		'Отметьте какие наборы должны быть объединены в особую секцию "Наборы". Конечно же это настройка, для каждого персонажа отдельно.'
+	L["Check this so armors are dispatched in four sections by type."] =
+		"Отметьте это, и броня будет разделяться на четыре секции в зависимости от ее типа."
+	L["Check this so tidying is performed when you close the loot windows or you leave merchants, mailboxes, etc."] =
+		"Отметьте это, если хотите что бы уборка в сумках происходила при каждом закрытии окна сбора добычи, торговли, почтового ящика и т.п."
+	L["Check this to display a bag type tag in the top left corner of items."] =
+		"Поставте галочку, чтобы отображать тег сумки в левом верхнем углу иконки предмета."
+	L["Check this to display a colored border around items, based on item quality."] =
+		"Отметьте это, чтобы подкрашивать края предметов исходя из их качества."
+	L["Check this to display an icon after usage of each type of bags."] =
+		"Поставьте тут галочку для отображения иконки после использования каждого из видов сумок." -- Needs review
+	L["Check this to display an indicator on quest items."] =
+		"Поставьте тут галочку чтобы отображать индикатор на предметах, необходимых для задания."
+	L["Check this to display an textual tag before usage of each type of bags."] =
+		"Отметьте это, если хотите что бы отображалась текстовая пометка перед использованием каждого из типов сумок."
+	L['Check this to display one individual section per set. If this is disabled, there will be one big "Sets" section.'] =
+		'Отметьте это, если хотите что бы для каждого набора вещей была отдельная секция. Если этот пункт отключен, используется одна большая секция "Наборы".'
+	L["Check this to display only one value counting all equipped bags, ignoring their type."] =
+		"Отметьте это, если хотите что бы отображалась только количество пустых слотов во всех сумках, несмотря на тип сумок."
+	L["Check this to have poor quality items dimmed."] =
+		"Поставьте галочку, для отабражения низкова уровня вешей затемнёным цветом."
+	L["Check this to show space at your bank in the plugin."] =
+		"Отметьте это, если хотите чтобы отображались промежутки в окне банка вашего плагина." -- Needs review
+	L["Check this to show this section. Uncheck to hide it."] =
+		"Отметьте это что бы показывать эту секцию, или снимите отметку что бы ее скрыть."
+	L["Check to enable this module."] =
+		"Поставьте галочку для включения данного модуля."
+	L["Click on this button to create the new association."] =
+		"Кликните на кнопку, что бы создать новую ассоциацию."
+	L["Click there to reset the bag positions and sizes."] =
+		"Кликните тут чтобы сбросить расположение сумок и их размер."
 	L["Click to purchase"] = "Кликните чтобы купить"
 	L["Click to reset item status."] = "Кликните чтобы сбросить статус предметов."
-	L["Click to select which sections should be shown or hidden. Section visibility is common to all bags."] = "Кликните что бы выбрать какие секции должны показываться, а какие скрываться. Настройки видимости секций общие для всех сумок."
+	L["Click to select which sections should be shown or hidden. Section visibility is common to all bags."] =
+		"Кликните что бы выбрать какие секции должны показываться, а какие скрываться. Настройки видимости секций общие для всех сумок."
 	L["Click to tidy bags."] = "Кликните, что бы прибраться в сумках."
 	L["Click to toggle the bag anchor."] = "Кликните чтобы переключить якорь сумки."
-	L["Click to toggle the equipped bag panel, so you can change them."] = "Кликните для переключения панели надетых сумок, так что вы можете их изменить."
+	L["Click to toggle the equipped bag panel, so you can change them."] =
+		"Кликните для переключения панели надетых сумок, так что вы можете их изменить."
 	L["Close"] = "Закрыть"
 	L["Configure"] = "Настройка"
-	L['Currencies to show'] = "Отображать валюту"
-	L['Hide zeroes'] = "Прятать пустую валюту"
-	L['Ignore currencies with null amounts.'] = "Игнорировать валюты с нулевым количеством"
-	L["Drop an item there to add it to the list."] = "Перетащите туда предмет, чтобы добавить его в список."
-	L["Consider gems as a subcategory of trade goods"] = "Рассматривать самоцветы как подкатегорию хозяйственных товаров"
-	L["Consider glyphs as a subcategory of trade goods"] = "Рассматривать символы как подкатегорию хозяйственных товаров"
+	L["Currencies to show"] = "Отображать валюту"
+	L["Hide zeroes"] = "Прятать пустую валюту"
+	L["Ignore currencies with null amounts."] =
+		"Игнорировать валюты с нулевым количеством"
+	L["Drop an item there to add it to the list."] =
+		"Перетащите туда предмет, чтобы добавить его в список."
+	L["Consider gems as a subcategory of trade goods"] =
+		"Рассматривать самоцветы как подкатегорию хозяйственных товаров"
+	L["Consider glyphs as a subcategory of trade goods"] =
+		"Рассматривать символы как подкатегорию хозяйственных товаров"
 	L["Container information"] = "Информация о контейнере" -- Needs review
 	L["Currency"] = "Валюта"
 	L["Dim junk"] = "Затемнять хлам"
-	L["Display character currency at bottom left of the backpack."] = "Показывать количество золота у персонажа в нижней левой стороне окна сумок."
-	L["Display character money at bottom right of the backpack."] = "Отображать деньги персонажа в нижнем правом углу рюкзака."
-	L["Drop your item there to add it to this section."] = "Чтобы добавить предмет в этот раздел, переместите его туда. "
+	L["Display character currency at bottom left of the backpack."] =
+		"Показывать количество золота у персонажа в нижней левой стороне окна сумок."
+	L["Display character money at bottom right of the backpack."] =
+		"Отображать деньги персонажа в нижнем правом углу рюкзака."
+	L["Drop your item there to add it to this section."] =
+		"Чтобы добавить предмет в этот раздел, переместите его туда. "
 	L["Enabled"] = "Включен"
 	L["ENCHANTING_BAG_TAG"] = "Чры"
 	L["ENGINEERING_BAG_TAG"] = "Эн"
-	L["Enter a text to search in item names."] = "Введите текст для поиска предмета по названию."
-	L["Enter the name, link or itemid of the item to associate with the section. You can also drop an item into this box."] = "Введите название, ссылку или ID предмета, что бы связать ее с секцией. Так же вы можете просто перетащить предмет в окошко."
-	L["Enter the name of your custom section"] = "Введите название секции, с которой вы хотите связать вещь."
+	L["Enter a text to search in item names."] =
+		"Введите текст для поиска предмета по названию."
+	L["Enter the name, link or itemid of the item to associate with the section. You can also drop an item into this box."] =
+		"Введите название, ссылку или ID предмета, что бы связать ее с секцией. Так же вы можете просто перетащить предмет в окошко."
+	L["Enter the name of your custom section"] =
+		"Введите название секции, с которой вы хотите связать вещь."
 	L["Equipment"] = "Экипировка"
 	L["Equipped bags"] = "Сумки персонажа"
 	L["Fill lines at most"] = "Заполнять линии полностью"
 	L["Filter"] = "Фильтр"
 	L["Filtering information"] = "Фильтрование информации"
 	L["Filters"] = "Фильтры"
-	L["Filters are used to dispatch items in bag sections. One item can only appear in one section. If the same item is selected by several filters, the one with the highest priority wins."] = "Фильтры используются для группировки ваших вещей. Одна вещь может находиться только в одной из секций. Если одна вещь входит в несколько фильтров, используется тот фильтр, чей приоритет выше."
+	L["Filters are used to dispatch items in bag sections. One item can only appear in one section. If the same item is selected by several filters, the one with the highest priority wins."] =
+		"Фильтры используются для группировки ваших вещей. Одна вещь может находиться только в одной из секций. Если одна вещь входит в несколько фильтров, используется тот фильтр, чей приоритет выше."
 	L["Four general sections."] = "Четыре общих секции."
 	L["Free space"] = "Свободно"
 	L["Free space / total space"] = "Свободно / всего места"
-	L['Item level']	= "Уровень предметов" -- ItemLevel.lua
-	L['Which color scheme should be used to display the item level ?'] = "Какую цветовую схему следует использовать для отображения уровня предметов?" -- ItemLevel.lua
-	L['Color scheme'] = "Цветовая схема" -- ItemLevel.lua
-	L['None'] = "Стандарт" -- ItemLevel.lua
-	L['Do not show levels under this threshold.'] = "Не показывать уровни ниже этого порогового значения." -- ItemLevel.lua
-	L['Do not show level of heirloom items.'] = "Не показывать уровень у наследуемых предметов." -- ItemLevel.lua
-	L['Do not show level of poor quality items.'] = "Не показывать уровень у низкоуровневых предметов." -- ItemLevel.lua
-	L['Do not show level of items that cannot be equipped.'] = "Не показывать уровень предметов которые нельзя надеть." -- ItemLevel.lua
-	L['Same as InventoryItemLevels'] = "Зависимость цвета от уровня предметов" -- ItemLevel.lua
-	L['Related to player level'] = "Зависимость от уровня персонажа" -- ItemLevel.lua
-	L['Ignore heirloom items'] = "Игнорировать наследуемые предметы" -- ItemLevel.lua
-	L['Only equippable items'] = "Отображать только у оснащаемых предметов" -- ItemLevel.lua
+	L["Item level"] = "Уровень предметов" -- ItemLevel.lua
+	L["Which color scheme should be used to display the item level ?"] =
+		"Какую цветовую схему следует использовать для отображения уровня предметов?" -- ItemLevel.lua
+	L["Color scheme"] = "Цветовая схема" -- ItemLevel.lua
+	L["None"] = "Стандарт" -- ItemLevel.lua
+	L["Do not show levels under this threshold."] =
+		"Не показывать уровни ниже этого порогового значения." -- ItemLevel.lua
+	L["Do not show level of heirloom items."] =
+		"Не показывать уровень у наследуемых предметов." -- ItemLevel.lua
+	L["Do not show level of poor quality items."] =
+		"Не показывать уровень у низкоуровневых предметов." -- ItemLevel.lua
+	L["Do not show level of items that cannot be equipped."] =
+		"Не показывать уровень предметов которые нельзя надеть." -- ItemLevel.lua
+	L["Same as InventoryItemLevels"] = "Зависимость цвета от уровня предметов" -- ItemLevel.lua
+	L["Related to player level"] = "Зависимость от уровня персонажа" -- ItemLevel.lua
+	L["Ignore heirloom items"] = "Игнорировать наследуемые предметы" -- ItemLevel.lua
+	L["Only equippable items"] = "Отображать только у оснащаемых предметов" -- ItemLevel.lua
 	L["Gear manager item sets"] = "Предметы наборов управления экипировкой"
 	L["GEM_BAG_TAG"] = "См"
 	L["Gems are trade goods"] = "Самоцветы это Хозяйственные товары"
@@ -451,16 +514,19 @@ if locale == 'ruRU' then
 	L["Item information"] = "Информация о предмете"
 	L["Items"] = "Предметы"
 	L["Decorate."] = "Декоративные предметы/оружия"
-	L["Put decorated items in their own section."] = "Поместить предметы связанные с трансмогрификацией в свою секцию."
+	L["Put decorated items in their own section."] =
+		"Поместить предметы связанные с трансмогрификацией в свою секцию."
 	L["Decorative item"] = "Декоративный предмет"
 	L["Item search"] = "Поиск предмета"
 	L["Jewelry"] = "Бижутерия"
 	L["Trinket"] = "Аксессуары"
 	L["Temporary items"] = "Временные предметы"
 	L["Expiring Items"] = "Временные предметы"
-	L["Put items that have an expiration time or lifetime in a specific section."] = "Поместите предметы, у которых есть время или срок действия в специальную секцию."
+	L["Put items that have an expiration time or lifetime in a specific section."] =
+		"Поместите предметы, у которых есть время или срок действия в специальную секцию."
 	L["Enable Expiring Items Category"] = "Включить категорию временных предметов"
-	L["Check this to automatically group items that have an expiration time or lifetime."] = "Включите это, чтобы автоматически группировать предметы, у которых есть срок действия."
+	L["Check this to automatically group items that have an expiration time or lifetime."] =
+		"Включите это, чтобы автоматически группировать предметы, у которых есть срок действия."
 	L["KEYRING_TAG"] = "Клч"
 	L["Keyring"] = "Связка ключей"
 	L["Layout priority"] = "Приоритет слоя"
@@ -474,8 +540,10 @@ if locale == 'ruRU' then
 	L["Maximum stack size"] = "Максимальный размер стопки"
 	L["Merge bag types"] = "Объединить типы сумок"
 	L["Merged sets"] = "Объединенные наборы"
-	L["Merge incomplete stacks with complete ones."] = "Объединять не полные стопки, с полными."
-	L["Merge stackable items"] = "Складывать в стопки вещи, которые могут быть сложены."
+	L["Merge incomplete stacks with complete ones."] =
+		"Объединять не полные стопки, с полными."
+	L["Merge stackable items"] =
+		"Складывать в стопки вещи, которые могут быть сложены."
 	L["MINING_BAG_TAG"] = "Гд"
 	L["Money"] = "Валюта"
 	L["Never"] = "Никогда"
@@ -486,37 +554,53 @@ if locale == 'ruRU' then
 	L["One section per set"] = "Одна секция на набор"
 	L["Only one section."] = "Только одна секция"
 	L["Opacity"] = "Непрозрачность"
-	L["Please note this filter matchs every item. Any filter with lower priority than this one will have no effect."] = "Имейте ввиду, что этот фильтр будет использоваться для всех вещей. Любой фильтр с меньшим приоритетом чем этот, не будет применяться."
+	L["Please note this filter matchs every item. Any filter with lower priority than this one will have no effect."] =
+		"Имейте ввиду, что этот фильтр будет использоваться для всех вещей. Любой фильтр с меньшим приоритетом чем этот, не будет применяться."
 	L["Plugins"] = "Плагины"
 	L["Position mode"] = "Режим позиционирования" -- Needs review
 	L["Priority"] = "Приоритет"
-	L["Provides a LDB data source to be displayed by LDB display addons."] = "Позволяет отображать источник LDB данных другими аддонами для отображения LDB." -- Needs review
-	L["Provides a text widget at top of the backpack where you can type (part of) an item name to locate it in your bags."] = "Добавляет виджет сверху окна сумок, с помощью которого, вы можете отыскать вещь, вводя ее название (или его часть) в специальное поле."
-	L["Put any item that can be equipped (including bags) into the \"Equipment\" section."] = "Поместить все предметы которые могут быть одеты на персонажа (включая сумки) в секцию \"Экипировка\""
-	L["Put items categorized as keys in their own section."] = "Поместите элементы, отнесенные к категории ключей, в отдельный раздел." -- Needs review
-	L["Put items belonging to one or more sets of the built-in gear manager in specific sections."] = "Помещает вещи, являющиеся частью одного из наборов, созданных с помощью управления экипировкой, в отдельные секции."
-	L["Put items in sections depending on their first-level category at the Auction House."] = "Раскладывать вещи в сумках, используя общие категории аукциона."
-	L["Put items of poor quality or labeled as junk in the \"Junk\" section."] = "Поместить предметы низкого качества или помеченных как хлам с секцию \"Хлам\"."
-	L["Put quest-related items in their own section."] = "Поместить предметы связанные с заданием в свою секцию."
+	L["Provides a LDB data source to be displayed by LDB display addons."] =
+		"Позволяет отображать источник LDB данных другими аддонами для отображения LDB." -- Needs review
+	L["Provides a text widget at top of the backpack where you can type (part of) an item name to locate it in your bags."] =
+		"Добавляет виджет сверху окна сумок, с помощью которого, вы можете отыскать вещь, вводя ее название (или его часть) в специальное поле."
+	L['Put any item that can be equipped (including bags) into the "Equipment" section.'] =
+		'Поместить все предметы которые могут быть одеты на персонажа (включая сумки) в секцию "Экипировка"'
+	L["Put items categorized as keys in their own section."] =
+		"Поместите элементы, отнесенные к категории ключей, в отдельный раздел." -- Needs review
+	L["Put items belonging to one or more sets of the built-in gear manager in specific sections."] =
+		"Помещает вещи, являющиеся частью одного из наборов, созданных с помощью управления экипировкой, в отдельные секции."
+	L["Put items in sections depending on their first-level category at the Auction House."] =
+		"Раскладывать вещи в сумках, используя общие категории аукциона."
+	L['Put items of poor quality or labeled as junk in the "Junk" section.'] =
+		'Поместить предметы низкого качества или помеченных как хлам с секцию "Хлам".'
+	L["Put quest-related items in their own section."] =
+		"Поместить предметы связанные с заданием в свою секцию."
 	L["Quality highlight"] = "Подсвечивать в зависимости от качества"
 	L["Quest indicator"] = "Индикатор задания"
 	L["Quest Items"] = "Предметы, необходимые для задания"
 	L["QUIVER_TAG"] = "Клчн"
 	L["Reset new items"] = "Сброс новых предметов"
 	L["Reset position"] = "Сброс расположения"
-	L["Right-click to try to empty this bag."] = "Кликните правой кнопкой, что бы попытаться опустошить эту сумку."
+	L["Right-click to try to empty this bag."] =
+		"Кликните правой кнопкой, что бы попытаться опустошить эту сумку."
 	L["Scale"] = "Масштаб"
 	L["Section"] = "Секция"
 	L["Section category"] = "Категория секции"
 	L["Section setup"] = "Настройки секции"
 	L["Section visibility"] = "Видимость секции"
 	L["Section visibility button"] = "Кнопка отображения секций"
-	L["Select how bag usage should be formatted in the plugin."] = "Выберите способ, которым следует упорядочивать использование сумок плагином." -- Needs review
-	L["Select how items should be sorted within each section."] = "Выберите как предметы должны сортироваться в пределах каждой секции."
-	L["Select how the bag are positionned."] = "Выбрать то, как окно сумок будет расположено на экране."
-	L["Select the category of the section to associate. This is used to group sections together."] = "Выберите категорию секции для того, что бы ее связать. Это необходимо для того, чтобы сгруппировать секции вместе."
-	L["Select the sections in which the items should be dispatched."] = "Укажите секцию, в которой вещи необходимо разделить" -- Needs review
-	L["Select which first-level categories should be split by sub-categories."] = "Укажите, какие общие категории должны быть разделены на субкатегории."
+	L["Select how bag usage should be formatted in the plugin."] =
+		"Выберите способ, которым следует упорядочивать использование сумок плагином." -- Needs review
+	L["Select how items should be sorted within each section."] =
+		"Выберите как предметы должны сортироваться в пределах каждой секции."
+	L["Select how the bag are positionned."] =
+		"Выбрать то, как окно сумок будет расположено на экране."
+	L["Select the category of the section to associate. This is used to group sections together."] =
+		"Выберите категорию секции для того, что бы ее связать. Это необходимо для того, чтобы сгруппировать секции вместе."
+	L["Select the sections in which the items should be dispatched."] =
+		"Укажите секцию, в которой вещи необходимо разделить" -- Needs review
+	L["Select which first-level categories should be split by sub-categories."] =
+		"Укажите, какие общие категории должны быть разделены на субкатегории."
 	L["Semi-automated tidy"] = "Полуавтоматическая уборка"
 	L["Sets"] = "Наборы"
 	L["Set: %s"] = "Набор: %s"
@@ -526,9 +610,12 @@ if locale == 'ruRU' then
 	L["Show container information..."] = "Показать данные контейнера..."
 	L["Show filtering information..."] = "Показать данные фильтрации..."
 	L["Show item information..."] = "Показать данные о вещи..."
-	L["Show only one free slot for each kind of bags."] = "Показывать только один свободный слот для каждого типа сумок"
-	L["Show only one slot of items that can be stacked."] = "Показывать только один слот для вещей, которые можно сложить в стопки"
-	L["Show only one slot of items that cannot be stacked."] = "Показывать только один слот вещей, которые не могут быть сложены в стопки"
+	L["Show only one free slot for each kind of bags."] =
+		"Показывать только один свободный слот для каждого типа сумок"
+	L["Show only one slot of items that can be stacked."] =
+		"Показывать только один слот для вещей, которые можно сложить в стопки"
+	L["Show only one slot of items that cannot be stacked."] =
+		"Показывать только один слот вещей, которые не могут быть сложены в стопки"
 	L["Show %s"] = "Показать %s"
 	L["Slot number"] = "Номер слота"
 	L["Sorting order"] = "Порядок сортировки"
@@ -539,25 +626,31 @@ if locale == 'ruRU' then
 	L["Split by subcategories"] = "Разделить по субкатегориям"
 	L["Strictly keep ordering"] = "Строго соблюдать порядок"
 	L["Tidy bags"] = "Чистыйе сумки"
-	L["Tidy your bags by clicking on the small \"T\" button at the top left of bags. Special bags with free slots will be filled with matching items and stackable items will be stacked to save space."] = "Убраться в ваших сумках можно нажав небольшую кнопку \"Т\", которая находится верхней левой стороне окна сумок. Специальные сумки будут заполнены подходящими для них предметами, и вещи которые можно сложить, будут сложены в стопки для экономии места."
-	L["Toggle and configure item filters."] = "Переключение и настройка фильтров предмета."
+	L['Tidy your bags by clicking on the small "T" button at the top left of bags. Special bags with free slots will be filled with matching items and stackable items will be stacked to save space.'] =
+		'Убраться в ваших сумках можно нажав небольшую кнопку "Т", которая находится верхней левой стороне окна сумок. Специальные сумки будут заполнены подходящими для них предметами, и вещи которые можно сложить, будут сложены в стопки для экономии места.'
+	L["Toggle and configure item filters."] =
+		"Переключение и настройка фильтров предмета."
 	L["Toggle and configure plugins."] = "Переключение и настройка плагина."
 	L["Tooltip information"] = "Информация подсказки"
 	L["Track new items"] = "Следить за новыми предметами"
-	L["Track new items in each bag, displaying a glowing aura over them and putting them in a special section. \"New\" status can be reset by clicking on the small \"N\" button at top left of bags."] = "Отслеживать новые предметы в каждой сумке, подсвечивать их и помещать в отдельную секцию. Статус \"Новое\" может быть сброшен кликом по небольшой кнопке \"N\" находящейся, в верхней левой стороне окна сумок."
+	L['Track new items in each bag, displaying a glowing aura over them and putting them in a special section. "New" status can be reset by clicking on the small "N" button at top left of bags.'] =
+		'Отслеживать новые предметы в каждой сумке, подсвечивать их и помещать в отдельную секцию. Статус "Новое" может быть сброшен кликом по небольшой кнопке "N" находящейся, в верхней левой стороне окна сумок.'
 	L["Uncheck this to disable AdiBags."] = "Снимите галочку штобы выключить AdiBags."
 	L["Reset bag position"] = "Сброс позиции сумки"
 	L["Unlock Anchor"] = "Разблокировать якорь"
 	L["Manual Filtering"] = "Ручная фильтрация"
 	L["Settings"] = "Настройки"
 	L["Manual mode click behavior"] = "Поведение кликов в ручном режиме"
-	L["Choose how mouse clicks work in manual mode:\n\nNormal: Left-click opens menu, Shift+Left-click moves bag\nSwapped: Left-click moves bag, Shift+Left-click opens menu"] = "Выберите как работают клики мыши в ручном режиме:\n\nОбычный: Левый клик открывает меню, Shift+Левый клик перемещает сумку\nПереключенный: Левый клик перемещает сумку, Shift+Левый клик открывает меню"
+	L["Choose how mouse clicks work in manual mode:\n\nNormal: Left-click opens menu, Shift+Left-click moves bag\nSwapped: Left-click moves bag, Shift+Left-click opens menu"] =
+		"Выберите как работают клики мыши в ручном режиме:\n\nОбычный: Левый клик открывает меню, Shift+Левый клик перемещает сумку\nПереключенный: Левый клик перемещает сумку, Shift+Левый клик открывает меню"
 	L["Normal"] = "Обычный"
 	L["Swapped"] = "Переключенный"
 	L["Show anchor highlight"] = "Подсветка якоря"
-	L["Show green/orange highlight when hovering over bag anchors in manual mode"] = "Зеленая/оранжевая подсветка при наведении на якорь в ручном режиме"
+	L["Show green/orange highlight when hovering over bag anchors in manual mode"] =
+		"Зеленая/оранжевая подсветка при наведении на якорь в ручном режиме"
 	L["Show anchor tooltip"] = "Подсказка якоря"
-	L["Show tooltip when hovering over bag anchors in both modes"] = "Показывать подсказку при наведении на якорь в обоих режимах"
+	L["Show tooltip when hovering over bag anchors in both modes"] =
+		"Показывать подсказку при наведении на якорь в обоих режимах"
 	L["Anchored"] = "Якорный"
 	L["Mode"] = "Режим"
 	L["Manual"] = "Ручной"
@@ -571,15 +664,40 @@ if locale == 'ruRU' then
 	L["to toggle anchor mode."] = "переключить режим якоря."
 	L["to move bag container."] = "переместить контейнер сумки."
 	L["mode."] = "режим."
+	L["Cross-character items"] = "Предметы других персонажей"
+	L["Show item and currency counts from other characters in tooltips."] =
+		"Показывать количество предметов и валюты других персонажей в подсказках."
+	L["Show items on other characters"] = "Показывать предметы других персонажей"
+	L["Show item counts from other characters in item tooltips."] =
+		"Показывать количество предметов на других персонажах в подсказках."
+	L["Show money on other characters"] = "Показывать золото других персонажей"
+	L["Show gold from other characters in the money tooltip."] =
+		"Показывать золото других персонажей в подсказке валюты."
+	L["Show currencies on other characters"] = "Показывать валюту других персонажей"
+	L["Show currency counts from other characters in the currency tooltip."] =
+		"Показывать количество валюты других персонажей в подсказке."
+	L["Delete character data"] = "Удалить данные персонажа"
+	L["Are you sure you want to delete data for %s?"] =
+		"Вы уверены, что хотите удалить данные для %s?"
+	L["Other characters"] = "Другие персонажи"
+	L["Total"] = "Итого"
+	L["Equipped"] = "Надето"
+	L["Show other realms"] = "Показывать другие реалмы"
+	L["Show characters from other realms. When disabled, only characters from the current realm are shown."] =
+		"Показывать персонажей с других реалмов. Если выключено, отображаются только персонажи текущего реалма."
 	L["Unlock anchor"] = "Разблок. якорь"
-	L["Use this section to define any item-section association."] = "Использовать эту секцию, для определения любой связной с ней секцией" -- Needs review
+	L["Use this section to define any item-section association."] =
+		"Использовать эту секцию, для определения любой связной с ней секцией" -- Needs review
 	L["Use this to adjust the bag scale."] = "Регулировка масштаба сумок."
-	L["Use this to adjust the quality-based border opacity. 100% means fully opaque."] = "Используете ето для настройки, на основе качества, границ прозрачности. 100% означает полностью непрозрачный"
+	L["Use this to adjust the quality-based border opacity. 100% means fully opaque."] =
+		"Используете ето для настройки, на основе качества, границ прозрачности. 100% означает полностью непрозрачный"
 	L["Virtual stacks"] = "Виртуальные стопки"
-	L["Virtual stacks display in one place items that actually spread over several bag slots."] = "Виртуальные стопки отображаютса в одном месте, предметы которые на самом деле распространяютса в нескольких сумачных слотаф."
+	L["Virtual stacks display in one place items that actually spread over several bag slots."] =
+		"Виртуальные стопки отображаютса в одном месте, предметы которые на самом деле распространяютса в нескольких сумачных слотаф."
 	L["Virtual stack slots"] = "Виртуальное сложение слотов" -- Needs review
 	L["When alt is held down"] = "Когда кнопка Alt нажата"
-	L["When any modifier key is held down"] = "Когда какая-либо клавиша модификатора нажата"
+	L["When any modifier key is held down"] =
+		"Когда какая-либо клавиша модификатора нажата"
 	L["When ctrl is held down"] = "Когда кнопка Ctrl нажата"
 	L["When shift is held down"] = "Когда кнопка Shift нажата"
 end

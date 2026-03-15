@@ -33,7 +33,7 @@ local HEADER_SIZE = addon.HEADER_SIZE
 --------------------------------------------------------------------------------
 
 local categoryOrder = {
-	[L["Free space"]] = -100
+	[L["Free space"]] = -100,
 }
 
 function addon:SetCategoryOrder(name, order)
@@ -61,7 +61,7 @@ end
 local sectionClass, sectionProto = addon:NewClass("Section", "Frame", "AceEvent-3.0")
 local sectionPool = addon:CreatePool(sectionClass, "AcquireSection")
 
-local sectionFont = CreateFont(addonName.."SectionHeaderNormalFont")
+local sectionFont = CreateFont(addonName .. "SectionHeaderNormalFont")
 sectionFont:SetFontObject("GameFontNormalLeft")
 
 function sectionProto:OnCreate()
@@ -79,13 +79,13 @@ function sectionProto:OnCreate()
 	header:RegisterForClicks()
 	header:SetText("DUMMY")
 	header:SetHighlightTexture([[Interface\BUTTONS\UI-Panel-Button-Highlight]], "ADD")
-	header:GetHighlightTexture():SetTexCoord(4/128, 76/128, 4/32, 18/32)	
-	header:GetFontString():SetAllPoints()	
+	header:GetHighlightTexture():SetTexCoord(4 / 128, 76 / 128, 4 / 32, 18 / 32)
+	header:GetFontString():SetAllPoints()
 	self.Header = header
-	self:SendMessage('AdiBags_SectionCreated', self)
+	self:SendMessage("AdiBags_SectionCreated", self)
 
-	self:SetScript('OnShow', self.OnShow)
-	self:SetScript('OnHide', self.OnHide)
+	self:SetScript("OnShow", self.OnShow)
+	self:SetScript("OnHide", self.OnHide)
 end
 
 function sectionProto:OnShow()
@@ -105,11 +105,11 @@ function sectionProto:ToString()
 end
 
 function addon:BuildSectionKey(name, category)
-	return strjoin('#', category or name, name)
+	return strjoin("#", category or name, name)
 end
 
 function addon:SplitSectionKey(key)
-	local category, name = strsplit('#', key)
+	local category, name = strsplit("#", key)
 	return name, category
 end
 
@@ -125,7 +125,7 @@ function sectionProto:OnAcquire(container, name, category)
 	self.total = 0
 	self.dirtyLevel = 0
 	self.container = container
-	self:RegisterMessage('AdiBags_OrderChanged')
+	self:RegisterMessage("AdiBags_OrderChanged")
 	self:UpdateHeaderScripts()
 end
 
@@ -163,7 +163,7 @@ function sectionProto:SetCollapsed(collapsed)
 		else
 			self:Show()
 		end
-		self:SendMessage('AdiBags_LayoutChanged')
+		self:SendMessage("AdiBags_LayoutChanged")
 	end
 end
 
@@ -185,7 +185,12 @@ end
 -- Section hooks
 --------------------------------------------------------------------------------
 
-local scriptDispatcher = LibStub('CallbackHandler-1.0'):New(addon, 'RegisterSectionHeaderScript', 'UnregisterSectionHeaderScript', 'UnregisterAllSectionHeaderScripts')
+local scriptDispatcher = LibStub("CallbackHandler-1.0"):New(
+	addon,
+	"RegisterSectionHeaderScript",
+	"UnregisterSectionHeaderScript",
+	"UnregisterAllSectionHeaderScripts"
+)
 
 local scripts = {
 	OnClick = {
@@ -195,17 +200,25 @@ local scripts = {
 		Disable = function(self)
 			self:RegisterForClicks()
 		end,
-		Handler = function(...) return scriptDispatcher:Fire('OnClick', ...) end
+		Handler = function(...)
+			return scriptDispatcher:Fire("OnClick", ...)
+		end,
 	},
 	OnEnter = {
-		Handler = function(...) return scriptDispatcher:Fire('OnEnter', ...) end
+		Handler = function(...)
+			return scriptDispatcher:Fire("OnEnter", ...)
+		end,
 	},
 	OnLeave = {
-		Handler = function(...) return scriptDispatcher:Fire('OnLeave', ...) end
+		Handler = function(...)
+			return scriptDispatcher:Fire("OnLeave", ...)
+		end,
 	},
 	OnReceiveDrag = {
-		Handler = function(...) return scriptDispatcher:Fire('OnReceiveDrag', ...) end
-	}
+		Handler = function(...)
+			return scriptDispatcher:Fire("OnReceiveDrag", ...)
+		end,
+	},
 }
 
 local usedScripts = {}
@@ -229,8 +242,10 @@ function sectionProto:UpdateHeaderScripts()
 end
 
 function scriptDispatcher:OnUsed(_, script)
-	if not scripts[script] then return end
-	addon:Debug('Used SectionHeaderScript', script)
+	if not scripts[script] then
+		return
+	end
+	addon:Debug("Used SectionHeaderScript", script)
 	usedScripts[script] = true
 	for section in sectionPool:IterateActiveObjects() do
 		section:UpdateHeaderScripts()
@@ -238,8 +253,10 @@ function scriptDispatcher:OnUsed(_, script)
 end
 
 function scriptDispatcher:OnUnused(_, script)
-	if scripts[script] == nil then return end
-	addon:Debug('Unused SectionHeaderScript', script)
+	if scripts[script] == nil then
+		return
+	end
+	addon:Debug("Unused SectionHeaderScript", script)
 	usedScripts[script] = nil
 	for section in sectionPool:IterateActiveObjects() do
 		section:UpdateHeaderScripts()
@@ -323,8 +340,8 @@ function sectionProto:PutButtonAt(button, index)
 		self:SetDirtyLevel(1)
 		self.slots[button] = index
 	end
-	local row, col = floor((index-1) / self.width), (index-1) % self.width
-	button:SetPoint("TOPLEFT", self, "TOPLEFT", col * SLOT_OFFSET, - HEADER_SIZE - row * SLOT_OFFSET)
+	local row, col = floor((index - 1) / self.width), (index - 1) % self.width
+	button:SetPoint("TOPLEFT", self, "TOPLEFT", col * SLOT_OFFSET, -HEADER_SIZE - row * SLOT_OFFSET)
 end
 
 function sectionProto:FitInSpace(maxWidth, maxHeight, xOffset, rowHeight)
@@ -355,7 +372,7 @@ function sectionProto:SetSizeInSlots(width, height)
 		self.width = width
 		self.height = height
 		self.total = width * height
-		self:SetWidth(ITEM_SIZE * width + ITEM_SPACING * max(width - 1 ,0))
+		self:SetWidth(ITEM_SIZE * width + ITEM_SPACING * max(width - 1, 0))
 		self:SetHeight(HEADER_SIZE + ITEM_SIZE * height + ITEM_SPACING * max(height - 1, 0))
 		self:SetDirtyLevel(2)
 	end
@@ -373,8 +390,8 @@ function sectionProto:SetHeaderOverflow(overflow)
 end
 
 function sectionProto:Layout(cleanLevel)
-	if self.dirtyLevel > cleanLevel  then
-		self:Debug('Layout, cleanLevel=', cleanLevel, 'dirtyLevel=', self.dirtyLevel, '=> reordering buttons')
+	if self.dirtyLevel > cleanLevel then
+		self:Debug("Layout, cleanLevel=", cleanLevel, "dirtyLevel=", self.dirtyLevel, "=> reordering buttons")
 		self:ReorderButtons()
 	end
 end
@@ -382,7 +399,9 @@ end
 local CompareButtons
 local buttonOrder = {}
 function sectionProto:ReorderButtons()
-	if not self:IsVisible() then return end
+	if not self:IsVisible() then
+		return
+	end
 	--self:Debug('ReorderButtons, count=', self.count)
 
 	if self:IsCollapsed() then
@@ -492,14 +511,13 @@ local sortingFuncs = {
 			return nameA < nameB
 		end
 	end,
-
 }
 
 local currentSortingFunc = sortingFuncs.default
 
 local itemCompareCache = setmetatable({}, {
 	__index = function(t, key)
-		local idA, idB = strsplit(':', key, 2)
+		local idA, idB = strsplit(":", key, 2)
 		local nameA, nameB = GetItemInfo(idA), GetItemInfo(idB)
 		if nameA and nameB then
 			local result = currentSortingFunc(idA, idB, nameA, nameB)
@@ -508,16 +526,16 @@ local itemCompareCache = setmetatable({}, {
 		else
 			return idA < idB
 		end
-	end
+	end,
 })
 
 function addon:SetSortingOrder(order)
 	local func = sortingFuncs[order]
 	if func and func ~= currentSortingFunc then
-		self:Debug('SetSortingOrder', order, func)
+		self:Debug("SetSortingOrder", order, func)
 		currentSortingFunc = func
 		wipe(itemCompareCache)
-		self:SendMessage('AdiBags_OrderChanged')
+		self:SendMessage("AdiBags_OrderChanged")
 	end
 end
 

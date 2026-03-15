@@ -1,4 +1,3 @@
-
 local addonName, addon = ...
 local safecall = addon.safecall
 
@@ -28,7 +27,7 @@ end
 
 local function Class_Create(class, ...)
 	class.serial = class.serial + 1
-	local self = CreateFrame(class.frameType, addonName..class.name..class.serial, nil, class.frameTemplate)
+	local self = CreateFrame(class.frameType, addonName .. class.name .. class.serial, nil, class.frameTemplate)
 	setmetatable(self, class.metatable)
 	self:ClearAllPoints()
 	self:Hide()
@@ -47,7 +46,7 @@ local function NewClass(name, parent, ...)
 		serial = 0,
 		metatable = {
 			__index = prototype,
-			__tostring = Meta_ToString
+			__tostring = Meta_ToString,
 		},
 		Create = Class_Create,
 	}
@@ -55,7 +54,7 @@ local function NewClass(name, parent, ...)
 	if parent.mixins then
 		setmetatable(mixins, { __index = parent.mixins })
 	end
-	for i = 1, select('#', ...) do
+	for i = 1, select("#", ...) do
 		local name = select(i, ...)
 		if not mixins[name] then
 			local mixin = LibStub(name)
@@ -187,7 +186,9 @@ function addon:CreatePool(class, acquireMethod)
 	class.prototype.Release = Instance_Release
 	pools[class.name] = pool
 	if acquireMethod then
-		self[acquireMethod] = function(self, ...) return pool:Acquire(...) end
+		self[acquireMethod] = function(self, ...)
+			return pool:Acquire(...)
+		end
 	end
 	return pool
 end
@@ -233,8 +234,9 @@ function SlashCmdList.ADIBAGSOODEBUG()
 	else
 		-- Enable debugging
 		addon.debugEnabled = true
-		addon.Debug = function(...) print("AdiBags Debug:", ...) end -- Enable debug printing
+		addon.Debug = function(...)
+			print("AdiBags Debug:", ...)
+		end -- Enable debug printing
 		print("Debugging is now enabled.")
 	end
 end
-

@@ -15,16 +15,16 @@ local UIDropDownMenu_AddButton = _G.UIDropDownMenu_AddButton
 local wipe = _G.wipe
 --GLOBALS>
 
-local mod = addon:NewModule('SectionVisibilityDropdown', 'AceEvent-3.0')
-mod.uiName = L['Section visibility button']
-mod.uiDesc = L['Add a dropdown menu to bags that allow to hide the sections.']
+local mod = addon:NewModule("SectionVisibilityDropdown", "AceEvent-3.0")
+mod.uiName = L["Section visibility button"]
+mod.uiDesc = L["Add a dropdown menu to bags that allow to hide the sections."]
 
 local buttons = {}
 local frame
 local Button_OnClick
 
 function mod:OnEnable()
-	addon:HookBagFrameCreation(self, 'OnBagFrameCreated')
+	addon:HookBagFrameCreation(self, "OnBagFrameCreated")
 	for button in pairs(buttons) do
 		button:Show()
 	end
@@ -47,7 +47,7 @@ function mod:OnBagFrameCreated(bag)
 	container:AddHeaderWidget(button, 5)
 	addon.SetupTooltip(button, {
 		L["Section visibility"],
-		L["Click to select which sections should be shown or hidden. Section visibility is common to all bags."]
+		L["Click to select which sections should be shown or hidden. Section visibility is common to all bags."],
 	}, "ANCHOR_TOPLEFT", 0, 8)
 	buttons[button] = true
 end
@@ -58,19 +58,21 @@ local function CollapseDropDownMenu_ToggleSection(button, key, container)
 		section:SetCollapsed(not section:IsCollapsed())
 	else
 		addon.db.char.collapsedSections[key] = not addon.db.char.collapsedSections[key]
-		mod:SendMessage('AdiBags_LayoutChanged')
+		mod:SendMessage("AdiBags_LayoutChanged")
 	end
 end
 
 local info = {}
 local entries = {}
 local function CollapseDropDownMenu_Initialize(self, level)
-	if not level then return end
+	if not level then
+		return
+	end
 
 	-- Title
 	wipe(info)
 	info.isTitle = true
-	info.text = L['Section visibility']
+	info.text = L["Section visibility"]
 	info.notCheckable = true
 	UIDropDownMenu_AddButton(info, level)
 
@@ -111,8 +113,8 @@ local function CollapseDropDownMenu_Initialize(self, level)
 			info.text = name
 		end
 		info.isNotRadio = true
-		info.tooltipTitle = format(L['Show %s'], name)
-		info.tooltipText = L['Check this to show this section. Uncheck to hide it.']
+		info.tooltipTitle = format(L["Show %s"], name)
+		info.tooltipText = L["Check this to show this section. Uncheck to hide it."]
 		info.checked = not addon.db.char.collapsedSections[key]
 		info.keepShownOnClick = true
 		info.arg1 = key
@@ -130,12 +132,12 @@ end
 
 function Button_OnClick(button)
 	if not frame then
-		frame = CreateFrame("Frame", addonName.."CollapseDropDownMenu")
+		frame = CreateFrame("Frame", addonName .. "CollapseDropDownMenu")
 		frame.displayMode = "MENU"
 		frame.initialize = CollapseDropDownMenu_Initialize
 		frame.point = "BOTTOMRIGHT"
 		frame.relativePoint = "BOTTOMLEFT"
 	end
 	frame.container = button.container
-	ToggleDropDownMenu(1, nil, frame, 'cursor')
+	ToggleDropDownMenu(1, nil, frame, "cursor")
 end

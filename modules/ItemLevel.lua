@@ -15,23 +15,29 @@ local select = _G.select
 local unpack = _G.unpack
 --GLOBALS>
 
-local mod = addon:NewModule('ItemLevel', 'AceEvent-3.0')
-mod.uiName = L['Item level']
-mod.uiDesc = L['Display the level of equippable item in the top left corner of the button.']
+local mod = addon:NewModule("ItemLevel", "AceEvent-3.0")
+mod.uiName = L["Item level"]
+mod.uiDesc = L["Display the level of equippable item in the top left corner of the button."]
 
 local colorSchemes = {
-	none = function() return mod.db.profile.text.r, mod.db.profile.text.g, mod.db.profile.text.b end
+	none = function()
+		return mod.db.profile.text.r, mod.db.profile.text.g, mod.db.profile.text.b
+	end,
 }
 
 local texts = {}
-local ItemUpgradeInfo = LibStub('LibItemUpgradeInfo-1.0')
+local ItemUpgradeInfo = LibStub("LibItemUpgradeInfo-1.0")
 
 local SyLevel = _G.SyLevel
 local SyLevelBypass
 if SyLevel then
-	function SyLevelBypass() return mod:IsEnabled() and mod.db.profile.useSyLevel end
+	function SyLevelBypass()
+		return mod:IsEnabled() and mod.db.profile.useSyLevel
+	end
 else
-	function SyLevelBypass() return false end
+	function SyLevelBypass()
+		return false
+	end
 end
 
 local function UpdateFont()
@@ -49,41 +55,39 @@ function mod:OnInitialize()
 		profile = {
 			useSyLevel = false,
 			equippableOnly = true,
-			colorScheme = 'level',
+			colorScheme = "level",
 			minLevel = 1,
 			ignoreJunk = true,
 			ignoreHeirloom = true,
 			ignoreAmmo = true,
-			anchor = 'BOTTOMLEFT',
+			anchor = "BOTTOMLEFT",
 			offsetX = 2,
 			offsetY = 1,
 			text = addon:GetFontDefaults(NumberFontNormalLarge),
 		},
 	})
-	self.font = addon:CreateFont(
-	self.name..'Font',
-	NumberFontNormalLarge,
-	function() return self.db.profile.text end
-)
-self.font.SettingHook = UpdateFont
-if self.db.profile.colored == true then
-	self.db.profile.colorScheme = 'original'
-	self.db.profile.colored = nil
-elseif self.db.profile.colored == false then
-	self.db.profile.colorScheme = 'none'
-	self.db.profile.colored = nil
-end
-if SyLevel then
-	SyLevel:RegisterPipe(
-	'Adibags',
-	function() self.db.profile.useSyLevel = true end,
-	function() self.db.profile.useSyLevel = false end,
-	function() self:SendMessage('AdiBags_UpdateAllButtons') end,
-	'AdiBags'
-)
-SyLevel:RegisterFilterOnPipe('Adibags', 'Item level text')
-SyLevelDB.EnabledFilters['Item level text']['Adibags'] = true
-end
+	self.font = addon:CreateFont(self.name .. "Font", NumberFontNormalLarge, function()
+		return self.db.profile.text
+	end)
+	self.font.SettingHook = UpdateFont
+	if self.db.profile.colored == true then
+		self.db.profile.colorScheme = "original"
+		self.db.profile.colored = nil
+	elseif self.db.profile.colored == false then
+		self.db.profile.colorScheme = "none"
+		self.db.profile.colored = nil
+	end
+	if SyLevel then
+		SyLevel:RegisterPipe("Adibags", function()
+			self.db.profile.useSyLevel = true
+		end, function()
+			self.db.profile.useSyLevel = false
+		end, function()
+			self:SendMessage("AdiBags_UpdateAllButtons")
+		end, "AdiBags")
+		SyLevel:RegisterFilterOnPipe("Adibags", "Item level text")
+		SyLevelDB.EnabledFilters["Item level text"]["Adibags"] = true
+	end
 end
 
 local function UpdateTextLocation()
@@ -97,11 +101,11 @@ local function UpdateTextLocation()
 end
 
 function mod:OnEnable()
-	self:RegisterMessage('AdiBags_UpdateButton', 'UpdateButton')
-	if SyLevel and self.db.profile.useSyLevel and not SyLevel:IsPipeEnabled('Adibags') then
-		SyLevel:EnablePipe('Adibags')
+	self:RegisterMessage("AdiBags_UpdateButton", "UpdateButton")
+	if SyLevel and self.db.profile.useSyLevel and not SyLevel:IsPipeEnabled("Adibags") then
+		SyLevel:EnablePipe("Adibags")
 	end
-	self:SendMessage('AdiBags_UpdateAllButtons')
+	self:SendMessage("AdiBags_UpdateAllButtons")
 	self.font:ApplySettings()
 	UpdateFont()
 	UpdateTextLocation()
@@ -129,25 +133,26 @@ function mod:UpdateButton(event, button)
 	local settings = self.db.profile
 	local link = button:GetItemLink()
 	local text = texts[button]
-	
+
 	if link then
 		local _, _, quality, _, reqLevel, _, _, _, loc = GetItemInfo(link)
 		local level = ItemUpgradeInfo:GetUpgradedItemLevel(link) or 0 -- Ugly workaround
-		if level >= settings.minLevel
-		and (quality > 0 or not settings.ignoreJunk)
-		and (loc ~= "" or not settings.equippableOnly)
-		and (loc ~= "INVTYPE_AMMO" or not settings.ignoreAmmo)
-		and (quality ~= 7 or not settings.ignoreHeirloom)
+		if
+			level >= settings.minLevel
+			and (quality > 0 or not settings.ignoreJunk)
+			and (loc ~= "" or not settings.equippableOnly)
+			and (loc ~= "INVTYPE_AMMO" or not settings.ignoreAmmo)
+			and (quality ~= 7 or not settings.ignoreHeirloom)
 		then
 			if SyLevel then
 				if settings.useSyLevel then
 					if text then
 						text:Hide()
 					end
-					SyLevel:CallFilters('Adibags', button, link)
+					SyLevel:CallFilters("Adibags", button, link)
 					return
 				else
-					SyLevel:CallFilters('Adibags', button, nil)
+					SyLevel:CallFilters("Adibags", button, nil)
 				end
 			end
 			if not text then
@@ -159,46 +164,44 @@ function mod:UpdateButton(event, button)
 		end
 	end
 	if SyLevel then
-		SyLevel:CallFilters('Adibags', button, nil)
+		SyLevel:CallFilters("Adibags", button, nil)
 	end
 	if text then
 		text:Hide()
 	end
 end
 
-
 function mod:GetOptions()
-	local options =
-	{
+	local options = {
 		useSyLevel = SyLevel and {
-			name = L['Use SyLevel'],
-			desc = L['Let SyLevel handle the the display.'],
-			type = 'toggle',
+			name = L["Use SyLevel"],
+			desc = L["Let SyLevel handle the the display."],
+			type = "toggle",
 			order = 5,
 		} or nil,
 		equippableOnly = {
-			name = L['Only equippable items'],
-			desc = L['Do not show level of items that cannot be equipped.'],
-			type = 'toggle',
+			name = L["Only equippable items"],
+			desc = L["Do not show level of items that cannot be equipped."],
+			type = "toggle",
 			order = 10,
 		},
 		colorScheme = {
-			name = L['Color scheme'],
-			desc = L['Which color scheme should be used to display the item level ?'],
-			type = 'select',
+			name = L["Color scheme"],
+			desc = L["Which color scheme should be used to display the item level ?"],
+			type = "select",
 			hidden = SyLevelBypass,
 			values = {
-				none     = L['Manual'],
-				original = L['Same as InventoryItemLevels'],
-				level    = L['Related to player level'],
-				qualityColor = L['Same as quality color'],
+				none = L["Manual"],
+				original = L["Same as InventoryItemLevels"],
+				level = L["Related to player level"],
+				qualityColor = L["Same as quality color"],
 			},
 			order = 20,
 		},
 		minLevel = {
-			name = L['Mininum level'],
-			desc = L['Do not show levels under this threshold.'],
-			type = 'range',
+			name = L["Mininum level"],
+			desc = L["Do not show levels under this threshold."],
+			type = "range",
 			min = 1,
 			max = 1000,
 			step = 1,
@@ -206,31 +209,31 @@ function mod:GetOptions()
 			order = 30,
 		},
 		ignoreJunk = {
-			name = L['Ignore low quality items'],
-			desc = L['Do not show level of poor quality items.'],
-			type = 'toggle',
+			name = L["Ignore low quality items"],
+			desc = L["Do not show level of poor quality items."],
+			type = "toggle",
 			order = 40,
 		},
 		ignoreHeirloom = {
-			name = L['Ignore heirloom items'],
-			desc = L['Do not show level of heirloom items.'],
-			type = 'toggle',
+			name = L["Ignore heirloom items"],
+			desc = L["Do not show level of heirloom items."],
+			type = "toggle",
 			order = 50,
-		},		
+		},
 		ignoreAmmo = {
-			name = L['Ignore ammunition'],
-			desc = L['Do not show level of arrows/bullets.'],
-			type = 'toggle',
+			name = L["Ignore ammunition"],
+			desc = L["Do not show level of arrows/bullets."],
+			type = "toggle",
 			order = 60,
 		},
 		positionHeader = {
-			name = L['Text Position'],
-			type = 'header',
+			name = L["Text Position"],
+			type = "header",
 			order = 70,
 		},
 		anchor = {
-			name = L['Anchor'],
-			type = 'select',
+			name = L["Anchor"],
+			type = "select",
 			values = {
 				TOPLEFT = "TOPLEFT",
 				TOP = "TOP",
@@ -254,34 +257,45 @@ function mod:GetOptions()
 			-- 	[9] = "BOTTOMRIGHT",
 			-- },
 			order = 71,
-			set = function(info,value) mod.db.profile[info[#info]] = value; UpdateTextLocation() end,
+			set = function(info, value)
+				mod.db.profile[info[#info]] = value
+				UpdateTextLocation()
+			end,
 		},
 		offsetX = {
 			name = L["X Offset"],
 			desc = L["Offset in X direction (horizontal) from the given anchor point."],
-			type = 'range',
+			type = "range",
 			min = -20,
 			max = 20,
 			step = 1,
 			bigStep = 1,
 			order = 72,
-			set = function(info,value) mod.db.profile[info[#info]] = value; UpdateTextLocation() end,
+			set = function(info, value)
+				mod.db.profile[info[#info]] = value
+				UpdateTextLocation()
+			end,
 		},
 		offsetY = {
-			name = L["Y Offset"] ,
+			name = L["Y Offset"],
 			desc = L["Offset in Y direction (vertical) from the given anchor point."],
-			type = 'range',
+			type = "range",
 			min = -20,
 			max = 20,
 			step = 1,
 			bigStep = 1,
 			order = 73,
-			set = function(info,value) mod.db.profile[info[#info]] = value; UpdateTextLocation() end,
+			set = function(info, value)
+				mod.db.profile[info[#info]] = value
+				UpdateTextLocation()
+			end,
 		},
 		text = addon:CreateFontOptions(self.font, nil, 80),
 	}
 	options.text.args.size.step = 1
-	options.text.args.color.disabled  = function() return mod.db.profile.colorScheme ~= "none" end
+	options.text.args.color.disabled = function()
+		return mod.db.profile.colorScheme ~= "none"
+	end
 	return options, addon:GetOptionHandler(self)
 end
 
@@ -289,9 +303,9 @@ end
 do
 	local colors = {
 		-- { upper bound, r, g, b }
-		{  30, 0.55, 0.55, 0.55 }, -- gray
-		{  54, 1.00, 0.00, 0.00 }, -- red
-		{  72, 1.00, 0.70, 0.00 }, -- orange
+		{ 30, 0.55, 0.55, 0.55 }, -- gray
+		{ 54, 1.00, 0.00, 0.00 }, -- red
+		{ 72, 1.00, 0.70, 0.00 }, -- orange
 		{ 140, 1.00, 1.00, 0.00 }, -- yellow
 		{ 158, 0.00, 1.00, 0.00 }, -- green
 		{ 188, 0.00, 1.00, 1.00 }, -- cyan
@@ -300,7 +314,7 @@ do
 		{ 273, 1.00, 0.75, 1.00 }, -- pink
 		{ 999, 1.00, 1.00, 1.00 }, -- white
 	}
-	
+
 	colorSchemes.original = function(level)
 		for i, tuple in pairs(colors) do
 			if level < tuple[1] then
@@ -318,7 +332,7 @@ do
 		local function GetY(r, g, b)
 			return 0.3 * r + 0.59 * g + 0.11 * b
 		end
-		
+
 		local function RGBToHCY(r, g, b)
 			local min, max = min(r, g, b), max(r, g, b)
 			local chroma = max - min
@@ -335,7 +349,7 @@ do
 			end
 			return hue, chroma, GetY(r, g, b)
 		end
-		
+
 		local function HCYtoRGB(hue, chroma, luma)
 			local r, g, b = 0, 0, 0
 			if hue then
@@ -358,34 +372,34 @@ do
 			local m = luma - GetY(r, g, b)
 			return r + m, g + m, b + m
 		end
-		
+
 		colorGradient = function(a, b, ...)
 			local perc
-			if(b == 0) then
+			if b == 0 then
 				perc = 0
 			else
 				perc = a / b
 			end
-			
+
 			if perc >= 1 then
-				local r, g, b = select(select('#', ...) - 2, ...)
+				local r, g, b = select(select("#", ...) - 2, ...)
 				return r, g, b
 			elseif perc <= 0 then
 				local r, g, b = ...
 				return r, g, b
 			end
-			
-			local num = select('#', ...) / 3
-			local segment, relperc = modf(perc*(num-1))
-			local r1, g1, b1, r2, g2, b2 = select((segment*3)+1, ...)
-			
+
+			local num = select("#", ...) / 3
+			local segment, relperc = modf(perc * (num - 1))
+			local r1, g1, b1, r2, g2, b2 = select((segment * 3) + 1, ...)
+
 			local h1, c1, y1 = RGBToHCY(r1, g1, b1)
 			local h2, c2, y2 = RGBToHCY(r2, g2, b2)
-			local c = c1 + (c2-c1) * relperc
-			local	y = y1 + (y2-y1) * relperc
+			local c = c1 + (c2 - c1) * relperc
+			local y = y1 + (y2 - y1) * relperc
 			if h1 and h2 then
 				local dh = h2 - h1
-				if dh < -0.5  then
+				if dh < -0.5 then
 					dh = dh + 1
 				elseif dh > 0.5 then
 					dh = dh - 1
@@ -394,21 +408,20 @@ do
 			else
 				return HCYtoRGB(h1 or h2, c, y)
 			end
-			
 		end
 	end
-	
+
 	local maxLevelRanges = {
-		[60]  = {  66,  92 },
-		[70]  = { 100, 164 },
-		[80]  = { 187, 284 },
-		[85]  = { 333, 416 },
-		[90]  = { 450, 616 },
+		[60] = { 66, 92 },
+		[70] = { 100, 164 },
+		[80] = { 187, 284 },
+		[85] = { 333, 416 },
+		[90] = { 450, 616 },
 		[100] = { 615, 735 },
 		[110] = { 805, 905 },
 		[120] = { 310, 350 },
 	}
-	
+
 	local maxLevelColors = {}
 	do
 		local t = maxLevelColors
@@ -417,10 +430,12 @@ do
 		t[7], t[8], t[9] = GetItemQualityColor(4)
 		t[10], t[11], t[12] = GetItemQualityColor(5)
 	end
-	
+
 	colorSchemes.level = function(level, quality, reqLevel, equipabble)
-		if not equipabble then return 1,1,1 end
-		local playerLevel = UnitLevel('player')
+		if not equipabble then
+			return 1, 1, 1
+		end
+		local playerLevel = UnitLevel("player")
 		if playerLevel == _G.MAX_PLAYER_LEVEL then
 			-- Use the item level range for that level
 			local minLevel, maxLevel = unpack(maxLevelRanges[playerLevel])
@@ -453,7 +468,7 @@ do
 	do
 		colorSchemes.qualityColor = function(level, quality)
 			r, g, b, hex = GetItemQualityColor(quality)
-			return r,g,b
+			return r, g, b
 		end
-	end	
+	end
 end

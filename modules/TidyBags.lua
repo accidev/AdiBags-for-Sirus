@@ -30,9 +30,10 @@ local wipe = _G.wipe
 local GetSlotId = addon.GetSlotId
 local GetBagSlotFromId = addon.GetBagSlotFromId
 
-local mod = addon:NewModule('TidyBags', 'AceEvent-3.0', 'AceBucket-3.0')
-mod.uiName = L['Tidy bags']
-mod.uiDesc = L['Tidy your bags by clicking on the small "T" button at the top left of bags. Special bags with free slots will be filled with matching items and stackable items will be stacked to save space.']
+local mod = addon:NewModule("TidyBags", "AceEvent-3.0", "AceBucket-3.0")
+mod.uiName = L["Tidy bags"]
+mod.uiDesc =
+	L['Tidy your bags by clicking on the small "T" button at the top left of bags. Special bags with free slots will be filled with matching items and stackable items will be stacked to save space.']
 
 local bags = {}
 
@@ -52,23 +53,23 @@ function mod:OnEnable()
 	for i, bag in addon:IterateDefinedBags() do
 		local name = bag.bagName
 		if not bags[name] then
-			self:Debug('Adding bag', bag, name, bag.bagIds)
+			self:Debug("Adding bag", bag, name, bag.bagIds)
 			bags[name] = setmetatable({
-				name = "Tidy-"..name,
+				name = "Tidy-" .. name,
 				bagIds = bag.bagIds,
 				obj = bag,
 				locked = {},
 			}, bagMeta)
-			self:Debug('Registered', bags[name])
+			self:Debug("Registered", bags[name])
 		end
 	end
-	addon:HookBagFrameCreation(self, 'OnBagFrameCreated')
+	addon:HookBagFrameCreation(self, "OnBagFrameCreated")
 
-	self:RegisterMessage('AdiBags_InteractingWindowChanged')
-	self:RegisterBucketMessage('AdiBags_BagUpdated', 0.2)
-	self:RegisterEvent('PLAYER_REGEN_DISABLED', 'RefreshAllBags')
-	self:RegisterEvent('PLAYER_REGEN_ENABLED')
-	self:RegisterEvent('LOOT_CLOSED', 'AutomaticTidy')
+	self:RegisterMessage("AdiBags_InteractingWindowChanged")
+	self:RegisterBucketMessage("AdiBags_BagUpdated", 0.2)
+	self:RegisterEvent("PLAYER_REGEN_DISABLED", "RefreshAllBags")
+	self:RegisterEvent("PLAYER_REGEN_ENABLED")
+	self:RegisterEvent("LOOT_CLOSED", "AutomaticTidy")
 
 	for name, bag in pairs(bags) do
 		bag:ShowButton()
@@ -84,12 +85,13 @@ end
 function mod:GetOptions()
 	return {
 		autoTidy = {
-			name = L['Semi-automated tidy'],
-			desc = L['Check this so tidying is performed when you close the loot windows or you leave merchants, mailboxes, etc.'],
-			type = 'toggle',
+			name = L["Semi-automated tidy"],
+			desc = L["Check this so tidying is performed when you close the loot windows or you leave merchants, mailboxes, etc."],
+			type = "toggle",
 			order = 10,
 		},
-	}, addon:GetOptionHandler(self)
+	},
+		addon:GetOptionHandler(self)
 end
 
 function mod:AdiBags_InteractingWindowChanged(event, new)
@@ -103,8 +105,10 @@ function mod:OnBagFrameCreated(bag)
 end
 
 function mod:AutomaticTidy(event)
-	if not self.db.profile.autoTidy or InCombatLockdown() then return end
-	self:Debug('AutomaticTidy on', event)
+	if not self.db.profile.autoTidy or InCombatLockdown() then
+		return
+	end
+	self:Debug("AutomaticTidy on", event)
 	for name, bag in pairs(bags) do
 		bag:Tidy()
 	end
@@ -113,7 +117,7 @@ end
 local wasLocked = {}
 local wasCached = {}
 function mod:AdiBags_BagUpdated(bagIds)
-	self:Debug('AdiBags_BagUpdated')
+	self:Debug("AdiBags_BagUpdated")
 	wipe(wasLocked)
 	wipe(wasCached)
 	for name, bag in pairs(bags) do
@@ -126,7 +130,7 @@ function mod:AdiBags_BagUpdated(bagIds)
 						bag.cached = nil
 					end
 					if bag.locked[bagID] then
-						bag:Debug('Bag', bagID, "unlocked")
+						bag:Debug("Bag", bagID, "unlocked")
 						bag.locked[bagID] = nil
 						wasLocked[bag] = true
 					end
@@ -162,17 +166,16 @@ end
 
 local function TidyButton_OnClick(button)
 	PlaySound("igMainMenuOptionCheckBoxOn")
-		addon:SendMessage('AdiBags_TidyBagsButtonClick')
+	addon:SendMessage("AdiBags_TidyBagsButtonClick")
 	return button.bag:Tidy()
-
 end
 
 local function TidyButton_OnShow(button)
-	return button.bag:UpdateButton('OnShow')
+	return button.bag:UpdateButton("OnShow")
 end
 
 function bagProto:AttachContainer(container)
-	self:Debug('Attaching container', container)
+	self:Debug("Attaching container", container)
 	local button = CreateFrame("Button", nil, container, "UIPanelButtonTemplate")
 	button.bag = self
 	button:SetText("T")
@@ -182,7 +185,7 @@ function bagProto:AttachContainer(container)
 	button:SetScript("OnShow", TidyButton_OnShow)
 	addon.SetupTooltip(button, {
 		L["Tidy bags"],
-		L["Click to tidy bags."]
+		L["Click to tidy bags."],
 	}, "ANCHOR_TOPLEFT", 0, 8)
 	container:AddHeaderWidget(button, 0)
 
@@ -238,10 +241,10 @@ function bagProto:PickupItem(bag, slot, expectedCursorInfo)
 	PickupContainerItem(bag, slot)
 	if GetCursorInfo() == expectedCursorInfo then
 		if addon:SetGlobalLock(true) then
-			self:Debug('Locked all items')
+			self:Debug("Locked all items")
 		end
 		if not self.locked[bag] then
-			self:Debug('Bag', bag, 'locked, waiting for update')
+			self:Debug("Bag", bag, "locked, waiting for update")
 			self.locked[bag] = true
 		end
 		return true
@@ -249,28 +252,28 @@ function bagProto:PickupItem(bag, slot, expectedCursorInfo)
 end
 
 function bagProto:ProcessInternal()
-	self:Debug('Processing')
+	self:Debug("Processing")
 	if not GetCursorInfo() then
 		local fromBag, fromSlot, toBag, toSlot = self:GetNextMove()
 		if fromBag then
-			self:Debug('Trying to move from', fromBag, fromSlot, 'to', toBag, toSlot)
+			self:Debug("Trying to move from", fromBag, fromSlot, "to", toBag, toSlot)
 			if self:PickupItem(fromBag, fromSlot, "item") then
 				if self:PickupItem(toBag, toSlot, nil) then
-					self:Debug('Moved', fromBag, fromSlot, 'to', toBag, toSlot)
+					self:Debug("Moved", fromBag, fromSlot, "to", toBag, toSlot)
 					return
 				end
 			end
-			self:Debug('Something failed !')
+			self:Debug("Something failed !")
 			ClearCursor()
 		end
 	end
 	if addon:SetGlobalLock(false) then
-		self:Debug('Unlocked all items')
+		self:Debug("Unlocked all items")
 	end
 	self.running = nil
 	self:UpdateButton("ProcessInternal")
 	self:Debug("Done")
-	addon:SendMessage('AdiBags_TidyBags')
+	addon:SendMessage("AdiBags_TidyBags")
 end
 
 function bagProto:Process()
@@ -289,25 +292,35 @@ local GetSlotId = addon.GetSlotId
 local GetBagSlotFromId = addon.GetBagSlotFromId
 
 -- Memoization tables
-local itemMaxStackMemo = setmetatable({}, {__index = function(t, id)
-	if not id then return end
-	local count = select(8, GetItemInfo(id)) or false
-	t[id] = count
-	return count
-end})
-local itemFamilyMemo = setmetatable({}, {__index = function(t, id)
-if not id then return end
-	local family = GetItemFamily(id) or false
-	t[id] = family
-	return family
-end})
+local itemMaxStackMemo = setmetatable({}, {
+	__index = function(t, id)
+		if not id then
+			return
+		end
+		local count = select(8, GetItemInfo(id)) or false
+		t[id] = count
+		return count
+	end,
+})
+local itemFamilyMemo = setmetatable({}, {
+	__index = function(t, id)
+		if not id then
+			return
+		end
+		local family = GetItemFamily(id) or false
+		t[id] = family
+		return family
+	end,
+})
 
 local incompleteStacks = {}
 local bagList = {}
 local freeSlots = {}
 local profBags = {}
 function bagProto:FindNextMove()
-	if InCombatLockdown() then return end
+	if InCombatLockdown() then
+		return
+	end
 
 	wipe(bagList)
 	for bag in pairs(self.bagIds) do
@@ -317,7 +330,7 @@ function bagProto:FindNextMove()
 		end
 	end
 	tsort(bagList)
-	self:Debug('FindNextMove in bags', unpack(bagList))
+	self:Debug("FindNextMove in bags", unpack(bagList))
 
 	-- Firstly, merge incomplete stacks
 	wipe(incompleteStacks)
@@ -336,7 +349,7 @@ function bagProto:FindNextMove()
 					local existingStack = incompleteStacks[id]
 					if existingStack then
 						local toBag, toSlot = GetBagSlotFromId(existingStack)
-						self:Debug('FindNextMove: should merge stacks:', bag, slot, toBag, toSlot)
+						self:Debug("FindNextMove: should merge stacks:", bag, slot, toBag, toSlot)
 						if toBag < bag or (toBag == bag and toSlot < slot) then
 							return bag, slot, toBag, toSlot
 						else
@@ -363,7 +376,13 @@ function bagProto:FindNextMove()
 							if band(family, itemFamily) ~= 0 then
 								wipe(freeSlots)
 								GetContainerFreeSlots(toBag, freeSlots)
-								self:Debug("FindNextMove: should move into profession bag:", bag, slot, toBag, freeSlots[1])
+								self:Debug(
+									"FindNextMove: should move into profession bag:",
+									bag,
+									slot,
+									toBag,
+									freeSlots[1]
+								)
 								return bag, slot, toBag, freeSlots[1]
 							end
 						end
@@ -373,5 +392,5 @@ function bagProto:FindNextMove()
 		end
 	end
 
-	self:Debug('FindNextMove: nothing to do')
+	self:Debug("FindNextMove: nothing to do")
 end

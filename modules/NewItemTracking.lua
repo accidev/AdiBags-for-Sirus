@@ -1,9 +1,10 @@
 local addonName, addon = ...
 local L = addon.L
 
-local mod = addon:RegisterFilter('NewItem', 100, 'AceEvent-3.0', 'AceBucket-3.0', 'AceTimer-3.0')
-mod.uiName = L['Track new items']
-mod.uiDesc = L['Track new items in each bag, displaying a glowing aura over them and putting them in a special section. "New" status can be reset by clicking on the small "N" button at top left of bags.']
+local mod = addon:RegisterFilter("NewItem", 100, "AceEvent-3.0", "AceBucket-3.0", "AceTimer-3.0")
+mod.uiName = L["Track new items"]
+mod.uiDesc =
+	L['Track new items in each bag, displaying a glowing aura over them and putting them in a special section. "New" status can be reset by clicking on the small "N" button at top left of bags.']
 
 local allBagIds = {}
 
@@ -15,10 +16,10 @@ function mod:OnInitialize()
 			showGlow = true,
 			glowScale = 1.5,
 			glowColor = { 0.3, 1, 0.3, 0.7 },
-			ignoreJunk = false,			
+			ignoreJunk = false,
 		},
 	})
-	addon:SetCategoryOrder(L['New'], 100)
+	addon:SetCategoryOrder(L["New"], 100)
 end
 
 function mod:OnEnable()
@@ -31,15 +32,15 @@ function mod:OnEnable()
 		end
 	end
 
-	addon:HookBagFrameCreation(self, 'OnBagFrameCreated')
+	addon:HookBagFrameCreation(self, "OnBagFrameCreated")
 	for name, bag in pairs(bags) do
 		if bag.button then
 			bag.button:Show()
 		end
 	end
 
-	self:RegisterMessage('AdiBags_PreFilter')
-	self:RegisterMessage('AdiBags_UpdateButton', 'UpdateButton')
+	self:RegisterMessage("AdiBags_PreFilter")
+	self:RegisterMessage("AdiBags_UpdateButton", "UpdateButton")
 
 	addon.filterProto.OnEnable(self)
 end
@@ -63,7 +64,7 @@ local function ResetButton_OnClick(button)
 		_G.C_NewItems.ClearAll()
 		addon:UpdateFilters()
 	end
-	mod:SendMessage('AdiBags_NewItemReset')
+	mod:SendMessage("AdiBags_NewItemReset")
 end
 
 function mod:OnBagFrameCreated(bag)
@@ -78,7 +79,7 @@ function mod:OnBagFrameCreated(bag)
 	container:AddHeaderWidget(button, 10)
 	addon.SetupTooltip(button, {
 		L["Reset new items"],
-		L["Click to reset item status."]
+		L["Click to reset item status."],
 	}, "ANCHOR_TOPLEFT", 0, 8)
 
 	bags[bag.bagName].button = button
@@ -92,13 +93,13 @@ end
 function mod:GetOptions()
 	return {
 		showGlow = {
-			name = L['New item highlight'],
-			type = 'toggle',
+			name = L["New item highlight"],
+			type = "toggle",
 			order = 10,
 		},
 		glowScale = {
-			name = L['Highlight scale'],
-			type = 'range',
+			name = L["Highlight scale"],
+			type = "range",
 			min = 0.5,
 			max = 3.0,
 			step = 0.01,
@@ -107,21 +108,22 @@ function mod:GetOptions()
 			order = 20,
 		},
 		glowColor = {
-			name = L['Highlight color'],
-			type = 'color',
+			name = L["Highlight color"],
+			type = "color",
 			order = 30,
 			hasAlpha = true,
 		},
 		ignoreJunk = {
-			name = L['Ignore low quality items'],
-			type = 'toggle',
+			name = L["Ignore low quality items"],
+			type = "toggle",
 			order = 40,
 			set = function(info, ...)
 				info.handler:Set(info, ...)
 				addon:UpdateFilters()
-			end					
+			end,
 		},
-	}, addon:GetOptionHandler(self)
+	},
+		addon:GetOptionHandler(self)
 end
 
 --------------------------------------------------------------------------------
@@ -164,7 +166,7 @@ end
 
 local function CreateGlow(button)
 	local glow = CreateFrame("FRAME", nil, button)
-	glow:SetFrameLevel(button:GetFrameLevel()+15)
+	glow:SetFrameLevel(button:GetFrameLevel() + 15)
 	glow:SetPoint("CENTER")
 	glow:SetWidth(addon.ITEM_SIZE)
 	glow:SetHeight(addon.ITEM_SIZE)
@@ -194,11 +196,17 @@ end
 
 function mod:UpdateButton(event, button)
 	local glow = glows[button]
-	
+
 	local isNew = false
 	if _G.C_NewItems and _G.C_NewItems.IsNewItem then
 		if button.bag and button.slot and _G.C_NewItems.IsNewItem(button.bag, button.slot) then
-			if not (mod.db.profile.ignoreJunk and GetItemInfo(button:GetItemId()) and select(3, GetItemInfo(button:GetItemId())) == 0) then
+			if
+				not (
+					mod.db.profile.ignoreJunk
+					and GetItemInfo(button:GetItemId())
+					and select(3, GetItemInfo(button:GetItemId())) == 0
+				)
+			then
 				isNew = true
 			end
 		end
