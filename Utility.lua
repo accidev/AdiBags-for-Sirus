@@ -187,3 +187,30 @@ function addon.CanPutItemInContainer(item, container)
 		itemFamily,
 		containerFamily
 end
+
+local itemTooltipHandlers = {}
+
+local function AdiBags_OnTooltipCleared(tt)
+	tt.adibags_itemTooltipDone = nil
+end
+
+local function AdiBags_OnTooltipSetItem(tt)
+	if tt.adibags_itemTooltipDone then
+		return
+	end
+	tt.adibags_itemTooltipDone = true
+	local _, itemLink = tt:GetItem()
+	for i = 1, #itemTooltipHandlers do
+		addon.safecall(itemTooltipHandlers[i], tt, itemLink)
+	end
+end
+
+local itemTooltipHooked = false
+function addon:RegisterItemTooltipHandler(callback)
+	if not itemTooltipHooked then
+		GameTooltip:HookScript("OnTooltipCleared", AdiBags_OnTooltipCleared)
+		GameTooltip:HookScript("OnTooltipSetItem", AdiBags_OnTooltipSetItem)
+		itemTooltipHooked = true
+	end
+	itemTooltipHandlers[#itemTooltipHandlers + 1] = callback
+end

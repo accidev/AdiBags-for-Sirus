@@ -274,18 +274,22 @@ function addon:OnEnable()
 	self:RawHook("CloseSpecialWindows", true)
 
 	-- Track most windows involving items
-	self:RegisterEvent("BANKFRAME_OPENED", "UpdateInteractingWindow")
-	self:RegisterEvent("BANKFRAME_CLOSED", "UpdateInteractingWindow")
-	self:RegisterEvent("MAIL_SHOW", "UpdateInteractingWindow")
-	self:RegisterEvent("MAIL_CLOSED", "UpdateInteractingWindow")
-	self:RegisterEvent("MERCHANT_SHOW", "UpdateInteractingWindow")
-	self:RegisterEvent("MERCHANT_CLOSED", "UpdateInteractingWindow")
-	self:RegisterEvent("AUCTION_HOUSE_SHOW", "UpdateInteractingWindow")
-	self:RegisterEvent("AUCTION_HOUSE_CLOSED", "UpdateInteractingWindow")
-	self:RegisterEvent("TRADE_SHOW", "UpdateInteractingWindow")
-	self:RegisterEvent("TRADE_CLOSED", "UpdateInteractingWindow")
-	self:RegisterEvent("GUILDBANKFRAME_OPENED", "UpdateInteractingWindow")
-	self:RegisterEvent("GUILDBANKFRAME_CLOSED", "UpdateInteractingWindow")
+	for _, event in ipairs({
+		"BANKFRAME_OPENED",
+		"BANKFRAME_CLOSED",
+		"MAIL_SHOW",
+		"MAIL_CLOSED",
+		"MERCHANT_SHOW",
+		"MERCHANT_CLOSED",
+		"AUCTION_HOUSE_SHOW",
+		"AUCTION_HOUSE_CLOSED",
+		"TRADE_SHOW",
+		"TRADE_CLOSED",
+		"GUILDBANKFRAME_OPENED",
+		"GUILDBANKFRAME_CLOSED",
+	}) do
+		self:RegisterEvent(event, "UpdateInteractingWindow")
+	end
 
 	self:SetSortingOrder(self.db.profile.sortingOrder)
 
@@ -380,7 +384,7 @@ function addon:UpgradeProfile()
 		end
 		if skin.fontBagColor then
 			local bagFont = profile.bagFont
-			bagFont.r, bagFont.g, bagFont.r = unpack(skin.fontBagColor)
+			bagFont.r, bagFont.g, bagFont.b = unpack(skin.fontBagColor)
 			skin.fontBagColor = nil
 		end
 		if skin.fontSectionColor then
@@ -976,9 +980,8 @@ local function AnchoredBagLayout(self)
 	local anchorPoint = anchor:GetPosition()
 
 	local frame = bag:GetFrame()
-	frame:ClearAllPoints()
 	self:Debug("AnchoredBagLayout", anchorPoint)
-	frame:SetPoint(anchorPoint, anchor, anchorPoint, 0, 0)
+	frame:ClearAndSetPoint(anchorPoint, anchor, anchorPoint, 0, 0)
 
 	local lastFrame = frame
 	index, bag = nextBag(data, index)
@@ -996,8 +999,7 @@ local function AnchoredBagLayout(self)
 
 	while bag do
 		local frame = bag:GetFrame()
-		frame:ClearAllPoints()
-		frame:SetPoint(fromPoint, lastFrame, toPoint, x / frame:GetScale(), 0)
+		frame:ClearAndSetPoint(fromPoint, lastFrame, toPoint, x / frame:GetScale(), 0)
 		lastFrame, index, bag = frame, nextBag(data, index)
 	end
 end
@@ -1028,71 +1030,28 @@ function addon:LayoutBags()
 	end
 end
 
---===== Toggles current position mode to the opposite one.  =====--
---===== Made for bag menus Alt+LeftClick in ContainerFrame.lua =====--
+local MODE_STYLE = {
+	manual = { color = "|cFFFFA500", restoreTimeVisible = 3 },
+	anchored = { color = "|cFF00FF00", restoreTimeVisible = 5 },
+}
 
-function addon:ToggleCurrentLayout()
-	if self.db.profile.positionMode == "anchored" then
-		--===== Set position of current layout =====--
-		ManualBagLayout(self)
-
-		--===== Change DB setting to opposite layout =====--
-		self.db.profile.positionMode = "manual"
-
-		--===== Add Message to error frame about chaning anchoring mode. =====--
-		UIErrorsFrame:AddMessage(
-			"\124cFFFFA500" .. L["Manual"] .. "\124r \124cff00bfff" .. L["mode."] .. "\124r",
-			1.0,
-			0.0,
-			0.0,
-			53,
-			1
-		)
-
-		-- First call with a duration of 0.5 seconds to remove delay of AdiBags message.
-		UIErrorsFrame:SetTimeVisible(0.5)
-
-		-- After 0.6 second, change to default UI ErrorsFrame timing.
-		LibCompat.After(0.6, function()
-			UIErrorsFrame:SetTimeVisible(3)
-		end)
-
-		--===== Close Bag Menu =====--
-		CloseMenus()
-
-		--===== Send message to Container.lua menu frames =====--
-		self:SendMessage("AdiBags_ManualLayout")
-
-		-- print("Anchored layout")
-	elseif self.db.profile.positionMode == "manual" then
-		UIErrorsFrame:AddMessage(
-			"\124cFF00FF00" .. L["Anchored"] .. "\124r\124cff00bfff " .. L["mode."] .. "\124r",
-			1.0,
-			0.0,
-			0.0,
-			53,
-			1
-		)
-
-		UIErrorsFrame:SetTimeVisible(0.5)
-
-		LibCompat.After(0.6, function()
-			UIErrorsFrame:SetTimeVisible(5)
-		end)
-
-		AnchoredBagLayout(self)
-
-		self.db.profile.positionMode = "anchored"
-
-		CloseMenus()
-
-		self:SendMessage("AdiBags_AnchoredLayout")
-
-		-- print("manual layout")
-	end
+local function AnnounceMode(mode)
+	local style = MODE_STYLE[mode]
+	local label = mode == "manual" and L["Manual"] or L["Anchored"]
+	UIErrorsFrame:AddMessage(style.color .. label .. "|r |cff00bfff" .. L["mode."] .. "|r", 1, 0, 0, 53, 1)
+	UIErrorsFrame:SetTimeVisible(0.5)
+	LibCompat.After(0.6, function()
+		UIErrorsFrame:SetTimeVisible(style.restoreTimeVisible)
+	end)
 end
 
---===== Toggles Anchor for the anchored position mode =====--
+function addon:ToggleCurrentLayout()
+	local newMode = self.db.profile.positionMode == "anchored" and "manual" or "anchored"
+	self.db.profile.positionMode = newMode
+	CloseMenus()
+	AnnounceMode(newMode)
+	self:UpdatePositionMode()
+end
 
 function addon:ToggleAnchor()
 	if self.db.profile.positionMode == "anchored" and not self.anchor:IsShown() then
@@ -1102,43 +1061,26 @@ function addon:ToggleAnchor()
 	end
 end
 
---=====  =====--
-
 function addon:UpdatePositionMode()
-	if self.db.profile.positionMode == "anchored" then
-		for index, bag in self:IterateBags() do
-			if bag:HasFrame() then
-				bag:GetFrame().Anchor:Hide()
+	self.anchor:Hide()
+	for _, bag in self:IterateBags() do
+		if bag:HasFrame() then
+			local frame = bag:GetFrame()
+			if frame.UpdateAnchorVisibility then
+				frame:UpdateAnchorVisibility()
 			end
 		end
-	else
-		for index, bag in self:IterateBags() do
-			if bag:HasFrame() then
-				bag:GetFrame().Anchor:Show()
-			end
-		end
-		self.anchor:Hide()
 	end
 	self:LayoutBags()
 end
 
-local function copytable(dst, src)
-	wipe(dst)
-	for k, v in pairs(src) do
-		if type(v) == "table" then
-			if type(dst[k]) ~= "table" then
-				dst[k] = {}
-			end
-			copytable(dst[k], v)
-		else
-			dst[k] = v
-		end
-	end
-end
-
 function addon:ResetBagPositions()
 	self.db.profile.scale = DEFAULT_SETTINGS.profile.scale
-	copytable(self.db.profile.positions, DEFAULT_SETTINGS.profile.positions)
+	local positions = self.db.profile.positions
+	wipe(positions)
+	for key, preset in pairs(DEFAULT_SETTINGS.profile.positions) do
+		positions[key] = CopyTable(preset)
+	end
 	self:LayoutBags()
 end
 

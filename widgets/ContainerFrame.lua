@@ -50,74 +50,77 @@ local EasyMenu = EasyMenu
 local CreateFrame = CreateFrame
 local ToggleDropDownMenu = ToggleDropDownMenu
 
-local menuFrame = CreateFrame("Frame", "menuFrame", UIParent, "UIDropDownMenuTemplate")
-local menuList = {
-	{
-		text = "|TInterface\\Buttons\\UI-Panel-MinimizeButton-Up:24|t |cffFFA500Close|r",
-		func = function()
-			CloseMenus()
-		end,
-		fontObject = GameFontNormalLarge,
-	},
-
-	{ text = "  ", notClickable = true },
-	{
-		text = "  |TInterface\\Icons\\INV_Misc_Spyglass_03:20|t    " .. L["Reset bag position"],
-		func = function()
-			addon:ResetBagPositions()
-		end,
-	},
-	{
-		text = "  |TInterface\\Icons\\INV_Misc_Spyglass_03:20|t    " .. L["Unlock Anchor"],
-		func = function()
-			addon:ToggleAnchor()
-		end,
-	},
-	{
+local function BuildBagMenu(includeUnlockAnchor)
+	local menu = {
+		{
+			text = "|TInterface\\Buttons\\UI-Panel-MinimizeButton-Up:24|t |cffFFA500Close|r",
+			func = function()
+				CloseMenus()
+			end,
+			fontObject = GameFontNormalLarge,
+		},
+		{ text = "  ", notClickable = true },
+		{
+			text = "  |TInterface\\Icons\\INV_Misc_Spyglass_03:20|t    " .. L["Reset bag position"],
+			func = function()
+				addon:ResetBagPositions()
+			end,
+		},
+	}
+	if includeUnlockAnchor then
+		menu[#menu + 1] = {
+			text = "  |TInterface\\Icons\\INV_Misc_Spyglass_03:20|t    " .. L["Unlock Anchor"],
+			func = function()
+				addon:ToggleAnchor()
+			end,
+		}
+	end
+	menu[#menu + 1] = {
 		text = "  |TInterface\\Icons\\INV_TradeskillItem_03:20|t    " .. L["Manual Filtering"],
 		func = function()
 			addon:OpenOptions("filters", "FilterOverride")
 		end,
-	},
-	{
+	}
+	menu[#menu + 1] = {
 		text = "  |TInterface\\Icons\\INV_Misc_Gear_01:20|t    " .. L["Settings"],
 		func = function()
 			addon:OpenOptions()
 		end,
-	},
-}
+	}
+	return menu
+end
+
+local menuFrame = CreateFrame("Frame", "menuFrame", UIParent, "UIDropDownMenuTemplate")
+local menuList = BuildBagMenu(true)
 
 local menuFrame2 = CreateFrame("Frame", "menuFrame2", UIParent, "UIDropDownMenuTemplate")
+local menuList2 = BuildBagMenu(false)
 
-local menuList2 = {
-	{
-		text = "|TInterface\\Buttons\\UI-Panel-MinimizeButton-Up:24|t |cffFFA500Close|r",
-		func = function()
-			CloseMenus()
-		end,
-		fontObject = GameFontNormalLarge,
-	},
+local function ShowModeTooltip(owner, headerText, bodyLines)
+	GameTooltip:SetOwner(owner, "ANCHOR_TOPLEFT", -25, 8)
+	GameTooltip:SetText(headerText)
+	GameTooltip:AddLine(" ")
+	for _, line in ipairs(bodyLines) do
+		GameTooltip:AddLine(line)
+	end
+	GameTooltip:AddLine("|cffeda55f" .. L["Right-Click"] .. "|r |cff99ff00" .. L["to open AdiBags options."] .. "|r")
+	GameTooltip:AddLine("|cffeda55f" .. L["Alt-Left-Click"] .. "|r |cff99ff00" .. L["to toggle anchor mode."] .. "|r")
+	GameTooltip:SetBackdropColor(0, 0, 0, 1)
+	GameTooltip:Show()
+end
 
-	{ text = "  ", notClickable = true },
-	{
-		text = "  |TInterface\\Icons\\INV_Misc_Spyglass_03:20|t    " .. L["Reset bag position"],
-		func = function()
-			addon:ResetBagPositions()
-		end,
-	},
-	{
-		text = "  |TInterface\\Icons\\INV_TradeskillItem_03:20|t    " .. L["Manual Filtering"],
-		func = function()
-			addon:OpenOptions("filters", "FilterOverride")
-		end,
-	},
-	{
-		text = "  |TInterface\\Icons\\INV_Misc_Gear_01:20|t    " .. L["Settings"],
-		func = function()
-			addon:OpenOptions()
-		end,
-	},
-}
+local function CreateAnchorBackground(target)
+	local bg = target:CreateTexture(nil, "BACKGROUND")
+	bg:SetAllPoints()
+	bg:SetTexture(0, 1, 0, 0)
+	bg:SetSize(target:GetSize())
+	local border = target:CreateTexture(nil, "BORDER")
+	border:SetAllPoints()
+	border:SetTexture(0.4, 0.4, 0.4, 0)
+	target:SetFrameStrata("HIGH")
+	target:SetFrameLevel(100)
+	return bg
+end
 
 --------------------------------------------------------------------------------
 -- Widget scripts
@@ -264,49 +267,18 @@ function containerProto:OnCreate(name, bagIds, isBank)
 	AdiBagsBagMenu:SetPoint("LEFT", headerLeftRegion, "RIGHT", 4, 0)
 	AdiBagsBagMenu:SetPoint("RIGHT", headerRightRegion, "LEFT", -20, 0)
 
-	--===== Create Tooltip for Anchored Bag Menu =====--
 	local function ShowTooltipAnchored()
-		GameTooltip:SetOwner(AdiBagsBagMenu, "ANCHOR_TOPLEFT", -25, 8)
-		GameTooltip:SetText("\124cFF00FF00" .. L["Anchored"] .. "\124r\124cff00bfff " .. L["Mode"] .. "\124r")
-		GameTooltip:AddLine(" ")
-		GameTooltip:AddLine("|cffeda55f" .. L["Click"] .. "|r |cff99ff00" .. L["to toggle the anchor."] .. "|r")
-		GameTooltip:AddLine("|cffeda55f" .. L["Shift-Click"] .. "|r |cff99ff00" .. L["to open bag menu."] .. "|r")
-		GameTooltip:AddLine(
-			"|cffeda55f" .. L["Right-Click"] .. "|r |cff99ff00" .. L["to open AdiBags options."] .. "|r"
-		)
-		GameTooltip:AddLine(
-			"|cffeda55f" .. L["Alt-Left-Click"] .. "|r |cff99ff00" .. L["to toggle anchor mode."] .. "|r"
-		)
-		GameTooltip:SetBackdropColor(0, 0, 0, 1) -- Change the alpha value here
-		GameTooltip:Show()
+		ShowModeTooltip(AdiBagsBagMenu, "|cFF00FF00" .. L["Anchored"] .. "|r|cff00bfff " .. L["Mode"] .. "|r", {
+			"|cffeda55f" .. L["Click"] .. "|r |cff99ff00" .. L["to toggle the anchor."] .. "|r",
+			"|cffeda55f" .. L["Shift-Click"] .. "|r |cff99ff00" .. L["to open bag menu."] .. "|r",
+		})
 	end
 
-	-- create the texture for the background
-	local background = AdiBagsBagMenu:CreateTexture(nil, "BACKGROUND")
-	background:SetAllPoints()
-	background:SetTexture(0, 1, 0, 0) -- green background with 60% opacity
+	local background = CreateAnchorBackground(AdiBagsBagMenu)
 
-	-- set the size of the background texture to match the size of the clickable frame
-	background:SetSize(AdiBagsBagMenu:GetSize())
-
-	-- create the texture for the border
-	local border = AdiBagsBagMenu:CreateTexture(nil, "BORDER")
-	border:SetAllPoints()
-	border:SetTexture(0.4, 0.4, 0.4, 0) -- gray border
-
-	-- set the frame strata to be higher than the title text's strata
-	AdiBagsBagMenu:SetFrameStrata("HIGH")
-	AdiBagsBagMenu:SetFrameLevel(100)
-
-	-- add function to hide tooltip
-	local function HideTooltip()
-		GameTooltip:Hide()
-	end
-
-	-- set the frame to be clickable
 	AdiBagsBagMenu:SetScript("OnMouseUp", function(self, button)
 		local position = self:GetPoint()
-		HideTooltip() -- Call the hide tooltip function here
+		GameTooltip:Hide()
 
 		if button == "RightButton" then -- check if right button was clicked
 			addon:OpenOptions()
@@ -384,50 +356,22 @@ function containerProto:OnCreate(name, bagIds, isBank)
 	anchor:SetFrameLevel(self:GetFrameLevel() + 10)
 
 	local function ShowTooltipManual()
-		GameTooltip:SetOwner(anchor, "ANCHOR_TOPLEFT", -25, 8)
-		GameTooltip:SetText("\124cFFFFA500" .. L["Manual"] .. "\124r \124cff00bfff" .. L["Mode"] .. "\124r")
-		GameTooltip:AddLine(" ")
+		local lines
 		if addon.db.profile.clickMode == 0 then
-			GameTooltip:AddLine("|cffeda55f" .. L["Click"] .. "|r |cff99ff00" .. L["to open bag menu."] .. "|r")
-			GameTooltip:AddLine(
-				"|cffeda55f" .. L["Shift-Click"] .. "|r |cff99ff00" .. L["to move bag container."] .. "|r"
-			)
+			lines = {
+				"|cffeda55f" .. L["Click"] .. "|r |cff99ff00" .. L["to open bag menu."] .. "|r",
+				"|cffeda55f" .. L["Shift-Click"] .. "|r |cff99ff00" .. L["to move bag container."] .. "|r",
+			}
 		else
-			GameTooltip:AddLine("|cffeda55f" .. L["Click"] .. "|r |cff99ff00" .. L["to move bag container."] .. "|r")
-			GameTooltip:AddLine("|cffeda55f" .. L["Shift-Click"] .. "|r |cff99ff00" .. L["to open bag menu."] .. "|r")
+			lines = {
+				"|cffeda55f" .. L["Click"] .. "|r |cff99ff00" .. L["to move bag container."] .. "|r",
+				"|cffeda55f" .. L["Shift-Click"] .. "|r |cff99ff00" .. L["to open bag menu."] .. "|r",
+			}
 		end
-
-		GameTooltip:AddLine(
-			"|cffeda55f" .. L["Right-Click"] .. "|r |cff99ff00" .. L["to open AdiBags options."] .. "|r"
-		)
-		GameTooltip:AddLine(
-			"|cffeda55f" .. L["Alt-Left-Click"] .. "|r |cff99ff00" .. L["to toggle anchor mode."] .. "|r"
-		)
-		GameTooltip:SetBackdropColor(0, 0, 0, 1) -- Change the alpha value here
-		GameTooltip:Show()
+		ShowModeTooltip(anchor, "|cFFFFA500" .. L["Manual"] .. "|r |cff00bfff" .. L["Mode"] .. "|r", lines)
 	end
 
-	-- create the texture for the background
-	local background = anchor:CreateTexture(nil, "BACKGROUND")
-	background:SetAllPoints()
-	background:SetTexture(0, 1, 0, 0) -- green background with 60% opacity
-
-	-- set the size of the background texture to match the size of the clickable frame
-	background:SetSize(anchor:GetSize())
-
-	-- create the texture for the border
-	local border = anchor:CreateTexture(nil, "BORDER")
-	border:SetAllPoints()
-	border:SetTexture(0.4, 0.4, 0.4, 0) -- gray border
-
-	-- set the frame strata to be higher than the title text's strata
-	anchor:SetFrameStrata("HIGH")
-	anchor:SetFrameLevel(100)
-
-	-- add function to hide tooltip
-	local function HideTooltip()
-		GameTooltip:Hide()
-	end
+	local background = CreateAnchorBackground(anchor)
 
 	anchor:SetScript("OnMouseDown", function(self, button, ...)
 		if button == "LeftButton" then
@@ -461,11 +405,9 @@ function containerProto:OnCreate(name, bagIds, isBank)
 		if button == "LeftButton" and self.isMovingContainer then
 			self:StopMoving()
 			self.isMovingContainer = false
-			if not self.isMovingContainer then
-				CloseMenus()
-				if addon.db.profile.showAnchorTooltip then
-					ShowTooltipManual()
-				end
+			CloseMenus()
+			if addon.db.profile.showAnchorTooltip then
+				ShowTooltipManual()
 			end
 		elseif addon.db.profile.clickMode == 0 and button == "LeftButton" and not IsShiftKeyDown() then
 			GameTooltip:Hide()
@@ -562,20 +504,13 @@ function containerProto:OnCreate(name, bagIds, isBank)
 		end
 	end)
 
-	-- print("Anchor created for frame:", self:GetName())
-	if addon.db.profile.positionMode == "manual" then
-		anchor:Show()
-	end
-
 	self.Anchor = anchor
 
 	--------------------------------------------------------------------------------
 	-- Show or Hide the title frames depending on current positionmode setting.
 	--------------------------------------------------------------------------------
 
-	local RegisterMessage = LibStub("AceEvent-3.0").RegisterMessage
-
-	local function UpdateAnchorVisibility()
+	function self:UpdateAnchorVisibility()
 		if addon.db.profile.positionMode == "manual" then
 			AdiBagsBagMenu:Hide()
 			anchor:Show()
@@ -585,9 +520,11 @@ function containerProto:OnCreate(name, bagIds, isBank)
 		end
 	end
 
-	self:RegisterMessage("AdiBags_ManualLayout", UpdateAnchorVisibility)
-	self:RegisterMessage("AdiBags_AnchoredLayout", UpdateAnchorVisibility)
-	self:RegisterMessage("AdiBags_TimeToCheckAnchorMode", UpdateAnchorVisibility)
+	self:UpdateAnchorVisibility()
+
+	self:RegisterMessage("AdiBags_ManualLayout", self.UpdateAnchorVisibility)
+	self:RegisterMessage("AdiBags_AnchoredLayout", self.UpdateAnchorVisibility)
+	self:RegisterMessage("AdiBags_TimeToCheckAnchorMode", self.UpdateAnchorVisibility)
 
 	--------------------------------------------------------------------------------
 	-- Some Updating Bag Slots Stuff

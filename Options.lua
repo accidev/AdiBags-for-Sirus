@@ -71,9 +71,6 @@ function handlerProto:Set(info, value, ...)
 	else
 		self.dbHolder:SendMessage("AdiBags_ConfigChanged", path)
 	end
-	if type(self.PostSet) == "function" then
-		self:PostSet(path, value, ...)
-	end
 end
 
 function handlerProto:IsDisabled(info)
@@ -82,9 +79,9 @@ function handlerProto:IsDisabled(info)
 end
 
 local handlers = {}
-function addon:GetOptionHandler(dbHolder, isFilter, postSet)
+function addon:GetOptionHandler(dbHolder, isFilter)
 	if not handlers[dbHolder] then
-		handlers[dbHolder] = setmetatable({ dbHolder = dbHolder, isFilter = isFilter, PostSet = postSet }, handlerMeta)
+		handlers[dbHolder] = setmetatable({ dbHolder = dbHolder, isFilter = isFilter }, handlerMeta)
 		dbHolder.SendMessage = LibStub("AceEvent-3.0").SendMessage
 	end
 	return handlers[dbHolder]

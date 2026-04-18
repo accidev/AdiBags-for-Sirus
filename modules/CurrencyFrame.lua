@@ -83,10 +83,9 @@ local function CurrencyButton_OnEnter(self)
 	GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
 	GameTooltip:ClearLines()
 	GameTooltip:AddDoubleLine(data.left, data.right, 1, 1, 1, 1, 1, 1)
-	-- Show other characters' counts for this specific currency
 	local crossChar = addon:GetModule("CrossCharacter", true)
-	if crossChar and crossChar:IsEnabled() and data.name then
-		crossChar:AddCurrencyTooltip(GameTooltip, data.name)
+	if crossChar and crossChar:IsEnabled() and data.itemID then
+		crossChar:AddCurrencyTooltip(GameTooltip, data.itemID)
 	end
 	GameTooltip:Show()
 end
@@ -187,8 +186,7 @@ function mod:Update()
 			local strWidth = btn.fs:GetStringWidth()
 			local btnWidth = math.max(strWidth, 10) + 8
 			btn:SetWidth(btnWidth)
-			btn:ClearAllPoints()
-			btn:SetPoint("LEFT", self.widget, "LEFT", totalWidth, 0)
+			btn:ClearAndSetPoint("LEFT", self.widget, "LEFT", totalWidth, 0)
 			btn:Show()
 
 			local limitText = count
@@ -210,6 +208,7 @@ function mod:Update()
 				left = format(CURRENCY_STRING, icon, name),
 				right = limitText,
 				name = name,
+				itemID = itemID,
 			}
 
 			totalWidth = totalWidth + btnWidth

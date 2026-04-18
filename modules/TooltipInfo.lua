@@ -34,9 +34,9 @@ end
 
 function mod:OnEnable()
 	if not self.hooked then
-		GameTooltip:HookScript("OnTooltipSetItem", function(...)
+		addon:RegisterItemTooltipHandler(function(tt)
 			if self:IsEnabled() then
-				return self:OnTooltipSetItem(...)
+				self:OnTooltipSetItem(tt)
 			end
 		end)
 		self.hooked = true

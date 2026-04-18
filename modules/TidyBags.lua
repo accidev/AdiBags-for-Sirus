@@ -288,7 +288,6 @@ end
 
 local CanPutItemInContainer = addon.CanPutItemInContainer
 local GetItemFamily = addon.GetItemFamily
-local GetSlotId = addon.GetSlotId
 local GetBagSlotFromId = addon.GetBagSlotFromId
 
 -- Memoization tables

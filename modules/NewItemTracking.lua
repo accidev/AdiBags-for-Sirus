@@ -6,7 +6,12 @@ mod.uiName = L["Track new items"]
 mod.uiDesc =
 	L['Track new items in each bag, displaying a glowing aura over them and putting them in a special section. "New" status can be reset by clicking on the small "N" button at top left of bags.']
 
-local allBagIds = {}
+local C_NewItems = _G.C_NewItems
+local IsNewItem = C_NewItems and C_NewItems.IsNewItem
+local ClearAllNewItems = C_NewItems and C_NewItems.ClearAll
+local CreateFrame = _G.CreateFrame
+local PlaySound = _G.PlaySound
+local unpack = unpack
 
 local bags = {}
 
@@ -16,42 +21,44 @@ function mod:OnInitialize()
 			showGlow = true,
 			glowScale = 1.5,
 			glowColor = { 0.3, 1, 0.3, 0.7 },
-			ignoreJunk = false,
 		},
 	})
 	addon:SetCategoryOrder(L["New"], 100)
 end
 
 function mod:OnEnable()
-	for i, bag in addon:IterateBags() do
+	for _, bag in addon:IterateBags() do
 		if not bags[bag.bagName] then
-			bags[bag.bagName] = {
-				bagIds = bag.bagIds,
-				isBank = bag.isBank,
-			}
+			bags[bag.bagName] = {}
 		end
 	end
 
 	addon:HookBagFrameCreation(self, "OnBagFrameCreated")
-	for name, bag in pairs(bags) do
+	for _, bag in pairs(bags) do
 		if bag.button then
 			bag.button:Show()
 		end
 	end
 
-	self:RegisterMessage("AdiBags_PreFilter")
 	self:RegisterMessage("AdiBags_UpdateButton", "UpdateButton")
 
 	addon.filterProto.OnEnable(self)
 end
 
 function mod:OnDisable()
-	for name, bag in pairs(bags) do
+	for _, bag in pairs(bags) do
 		if bag.button then
 			bag.button:Hide()
 		end
 	end
 	addon.filterProto.OnDisable(self)
+end
+
+local function IsNewItemSlot(bag, slot)
+	if not IsNewItem or not bag or not slot then
+		return false
+	end
+	return IsNewItem(bag, slot)
 end
 
 --------------------------------------------------------------------------------
@@ -60,8 +67,8 @@ end
 
 local function ResetButton_OnClick(button)
 	PlaySound("igMainMenuOptionCheckBoxOn")
-	if _G.C_NewItems and _G.C_NewItems.ClearAll then
-		_G.C_NewItems.ClearAll()
+	if ClearAllNewItems then
+		ClearAllNewItems()
 		addon:UpdateFilters()
 	end
 	mod:SendMessage("AdiBags_NewItemReset")
@@ -113,15 +120,6 @@ function mod:GetOptions()
 			order = 30,
 			hasAlpha = true,
 		},
-		ignoreJunk = {
-			name = L["Ignore low quality items"],
-			type = "toggle",
-			order = 40,
-			set = function(info, ...)
-				info.handler:Set(info, ...)
-				addon:UpdateFilters()
-			end,
-		},
 	},
 		addon:GetOptionHandler(self)
 end
@@ -130,26 +128,9 @@ end
 -- Filtering
 --------------------------------------------------------------------------------
 
-do
-	local currentContainerName
-
-	function mod:AdiBags_PreFilter(event, container)
-		currentContainerName = container.name
-	end
-
-	function mod:Filter(slotData)
-		local isNew = false
-		if _G.C_NewItems and _G.C_NewItems.IsNewItem then
-			if slotData.bag and slotData.slot and _G.C_NewItems.IsNewItem(slotData.bag, slotData.slot) then
-				if not (mod.db.profile.ignoreJunk and select(3, GetItemInfo(slotData.itemId)) == 0) then
-					isNew = true
-				end
-			end
-		end
-
-		if isNew then
-			return L["New"]
-		end
+function mod:Filter(slotData)
+	if IsNewItemSlot(slotData.bag, slotData.slot) then
+		return L["New"]
 	end
 end
 
@@ -157,7 +138,8 @@ end
 -- Item glows
 --------------------------------------------------------------------------------
 
-local glows = {}
+local glows = setmetatable({}, { __mode = "k" })
+local hookedButtons = setmetatable({}, { __mode = "k" })
 
 local function Glow_Update(glow)
 	glow:SetScale(mod.db.profile.glowScale)
@@ -194,23 +176,21 @@ local function CreateGlow(button)
 	return glow
 end
 
-function mod:UpdateButton(event, button)
+local function Button_OnEnter(button)
 	local glow = glows[button]
-
-	local isNew = false
-	if _G.C_NewItems and _G.C_NewItems.IsNewItem then
-		if button.bag and button.slot and _G.C_NewItems.IsNewItem(button.bag, button.slot) then
-			if
-				not (
-					mod.db.profile.ignoreJunk
-					and GetItemInfo(button:GetItemId())
-					and select(3, GetItemInfo(button:GetItemId())) == 0
-				)
-			then
-				isNew = true
-			end
-		end
+	if glow and glow:IsShown() then
+		glow:Hide()
 	end
+end
+
+function mod:UpdateButton(event, button)
+	if not hookedButtons[button] then
+		button:HookScript("OnEnter", Button_OnEnter)
+		hookedButtons[button] = true
+	end
+
+	local glow = glows[button]
+	local isNew = IsNewItemSlot(button.bag, button.slot)
 
 	if mod.db.profile.showGlow and isNew then
 		if not glow then

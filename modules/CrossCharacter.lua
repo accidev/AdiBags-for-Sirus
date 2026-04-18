@@ -2,20 +2,19 @@ local addonName, addon = ...
 local L = addon.L
 
 local _G = _G
-local pairs = _G.pairs
-local ipairs = _G.ipairs
-local format = _G.format
-local select = _G.select
-local tinsert = _G.tinsert
-local tsort = _G.table.sort
-local wipe = _G.wipe
-local tonumber = _G.tonumber
+local pairs = pairs
+local ipairs = ipairs
+local format = format
+local select = select
+local tinsert = table.insert
+local tsort = table.sort
+local wipe = wipe
+local tonumber = tonumber
 local GetContainerNumSlots = _G.GetContainerNumSlots
 local GetContainerItemInfo = _G.GetContainerItemInfo
 local GetContainerItemLink = _G.GetContainerItemLink
 local GetInventoryItemLink = _G.GetInventoryItemLink
 local GetInventoryItemCount = _G.GetInventoryItemCount
-local GetItemInfo = _G.GetItemInfo
 local GetMoney = _G.GetMoney
 local GetRealmName = _G.GetRealmName
 local UnitName = _G.UnitName
@@ -30,12 +29,15 @@ local INVSLOT_LAST_EQUIPPED = _G.INVSLOT_LAST_EQUIPPED or 19
 local GetCurrencyListInfo = _G.GetCurrencyListInfo
 local GetCurrencyListSize = _G.GetCurrencyListSize
 local ExpandCurrencyList = _G.ExpandCurrencyList
+local GetBackpackCurrencyInfo = _G.GetBackpackCurrencyInfo
 local RAID_CLASS_COLORS = _G.RAID_CLASS_COLORS
 local hooksecurefunc = _G.hooksecurefunc
 
 local mod = addon:NewModule("CrossCharacter", "AceEvent-3.0", "AceTimer-3.0")
 mod.uiName = L["Cross-character items"]
 mod.uiDesc = L["Show item and currency counts from other characters in tooltips."]
+
+local DB_VERSION = 2
 
 function mod:OnInitialize()
 	self.db = addon.db:RegisterNamespace(self.moduleName, {
@@ -52,6 +54,23 @@ function mod:OnInitialize()
 end
 
 local currentPlayer, currentRealm, currentClass
+local entriesDirty = true
+
+local function MigrateDB()
+	local db = mod.db.global
+	local version = db.version or 1
+	if version >= DB_VERSION then
+		return
+	end
+	if version < 2 then
+		for _, realm in pairs(db.realms) do
+			for _, char in pairs(realm) do
+				char.currencies = {}
+			end
+		end
+	end
+	db.version = DB_VERSION
+end
 
 local function GetClassColor(class)
 	local color = RAID_CLASS_COLORS[class]
@@ -74,32 +93,74 @@ end
 
 local function EnsureCharDB()
 	local realms = mod.db.global.realms
-	if not realms[currentRealm] then
-		realms[currentRealm] = {}
-	end
 	local realmDB = realms[currentRealm]
-	if not realmDB[currentPlayer] then
-		realmDB[currentPlayer] = {
+	if not realmDB then
+		realmDB = {}
+		realms[currentRealm] = realmDB
+		entriesDirty = true
+	end
+	local charDB = realmDB[currentPlayer]
+	if not charDB then
+		charDB = {
 			class = currentClass,
 			money = 0,
 			items = {},
 			currencies = {},
 		}
+		realmDB[currentPlayer] = charDB
+		entriesDirty = true
 	end
-	realmDB[currentPlayer].class = currentClass
-	return realmDB[currentPlayer]
+	charDB.class = currentClass
+	return charDB
+end
+
+local function EnsureItem(items, id)
+	local data = items[id]
+	if not data then
+		data = { bags = 0, bank = 0, equipped = 0 }
+		items[id] = data
+	end
+	return data
+end
+
+local function RemoveEmptyItems(items)
+	for id, data in pairs(items) do
+		if data.bags == 0 and data.bank == 0 and data.equipped == 0 then
+			items[id] = nil
+		end
+	end
 end
 
 function mod:SaveMoney()
-	local charDB = EnsureCharDB()
-	charDB.money = GetMoney()
+	EnsureCharDB().money = GetMoney()
+end
+
+function mod:SaveEquipped()
+	local items = EnsureCharDB().items
+
+	for _, data in pairs(items) do
+		data.equipped = 0
+	end
+
+	for slot = INVSLOT_FIRST_EQUIPPED, INVSLOT_LAST_EQUIPPED do
+		local link = GetInventoryItemLink("player", slot)
+		if link then
+			local itemId = GetItemId(link)
+			if itemId then
+				local count = GetInventoryItemCount("player", slot) or 1
+				local data = EnsureItem(items, itemId)
+				data.equipped = data.equipped + count
+			end
+		end
+	end
+
+	RemoveEmptyItems(items)
 end
 
 function mod:SaveBagItems()
-	local charDB = EnsureCharDB()
-	local items = charDB.items
+	local items = EnsureCharDB().items
 
-	for id, data in pairs(items) do
+	for _, data in pairs(items) do
 		data.bags = 0
 		data.equipped = 0
 	end
@@ -112,11 +173,8 @@ function mod:SaveBagItems()
 				local itemId = GetItemId(link)
 				if itemId then
 					local _, count = GetContainerItemInfo(bag, slot)
-					count = count or 1
-					if not items[itemId] then
-						items[itemId] = { bags = 0, bank = 0, equipped = 0 }
-					end
-					items[itemId].bags = items[itemId].bags + count
+					local data = EnsureItem(items, itemId)
+					data.bags = data.bags + (count or 1)
 				end
 			end
 		end
@@ -129,11 +187,8 @@ function mod:SaveBagItems()
 			local itemId = GetItemId(link)
 			if itemId then
 				local _, count = GetContainerItemInfo(KEYRING_CONTAINER, slot)
-				count = count or 1
-				if not items[itemId] then
-					items[itemId] = { bags = 0, bank = 0, equipped = 0 }
-				end
-				items[itemId].bags = items[itemId].bags + count
+				local data = EnsureItem(items, itemId)
+				data.bags = data.bags + (count or 1)
 			end
 		end
 	end
@@ -143,28 +198,20 @@ function mod:SaveBagItems()
 		if link then
 			local itemId = GetItemId(link)
 			if itemId then
-				local count = GetInventoryItemCount("player", slot)
-				count = count or 1
-				if not items[itemId] then
-					items[itemId] = { bags = 0, bank = 0, equipped = 0 }
-				end
-				items[itemId].equipped = items[itemId].equipped + count
+				local count = GetInventoryItemCount("player", slot) or 1
+				local data = EnsureItem(items, itemId)
+				data.equipped = data.equipped + count
 			end
 		end
 	end
 
-	for id, data in pairs(items) do
-		if data.bags == 0 and data.bank == 0 and data.equipped == 0 then
-			items[id] = nil
-		end
-	end
+	RemoveEmptyItems(items)
 end
 
 function mod:SaveBankItems()
-	local charDB = EnsureCharDB()
-	local items = charDB.items
+	local items = EnsureCharDB().items
 
-	for id, data in pairs(items) do
+	for _, data in pairs(items) do
 		data.bank = 0
 	end
 
@@ -175,11 +222,8 @@ function mod:SaveBankItems()
 			local itemId = GetItemId(link)
 			if itemId then
 				local _, count = GetContainerItemInfo(BANK_CONTAINER, slot)
-				count = count or 1
-				if not items[itemId] then
-					items[itemId] = { bags = 0, bank = 0, equipped = 0 }
-				end
-				items[itemId].bank = items[itemId].bank + count
+				local data = EnsureItem(items, itemId)
+				data.bank = data.bank + (count or 1)
 			end
 		end
 	end
@@ -192,21 +236,14 @@ function mod:SaveBankItems()
 				local itemId = GetItemId(link)
 				if itemId then
 					local _, count = GetContainerItemInfo(bag, slot)
-					count = count or 1
-					if not items[itemId] then
-						items[itemId] = { bags = 0, bank = 0, equipped = 0 }
-					end
-					items[itemId].bank = items[itemId].bank + count
+					local data = EnsureItem(items, itemId)
+					data.bank = data.bank + (count or 1)
 				end
 			end
 		end
 	end
 
-	for id, data in pairs(items) do
-		if data.bags == 0 and data.bank == 0 and data.equipped == 0 then
-			items[id] = nil
-		end
-	end
+	RemoveEmptyItems(items)
 end
 
 function mod:SaveCurrencies()
@@ -218,30 +255,30 @@ function mod:SaveCurrencies()
 	local charDB = EnsureCharDB()
 	wipe(charDB.currencies)
 
-	local collapse = {}
+	local collapsed = {}
 	local index = 0
 	repeat
 		index = index + 1
-		local name, isHeader, isExpanded, _, _, count, _, icon = GetCurrencyListInfo(index)
+		local name, isHeader, isExpanded, _, _, count, _, _, itemID = GetCurrencyListInfo(index)
 		if name then
 			if isHeader then
 				if not isExpanded then
-					tinsert(collapse, 1, index)
+					tinsert(collapsed, 1, index)
 					ExpandCurrencyList(index, true)
 					size = GetCurrencyListSize()
 				end
 			else
-				if count and count > 0 then
-					charDB.currencies[name] = {
+				if itemID and count and count > 0 then
+					charDB.currencies[itemID] = {
 						count = count,
-						icon = icon,
+						name = name,
 					}
 				end
 			end
 		end
 	until index >= size
 
-	for _, i in ipairs(collapse) do
+	for _, i in ipairs(collapsed) do
 		ExpandCurrencyList(i, false)
 	end
 end
@@ -249,6 +286,10 @@ end
 local sortedEntries = {}
 
 local function CollectEntries()
+	if not entriesDirty then
+		return sortedEntries
+	end
+
 	wipe(sortedEntries)
 	local realms = mod.db.global.realms
 	local showOtherRealms = mod.db.profile.showOtherRealms
@@ -283,6 +324,7 @@ local function CollectEntries()
 		return a.name < b.name
 	end)
 
+	entriesDirty = false
 	return sortedEntries
 end
 
@@ -421,8 +463,8 @@ function mod:AddMoneyTooltip(tooltip)
 	end
 end
 
-function mod:AddCurrencyTooltip(tooltip, currencyName)
-	if not self.db.profile.showCurrencies then
+function mod:AddCurrencyTooltip(tooltip, currencyId)
+	if not self.db.profile.showCurrencies or not currencyId then
 		return
 	end
 
@@ -432,7 +474,7 @@ function mod:AddCurrencyTooltip(tooltip, currencyName)
 	for _, entry in ipairs(entries) do
 		local charData = entry.data
 		if charData and charData.currencies then
-			local currData = charData.currencies[currencyName]
+			local currData = charData.currencies[currencyId]
 			if currData and currData.count and currData.count > 0 then
 				if not found then
 					tooltip:AddLine(" ")
@@ -450,16 +492,22 @@ function mod:AddCurrencyTooltip(tooltip, currencyName)
 	end
 end
 
+local bankUpdateTimer
+local currencyUpdateTimer
+local bankOpen = false
+
 function mod:OnEnable()
 	currentPlayer = UnitName("player")
 	currentRealm = GetRealmName()
 	currentClass = select(2, UnitClass("player"))
 
+	MigrateDB()
+
 	self:SaveMoney()
 	self:SaveBagItems()
 	self:SaveCurrencies()
 
-	self:RegisterEvent("BAG_UPDATE", "OnBagUpdate")
+	self:RegisterEvent("BAG_UPDATE_DELAYED", "OnBagUpdate")
 	self:RegisterEvent("PLAYER_MONEY", "OnMoneyUpdate")
 	self:RegisterEvent("BANKFRAME_OPENED", "OnBankOpened")
 	self:RegisterEvent("BANKFRAME_CLOSED", "OnBankClosed")
@@ -471,12 +519,9 @@ function mod:OnEnable()
 	self:RegisterEvent("UNIT_INVENTORY_CHANGED", "OnEquipmentChanged")
 
 	if not self.hooked then
-		GameTooltip:HookScript("OnTooltipSetItem", function(tt, ...)
-			if mod:IsEnabled() then
-				local _, itemLink = tt:GetItem()
-				if itemLink and GetItemInfo(itemLink) then
-					mod:AddItemOwners(tt, itemLink)
-				end
+		addon:RegisterItemTooltipHandler(function(tt, itemLink)
+			if mod:IsEnabled() and itemLink then
+				mod:AddItemOwners(tt, itemLink)
 			end
 		end)
 
@@ -484,20 +529,20 @@ function mod:OnEnable()
 			if not mod:IsEnabled() then
 				return
 			end
-			local name = GetCurrencyListInfo(index)
-			if name then
-				mod:AddCurrencyTooltip(tt, name)
+			local itemID = select(9, GetCurrencyListInfo(index))
+			if itemID then
+				mod:AddCurrencyTooltip(tt, itemID)
 			end
 		end)
 
-		if GameTooltip.SetBackpackToken then
+		if GameTooltip.SetBackpackToken and GetBackpackCurrencyInfo then
 			hooksecurefunc(GameTooltip, "SetBackpackToken", function(tt, id)
 				if not mod:IsEnabled() then
 					return
 				end
-				local name = _G.GetBackpackCurrencyInfo and _G.GetBackpackCurrencyInfo(id)
-				if name then
-					mod:AddCurrencyTooltip(tt, name)
+				local itemID = select(5, GetBackpackCurrencyInfo(id))
+				if itemID then
+					mod:AddCurrencyTooltip(tt, itemID)
 				end
 			end)
 		end
@@ -506,46 +551,71 @@ function mod:OnEnable()
 	end
 end
 
-function mod:OnDisable() end
-
-local bagUpdateTimer
-function mod:OnBagUpdate()
-	if bagUpdateTimer then
-		self:CancelTimer(bagUpdateTimer)
+function mod:OnDisable()
+	if bankUpdateTimer then
+		self:CancelTimer(bankUpdateTimer)
+		bankUpdateTimer = nil
 	end
-	bagUpdateTimer = self:ScheduleTimer(function()
-		bagUpdateTimer = nil
-		mod:SaveBagItems()
-	end, 0.5)
+	if currencyUpdateTimer then
+		self:CancelTimer(currencyUpdateTimer)
+		currencyUpdateTimer = nil
+	end
+end
+
+function mod:OnBagUpdate()
+	self:SaveBagItems()
 end
 
 function mod:OnMoneyUpdate()
 	self:SaveMoney()
 end
 
-local bankOpen = false
+local function ScheduleBankSave()
+	if bankUpdateTimer then
+		mod:CancelTimer(bankUpdateTimer)
+	end
+	bankUpdateTimer = mod:ScheduleTimer(function()
+		bankUpdateTimer = nil
+		mod:SaveBankItems()
+	end, 0.3)
+end
+
 function mod:OnBankOpened()
 	bankOpen = true
-	self:SaveBankItems()
+	ScheduleBankSave()
 end
 
 function mod:OnBankClosed()
-	bankOpen = false
-end
-
-function mod:OnBankChanged()
+	if bankUpdateTimer then
+		self:CancelTimer(bankUpdateTimer)
+		bankUpdateTimer = nil
+	end
 	if bankOpen then
 		self:SaveBankItems()
+		bankOpen = false
 	end
 end
 
+function mod:OnBankChanged()
+	if not bankOpen then
+		return
+	end
+	ScheduleBankSave()
+end
+
 function mod:OnCurrencyUpdate()
-	self:SaveCurrencies()
+	if currencyUpdateTimer then
+		self:CancelTimer(currencyUpdateTimer)
+	end
+	currencyUpdateTimer = self:ScheduleTimer(function()
+		currencyUpdateTimer = nil
+		mod:SaveCurrencies()
+	end, 1.0)
 end
 
 function mod:OnEquipmentChanged(_, unit)
 	if unit == "player" then
-		self:SaveBagItems()
+		self:SaveEquipped()
 	end
 end
 
@@ -584,6 +654,10 @@ function mod:GetOptions()
 			type = "toggle",
 			order = 35,
 			width = "double",
+			set = function(info, value)
+				info.handler:Set(info, value)
+				entriesDirty = true
+			end,
 		},
 		deleteChar = {
 			name = L["Delete character data"],
@@ -618,6 +692,7 @@ function mod:GetOptions()
 					if not hasChars then
 						mod.db.global.realms[realm] = nil
 					end
+					entriesDirty = true
 				end
 			end,
 			confirm = function(_, key)

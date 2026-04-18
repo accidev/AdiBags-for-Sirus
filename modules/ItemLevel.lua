@@ -95,8 +95,7 @@ local function UpdateTextLocation()
 	local offsetX = mod.db.profile.offsetX or mod.db.defaults.profile.offsetX
 	local offsetY = mod.db.profile.offsetY or mod.db.defaults.profile.offsetY
 	for button, text in pairs(texts) do
-		text:ClearAllPoints()
-		text:SetPoint(anchor, button, offsetX, offsetY)
+		text:ClearAndSetPoint(anchor, button, offsetX, offsetY)
 	end
 end
 

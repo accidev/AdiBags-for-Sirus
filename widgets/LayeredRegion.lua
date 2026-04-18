@@ -63,7 +63,7 @@ function layeredRegionProto:AddWidget(widget, ...)
 		data.layered = true
 		widget:SetContainer(self)
 	else
-		data.isShown = widget:IsShown()
+		data.shown = widget:IsShown()
 		data.width = widget:GetWidth()
 		data.height = widget:GetHeight()
 
@@ -178,12 +178,11 @@ function simpleLayeredRegionProto:OnLayout()
 	for index, data in ipairs(self.widgets) do
 		if data.widget:IsShown() then
 			local widget = data.widget
-			widget:ClearAllPoints()
 			if num > 0 then
 				x = x + dx * spacing
 				y = y + dy * spacing
 			end
-			widget:SetPoint(anchorPoint, self, x + data.xOffset, y + data.yOffset)
+			widget:ClearAndSetPoint(anchorPoint, self, x + data.xOffset, y + data.yOffset)
 			local w, h = widget:GetWidth(), widget:GetHeight()
 			x = x + dx * (data.size or w)
 			y = y + dy * (data.size or h)
