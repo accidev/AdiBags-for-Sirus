@@ -33,7 +33,7 @@ local GetBackpackCurrencyInfo = _G.GetBackpackCurrencyInfo
 local RAID_CLASS_COLORS = _G.RAID_CLASS_COLORS
 local hooksecurefunc = _G.hooksecurefunc
 
-local mod = addon:NewModule("CrossCharacter", "AceEvent-3.0", "AceTimer-3.0")
+local mod = addon:NewModule("CrossCharacter", "AceEvent-3.0", "AceBucket-3.0", "AceTimer-3.0")
 mod.uiName = L["Cross-character items"]
 mod.uiDesc = L["Show item and currency counts from other characters in tooltips."]
 
@@ -507,7 +507,7 @@ function mod:OnEnable()
 	self:SaveBagItems()
 	self:SaveCurrencies()
 
-	self:RegisterEvent("BAG_UPDATE_DELAYED", "OnBagUpdate")
+	self:RegisterBucketEvent("BAG_UPDATE", 0.2, "OnBagUpdate")
 	self:RegisterEvent("PLAYER_MONEY", "OnMoneyUpdate")
 	self:RegisterEvent("BANKFRAME_OPENED", "OnBankOpened")
 	self:RegisterEvent("BANKFRAME_CLOSED", "OnBankClosed")
@@ -622,6 +622,9 @@ end
 function mod:OnLogout()
 	self:SaveMoney()
 	self:SaveBagItems()
+	if bankOpen then
+		self:SaveBankItems()
+	end
 	self:SaveCurrencies()
 end
 
