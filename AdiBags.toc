@@ -62,4 +62,3 @@ modules\BlackDiamondHighlight.lua
 modules\BoEIndicator.lua
 
 DefaultFilters.lua
-
