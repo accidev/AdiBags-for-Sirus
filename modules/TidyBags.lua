@@ -41,6 +41,51 @@ local bags = {}
 local bagProto = { Debug = addon.Debug }
 local bagMeta = { __index = bagProto }
 
+local TIDY_WATCHDOG_TIMEOUT = 5
+
+local function AnyBagRunning()
+	for _, bag in pairs(bags) do
+		if bag.running then
+			return true
+		end
+	end
+end
+
+local function ForceUnlock(reason)
+	for _, bag in pairs(bags) do
+		wipe(bag.locked)
+		bag.running = nil
+		bag.cached = nil
+		bag:UpdateButton("ForceUnlock")
+	end
+	ClearCursor()
+	if addon:SetGlobalLock(false) then
+		addon:Debug("TidyBags: forced globalLock release -", reason)
+	end
+end
+
+local watchdog = CreateFrame("Frame")
+watchdog:Hide()
+local watchdogTimeout = 0
+watchdog:SetScript("OnUpdate", function(self, elapsed)
+	watchdogTimeout = watchdogTimeout - elapsed
+	if watchdogTimeout <= 0 then
+		self:Hide()
+		if addon.globalLock then
+			ForceUnlock("watchdog timeout")
+		end
+	end
+end)
+
+local function ArmWatchdog()
+	watchdogTimeout = TIDY_WATCHDOG_TIMEOUT
+	watchdog:Show()
+end
+
+local function DisarmWatchdog()
+	watchdog:Hide()
+end
+
 function mod:OnInitialize()
 	self.db = addon.db:RegisterNamespace(self.moduleName, {
 		profile = {
@@ -70,6 +115,9 @@ function mod:OnEnable()
 	self:RegisterEvent("PLAYER_REGEN_DISABLED", "RefreshAllBags")
 	self:RegisterEvent("PLAYER_REGEN_ENABLED")
 	self:RegisterEvent("LOOT_CLOSED", "AutomaticTidy")
+	self:RegisterEvent("PLAYER_ENTERING_WORLD", "GlobalLockSafetyCheck")
+	self:RegisterEvent("PLAYER_UNGHOST", "GlobalLockSafetyCheck")
+	self:RegisterEvent("PLAYER_ALIVE", "GlobalLockSafetyCheck")
 
 	for name, bag in pairs(bags) do
 		bag:ShowButton()
@@ -147,6 +195,10 @@ function mod:AdiBags_BagUpdated(bagIds)
 	for bag in pairs(wasCached) do
 		bag:UpdateButton("BAG_UPDATE")
 	end
+
+	if addon.globalLock and AnyBagRunning() then
+		ArmWatchdog()
+	end
 end
 
 function mod:RefreshAllBags(event)
@@ -155,7 +207,14 @@ function mod:RefreshAllBags(event)
 	end
 end
 
+function mod:GlobalLockSafetyCheck(event)
+	if addon.globalLock then
+		ForceUnlock(event)
+	end
+end
+
 function mod:PLAYER_REGEN_ENABLED(event)
+	self:GlobalLockSafetyCheck(event)
 	self:RefreshAllBags(event)
 	self:AutomaticTidy(event)
 end
@@ -243,6 +302,7 @@ function bagProto:PickupItem(bag, slot, expectedCursorInfo)
 		if addon:SetGlobalLock(true) then
 			self:Debug("Locked all items")
 		end
+		ArmWatchdog()
 		if not self.locked[bag] then
 			self:Debug("Bag", bag, "locked, waiting for update")
 			self.locked[bag] = true
@@ -270,6 +330,7 @@ function bagProto:ProcessInternal()
 	if addon:SetGlobalLock(false) then
 		self:Debug("Unlocked all items")
 	end
+	DisarmWatchdog()
 	self.running = nil
 	self:UpdateButton("ProcessInternal")
 	self:Debug("Done")
