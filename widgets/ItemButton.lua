@@ -6,11 +6,13 @@ local BankButtonIDToInvSlotID = _G.BankButtonIDToInvSlotID
 local BANK_CONTAINER = _G.BANK_CONTAINER
 local ContainerFrame_UpdateCooldown = _G.ContainerFrame_UpdateCooldown
 local format = _G.format
+local GetContainerItemGUID = _G.GetContainerItemGUID
 local GetContainerItemID = _G.GetContainerItemID
 local GetContainerItemInfo = _G.GetContainerItemInfo
 local GetContainerItemLink = _G.GetContainerItemLink
 local GetContainerItemQuestInfo = _G.GetContainerItemQuestInfo
 local GetContainerNumFreeSlots = _G.GetContainerNumFreeSlots
+local GetItemExpirationTimeLeft = _G.GetItemExpirationTimeLeft
 local GetItemInfo = _G.GetItemInfo
 local GetItemQualityColor = _G.GetItemQualityColor
 local IsInventoryItemLocked = _G.IsInventoryItemLocked
@@ -680,28 +682,56 @@ function stackProto:GetKey()
 	return self.key
 end
 
+local function GetSlotTimeLeft(bag, slot)
+	if not (GetContainerItemGUID and GetItemExpirationTimeLeft) then
+		return nil
+	end
+	local guid = GetContainerItemGUID(bag, slot)
+	if not guid then
+		return nil
+	end
+	local _, timeLeft = GetItemExpirationTimeLeft(guid)
+	if timeLeft and timeLeft > 0 then
+		return timeLeft
+	end
+end
+
+local function IsBetterSlot(newTime, newCount, oldTime, oldCount)
+	if newTime and oldTime then
+		return newTime < oldTime
+	elseif newTime ~= oldTime then
+		return newTime ~= nil
+	else
+		return newCount > oldCount
+	end
+end
+
 function stackProto:UpdateVisibleSlot()
-	local bestLockedId, bestLockedCount
-	local bestUnlockedId, bestUnlockedCount
+	local bestLockedId, bestLockedTime, bestLockedCount
+	local bestUnlockedId, bestUnlockedTime, bestUnlockedCount
 	if self.slotId and self.slots[self.slotId] then
-		local _, count, locked = GetContainerItemInfo(GetBagSlotFromId(self.slotId))
+		local bag, slot = GetBagSlotFromId(self.slotId)
+		local _, count, locked = GetContainerItemInfo(bag, slot)
 		count = count or 1
+		local timeLeft = GetSlotTimeLeft(bag, slot)
 		if locked then
-			bestLockedId, bestLockedCount = self.slotId, count
+			bestLockedId, bestLockedTime, bestLockedCount = self.slotId, timeLeft, count
 		else
-			bestUnlockedId, bestUnlockedCount = self.slotId, count
+			bestUnlockedId, bestUnlockedTime, bestUnlockedCount = self.slotId, timeLeft, count
 		end
 	end
 	for slotId in pairs(self.slots) do
-		local _, count, locked = GetContainerItemInfo(GetBagSlotFromId(slotId))
+		local bag, slot = GetBagSlotFromId(slotId)
+		local _, count, locked = GetContainerItemInfo(bag, slot)
 		count = count or 1
+		local timeLeft = GetSlotTimeLeft(bag, slot)
 		if locked then
-			if not bestLockedId or count > bestLockedCount then
-				bestLockedId, bestLockedCount = slotId, count
+			if not bestLockedId or IsBetterSlot(timeLeft, count, bestLockedTime, bestLockedCount) then
+				bestLockedId, bestLockedTime, bestLockedCount = slotId, timeLeft, count
 			end
 		else
-			if not bestUnlockedId or count > bestUnlockedCount then
-				bestUnlockedId, bestUnlockedCount = slotId, count
+			if not bestUnlockedId or IsBetterSlot(timeLeft, count, bestUnlockedTime, bestUnlockedCount) then
+				bestUnlockedId, bestUnlockedTime, bestUnlockedCount = slotId, timeLeft, count
 			end
 		end
 	end

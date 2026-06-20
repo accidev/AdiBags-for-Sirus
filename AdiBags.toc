@@ -57,6 +57,7 @@ modules\SectionVisibilityDropdown.lua
 modules\ItemLevel.lua
 modules\BankSwitcher.lua
 modules\ExpiringItems.lua
+modules\Tradeable.lua
 modules\CrossCharacter.lua
 modules\BlackDiamondHighlight.lua
 modules\BoEIndicator.lua

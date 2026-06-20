@@ -524,7 +524,7 @@ local itemCompareCache = setmetatable({}, {
 			t[key] = result
 			return result
 		else
-			return idA < idB
+			return tonumber(idA) < tonumber(idB)
 		end
 	end,
 })

@@ -466,7 +466,7 @@ do
 	-- Color scheme for quality colors
 	do
 		colorSchemes.qualityColor = function(level, quality)
-			r, g, b, hex = GetItemQualityColor(quality)
+			local r, g, b = GetItemQualityColor(quality)
 			return r, g, b
 		end
 	end

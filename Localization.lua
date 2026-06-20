@@ -496,8 +496,20 @@ if locale == "ruRU" then
 		"Не показывать уровень предметов которые нельзя надеть." -- ItemLevel.lua
 	L["Same as InventoryItemLevels"] = "Зависимость цвета от уровня предметов" -- ItemLevel.lua
 	L["Related to player level"] = "Зависимость от уровня персонажа" -- ItemLevel.lua
+	L["Same as quality color"] = "Цвет редкости предмета" -- ItemLevel.lua
 	L["Ignore heirloom items"] = "Игнорировать наследуемые предметы" -- ItemLevel.lua
 	L["Only equippable items"] = "Отображать только у оснащаемых предметов" -- ItemLevel.lua
+	-- Tradeable.lua
+	L["Tradeable items"] = "Передаваемые предметы"
+	L["Tradeable"] = "Можно передать"
+	L["Group bind-on-pickup items that can still be traded to other eligible raid members, and optionally show the time left."] =
+		"Собирать предметы, привязанные при получении, которые ещё можно передать игрокам рейда, имевшим право на добычу, и при желании показывать оставшееся время."
+	L["Enable Tradeable Category"] = "Включить категорию «Можно передать»"
+	L["Check this to group items that can still be traded to other eligible raid members."] =
+		"Включите, чтобы собирать в одну категорию предметы, которые ещё можно передать игрокам рейда."
+	L["Show remaining trade time"] = "Показывать оставшееся время передачи"
+	L["Show how many minutes are left to trade each item, on the item itself."] =
+		"Показывать прямо на предмете, сколько минут осталось на его передачу."
 	L["Gear manager item sets"] = "Предметы наборов управления экипировкой"
 	L["GEM_BAG_TAG"] = "См"
 	L["Gems are trade goods"] = "Самоцветы это Хозяйственные товары"
@@ -625,7 +637,7 @@ if locale == "ruRU" then
 	L["Split armors by types"] = "Разделять доспехи по типам"
 	L["Split by subcategories"] = "Разделить по субкатегориям"
 	L["Strictly keep ordering"] = "Строго соблюдать порядок"
-	L["Tidy bags"] = "Чистыйе сумки"
+	L["Tidy bags"] = "Чистые сумки"
 	L['Tidy your bags by clicking on the small "T" button at the top left of bags. Special bags with free slots will be filled with matching items and stackable items will be stacked to save space.'] =
 		'Убраться в ваших сумках можно нажав небольшую кнопку "Т", которая находится верхней левой стороне окна сумок. Специальные сумки будут заполнены подходящими для них предметами, и вещи которые можно сложить, будут сложены в стопки для экономии места.'
 	L["Toggle and configure item filters."] =

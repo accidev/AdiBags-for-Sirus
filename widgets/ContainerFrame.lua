@@ -1006,8 +1006,11 @@ function containerProto:RedispatchAllItems()
 		self:Debug("RedispatchAllItems")
 		self:SendMessage("AdiBags_PreFilter", self)
 		for bag, content in pairs(self.content) do
-			for slotId, slotData in ipairs(content) do
-				self:DispatchItem(slotData)
+			for slot = 1, content.size do
+				local slotData = content[slot]
+				if slotData then
+					self:DispatchItem(slotData)
+				end
 			end
 		end
 		self:SendMessage("AdiBags_PostFilter", self)

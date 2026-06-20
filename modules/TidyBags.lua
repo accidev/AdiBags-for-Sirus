@@ -67,23 +67,34 @@ end
 local watchdog = CreateFrame("Frame")
 watchdog:Hide()
 local watchdogTimeout = 0
+local watchdogGraced
 watchdog:SetScript("OnUpdate", function(self, elapsed)
 	watchdogTimeout = watchdogTimeout - elapsed
-	if watchdogTimeout <= 0 then
-		self:Hide()
-		if addon.globalLock then
-			ForceUnlock("watchdog timeout")
-		end
+	if watchdogTimeout > 0 then
+		return
 	end
+	if not addon.globalLock then
+		self:Hide()
+		return
+	end
+	if GetCursorInfo() and not watchdogGraced then
+		watchdogGraced = true
+		watchdogTimeout = TIDY_WATCHDOG_TIMEOUT
+		return
+	end
+	self:Hide()
+	ForceUnlock("watchdog timeout")
 end)
 
 local function ArmWatchdog()
 	watchdogTimeout = TIDY_WATCHDOG_TIMEOUT
+	watchdogGraced = nil
 	watchdog:Show()
 end
 
 local function DisarmWatchdog()
 	watchdog:Hide()
+	watchdogGraced = nil
 end
 
 function mod:OnInitialize()

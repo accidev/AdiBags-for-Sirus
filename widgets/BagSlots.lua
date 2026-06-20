@@ -27,6 +27,7 @@ local GetInventoryItemTexture = _G.GetInventoryItemTexture
 local GetItemInfo = _G.GetItemInfo
 local GetNumBankSlots = _G.GetNumBankSlots
 local ipairs = _G.ipairs
+local InCombatLockdown = _G.InCombatLockdown
 local IsInventoryItemLocked = _G.IsInventoryItemLocked
 local KEYRING_CONTAINER = _G.KEYRING_CONTAINER
 local next = _G.next
@@ -199,6 +200,9 @@ do
 	end)
 
 	function EmptyBag(bag)
+		if addon.globalLock or InCombatLockdown() then
+			return
+		end
 		ClearCursor()
 		wipe(otherBags)
 		local bags = addon.BAG_IDS.BANK[bag] and addon.BAG_IDS.BANK or addon.BAG_IDS.BAGS
