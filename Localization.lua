@@ -712,6 +712,72 @@ if locale == "ruRU" then
 		"Когда какая-либо клавиша модификатора нажата"
 	L["When ctrl is held down"] = "Когда кнопка Ctrl нажата"
 	L["When shift is held down"] = "Когда кнопка Shift нажата"
+	L["Managed bags"] = "Управляемые сумки"
+	L["Select which bags AdiBags should manage."] = "Выберите, какими сумками управляет AdiBags."
+	L["Skin"] = "Оформление"
+	L["Bag title"] = "Заголовок сумки"
+	L["Section header"] = "Заголовок секции"
+	L["Bag background"] = "Фон сумки"
+	L["Texture"] = "Текстура"
+	L["Insets"] = "Отступы"
+	L["Border"] = "Граница"
+	L["Border width"] = "Ширина границы"
+	L["Backpack color"] = "Цвет рюкзака"
+	L["Bank color"] = "Цвет банка"
+	L["Text"] = "Текст"
+	L["Font"] = "Шрифт"
+	L["Size"] = "Размер"
+	L["Color"] = "Цвет"
+	L["Reset"] = "Сброс"
+
+	L["Anchor"] = "Привязка"
+	L["Backpack button"] = "Кнопка рюкзака"
+	L["Bank button"] = "Кнопка банка"
+	L["Text Position"] = "Расположение текста"
+	L["X Offset"] = "Смещение по X"
+	L["Y Offset"] = "Смещение по Y"
+	L["Offset in X direction (horizontal) from the given anchor point."] =
+		"Смещение по горизонтали (X) от выбранной точки привязки."
+	L["Offset in Y direction (vertical) from the given anchor point."] =
+		"Смещение по вертикали (Y) от выбранной точки привязки."
+	-- ItemLevel.lua
+	L["Display the level of equippable item in the top left corner of the button."] =
+		"Отображать уровень экипируемых предметов в левом верхнем углу кнопки."
+	L["Use SyLevel"] = "Использовать SyLevel"
+	L["Let SyLevel handle the the display."] = "Позволить SyLevel управлять отображением."
+	L["Mininum level"] = "Минимальный уровень"
+	L["Ignore ammunition"] = "Игнорировать боеприпасы"
+	L["Do not show level of arrows/bullets."] = "Не показывать уровень стрел/пуль."
+	-- BankSwitcher.lua
+	L["Bank Switcher"] = "Перемещение в банк"
+	L["Move items from and to back by right-clicking on section headers."] =
+		"Перемещайте предметы в банк и обратно правым кликом по заголовкам секций."
+	L["Right-click to move these items."] = "Кликните правой кнопкой, чтобы переместить эти предметы."
+	-- Junk.lua
+	L["Low quality items"] = "Предметы низкого качества"
+	L["Junk category"] = "Категория хлама"
+	L["Included categories"] = "Включённые категории"
+	L["Include list"] = "Список включений"
+	L["Exclude list"] = "Список исключений"
+	L["Items in this list are always considered as junk. Click an item to remove it from the list."] =
+		"Предметы из этого списка всегда считаются хламом. Кликните по предмету, чтобы убрать его из списка."
+	L["Items in this list are never considered as junk. Click an item to remove it from the list."] =
+		"Предметы из этого списка никогда не считаются хламом. Кликните по предмету, чтобы убрать его из списка."
+	-- widgets/Config-ItemList.lua
+	L["Click or drag this item to remove it."] =
+		"Кликните или перетащите этот предмет, чтобы удалить его."
+	-- Options.lua (skin / stacking)
+	L["Merge free space"] = "Объединять свободное место"
+	L["Merge unstackable items"] = "Объединять нескладируемые предметы"
+	L["Keep all stacks together."] = "Держать все стопки вместе."
+	L["Separate unstackable items."] = "Разделять нескладируемые предметы."
+	L["Separate incomplete stacks."] = "Разделять неполные стопки."
+	L["Show every distinct item stacks."] = "Показывать каждую стопку предметов отдельно."
+	L["When trading:"] = "При обмене:"
+	L["Change stacking at merchants', auction house, bank, mailboxes or when trading."] =
+		"Менять объединение стопок у торговцев, на аукционе, в банке, у почтовых ящиков или при обмене."
+	-- DefaultFilters.lua
+	L["TACKLE_BOX_TAG"] = "Рб"
 end
 
 for k, v in pairs(L) do

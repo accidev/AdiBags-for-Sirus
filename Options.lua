@@ -279,7 +279,7 @@ function addon:GetOptions()
 				name = L["Enabled"],
 				desc = L["Uncheck this to disable AdiBags."],
 				type = "toggle",
-				order = 100,
+				order = 1,
 				disabled = false,
 			},
 			bags = {
@@ -288,8 +288,8 @@ function addon:GetOptions()
 				order = 100,
 				args = {
 					bags = {
-						name = L[""],
-						desc = L[""],
+						name = L["Managed bags"],
+						desc = L["Select which bags AdiBags should manage."],
 						type = "multiselect",
 						order = 90,
 						values = bagList,
@@ -334,7 +334,7 @@ function addon:GetOptions()
 						desc = L["Adjust the maximum number of items per row."],
 						type = "group",
 						inline = true,
-						order = 146,
+						order = 145,
 						args = {
 							Backpack = {
 								name = L["Backpack"],
@@ -358,7 +358,7 @@ function addon:GetOptions()
 						name = L["Maximum bag height"],
 						desc = L["Adjust the maximum height of the bags, relative to screen size."],
 						type = "range",
-						order = 145,
+						order = 140,
 						isPercent = true,
 						min = 0.30,
 						max = 0.90,
@@ -369,7 +369,7 @@ function addon:GetOptions()
 						desc = L["Choose how mouse clicks work in manual mode:\n\nNormal: Left-click opens menu, Shift+Left-click moves bag\nSwapped: Left-click moves bag, Shift+Left-click opens menu"],
 						type = "select",
 						-- width = "half",
-						order = 145,
+						order = 135,
 						values = {
 							[0] = L["Normal"],
 							[1] = L["Swapped"],
@@ -383,7 +383,7 @@ function addon:GetOptions()
 						name = L["Show anchor highlight"],
 						desc = L["Show green/orange highlight when hovering over bag anchors in manual mode"],
 						type = "toggle",
-						order = 145.1,
+						order = 136,
 						disabled = function(info)
 							return (info.handler and info.handler:IsDisabled(info))
 						end,
@@ -392,7 +392,7 @@ function addon:GetOptions()
 						name = L["Show anchor tooltip"],
 						desc = L["Show tooltip when hovering over bag anchors in both modes"],
 						type = "toggle",
-						order = 145.2,
+						order = 137,
 						disabled = function(info)
 							return (info.handler and info.handler:IsDisabled(info))
 						end,
@@ -411,20 +411,20 @@ function addon:GetOptions()
 				},
 			},
 			skin = {
-				name = "Skin",
+				name = L["Skin"],
 				type = "group",
-				order = 150,
+				order = 250,
 				args = {
-					bagFont = addon:CreateFontOptions(addon.bagFont, "Bag title", 10),
-					sectionFont = addon:CreateFontOptions(addon.sectionFont, "Section header", 15),
+					bagFont = addon:CreateFontOptions(addon.bagFont, L["Bag title"], 10),
+					sectionFont = addon:CreateFontOptions(addon.sectionFont, L["Section header"], 15),
 					background = {
-						name = "Bag background",
+						name = L["Bag background"],
 						type = "group",
 						inline = true,
 						order = 20,
 						args = {
 							texture = {
-								name = "Texture",
+								name = L["Texture"],
 								type = "select",
 								dialogControl = "AdiBags_LSM30_Background",
 								values = AceGUIWidgetLSMlists.background,
@@ -432,7 +432,7 @@ function addon:GetOptions()
 								arg = { "skin", "background" },
 							},
 							insets = {
-								name = "Insets",
+								name = L["Insets"],
 								type = "range",
 								order = 20,
 								arg = { "skin", "insets" },
@@ -441,7 +441,7 @@ function addon:GetOptions()
 								step = 1,
 							},
 							border = {
-								name = "Border",
+								name = L["Border"],
 								type = "select",
 								dialogControl = "AdiBags_LSM30_Border",
 								values = AceGUIWidgetLSMlists.border,
@@ -449,7 +449,7 @@ function addon:GetOptions()
 								arg = { "skin", "border" },
 							},
 							borderWidth = {
-								name = "Border width",
+								name = L["Border width"],
 								type = "range",
 								order = 40,
 								arg = { "skin", "borderWidth" },
@@ -458,14 +458,14 @@ function addon:GetOptions()
 								step = 1,
 							},
 							backpackColor = {
-								name = "Backpack color",
+								name = L["Backpack color"],
 								type = "color",
 								order = 50,
 								hasAlpha = true,
 								arg = { "skin", "BackpackColor" },
 							},
 							bankColor = {
-								name = "Bank color",
+								name = L["Bank color"],
 								type = "color",
 								order = 60,
 								hasAlpha = true,
@@ -485,7 +485,7 @@ function addon:GetOptions()
 						desc = L["Select how items should be sorted within each section."],
 						width = "double",
 						type = "select",
-						order = 100,
+						order = 10,
 						values = {
 							default = L["By category, subcategory, quality and item level (default)"],
 							byName = L["By name"],
@@ -496,7 +496,7 @@ function addon:GetOptions()
 						name = L["Quality highlight"],
 						type = "group",
 						inline = true,
-						order = 100,
+						order = 20,
 						args = {
 							qualityHighlight = {
 								name = L["Enabled"],
@@ -532,19 +532,19 @@ function addon:GetOptions()
 						name = L["Quest indicator"],
 						desc = L["Check this to display an indicator on quest items."],
 						type = "toggle",
-						order = 230,
+						order = 30,
 					},
 					showBagType = {
 						name = L["Bag type"],
 						desc = L["Check this to display a bag type tag in the top left corner of items."],
 						type = "toggle",
-						order = 240,
+						order = 40,
 					},
 					virtualStacks = {
 						name = L["Virtual stacks"],
 						type = "group",
 						inline = true,
-						order = 300,
+						order = 50,
 						args = {
 							_desc = {
 								name = L["Virtual stacks display in one place items that actually spread over several bag slots."],

@@ -116,10 +116,11 @@ end
 --------------------------------------------------------------------------------
 
 function addon:CreateFontOptions(font, title, order)
+	local L = addon.L
 	local _, mediumSize = font.template:GetFont()
 	mediumSize = floor(mediumSize)
 	return {
-		name = title or "Text",
+		name = title or L["Text"],
 		type = "group",
 		order = order or 0,
 		inline = true,
@@ -129,14 +130,14 @@ function addon:CreateFontOptions(font, title, order)
 		disabled = false,
 		args = {
 			name = {
-				name = "Font",
+				name = L["Font"],
 				type = "select",
 				order = 10,
 				dialogControl = "LSM30_Font",
 				values = ALL_FONTS,
 			},
 			size = {
-				name = "Size",
+				name = L["Size"],
 				type = "range",
 				order = 20,
 				min = mediumSize - 8,
@@ -144,13 +145,13 @@ function addon:CreateFontOptions(font, title, order)
 				step = 4,
 			},
 			color = {
-				name = "Color",
+				name = L["Color"],
 				type = "color",
 				order = 30,
 				hasAlpha = false,
 			},
 			reset = {
-				name = "Reset",
+				name = L["Reset"],
 				type = "execute",
 				order = 40,
 				disabled = "IsDefault",

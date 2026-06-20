@@ -37,14 +37,3 @@ function mod:Filter(slotData)
 	return nil
 end
 
-function mod:GetOptions()
-	return {
-		enabled = {
-			name = L["Enable Expiring Items Category"],
-			desc = L["Check this to automatically group items that have an expiration time or lifetime."],
-			type = "toggle",
-			order = 10,
-		},
-	},
-		addon:GetOptionHandler(self)
-end

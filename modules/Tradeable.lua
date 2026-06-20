@@ -137,7 +137,17 @@ function mod:Refresh()
 	if not self.db.profile.enabled or not HasTracked() then
 		return
 	end
-	self:SendMessage("AdiBags_FiltersChanged")
+	local now = GetTime()
+	local expired = false
+	for guid, exp in pairs(cache) do
+		if exp and exp <= now then
+			cache[guid] = false
+			expired = true
+		end
+	end
+	if expired then
+		self:SendMessage("AdiBags_FiltersChanged")
+	end
 	self:SendMessage("AdiBags_UpdateAllButtons")
 end
 
@@ -186,20 +196,11 @@ function mod:GetOptions()
 	end
 
 	return {
-		enabled = {
-			name = L["Enable Tradeable Category"],
-			desc = L["Check this to group items that can still be traded to other eligible raid members."],
-			type = "toggle",
-			order = 10,
-		},
 		showTimer = {
 			name = L["Show remaining trade time"],
 			desc = L["Show how many minutes are left to trade each item, on the item itself."],
 			type = "toggle",
-			order = 20,
-			disabled = function()
-				return not mod.db.profile.enabled
-			end,
+			order = 10,
 		},
 	},
 		handler

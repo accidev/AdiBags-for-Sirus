@@ -134,10 +134,11 @@ function mod:UpdateButton(event, button)
 	local text = texts[button]
 
 	if link then
-		local _, _, quality, _, reqLevel, _, _, _, loc = GetItemInfo(link)
+		local name, _, quality, _, reqLevel, _, _, _, loc = GetItemInfo(link)
 		local level = ItemUpgradeInfo:GetUpgradedItemLevel(link) or 0 -- Ugly workaround
 		if
-			level >= settings.minLevel
+			name
+			and level >= settings.minLevel
 			and (quality > 0 or not settings.ignoreJunk)
 			and (loc ~= "" or not settings.equippableOnly)
 			and (loc ~= "INVTYPE_AMMO" or not settings.ignoreAmmo)
@@ -437,7 +438,11 @@ do
 		local playerLevel = UnitLevel("player")
 		if playerLevel == _G.MAX_PLAYER_LEVEL then
 			-- Use the item level range for that level
-			local minLevel, maxLevel = unpack(maxLevelRanges[playerLevel])
+			local range = maxLevelRanges[playerLevel]
+			if not range then
+				return 1, 1, 1
+			end
+			local minLevel, maxLevel = range[1], range[2]
 			if level < minLevel then
 				return GetItemQualityColor(0)
 			else
