@@ -20,9 +20,11 @@ local GetItemInfoEx = _G.GetItemInfoEx
 local GetItemInfo = _G.GetItemInfo
 local GetItemSetInfo = _G.GetItemSetInfo
 local GetItemQualityColor = _G.GetItemQualityColor
+local InboxFrame = _G.InboxFrame
 local IsInventoryItemLocked = _G.IsInventoryItemLocked
 local ITEM_QUALITY_POOR = _G.ITEM_QUALITY_POOR
 local NumberFontNormalSmall = _G.NumberFontNormalSmall
+local OpenMailFrame = _G.OpenMailFrame
 local ITEM_QUALITY_UNCOMMON = _G.ITEM_QUALITY_UNCOMMON
 local KEYRING_CONTAINER = _G.KEYRING_CONTAINER
 local next = _G.next
@@ -180,10 +182,30 @@ local function GetSetBadgeData(item, itemID)
 	end
 end
 
+local blockInboxRightClick
 local itemInfoFrame = CreateFrame("Frame")
+
+local function UpdateInboxClickState()
+	local block = not not (InboxFrame and InboxFrame:IsVisible()
+		and (not OpenMailFrame or not OpenMailFrame:IsVisible()))
+	if blockInboxRightClick ~= block then
+		blockInboxRightClick = block
+		addon:SendMessage("AdiBags_UpdateClickRegistration")
+	end
+end
+
 itemInfoFrame:RegisterCustomEvent("GET_ITEM_INFO_RECEIVED")
-itemInfoFrame:SetScript("OnEvent", function(_, _, itemID, success)
-	if pendingSetItems[itemID] then
+itemInfoFrame:RegisterEvent("MAIL_SHOW")
+itemInfoFrame:RegisterEvent("MAIL_CLOSED")
+itemInfoFrame:SetScript("OnEvent", function(self, event, itemID, success)
+	if event == "MAIL_SHOW" then
+		self:SetScript("OnUpdate", UpdateInboxClickState)
+		UpdateInboxClickState()
+	elseif event == "MAIL_CLOSED" then
+		self:SetScript("OnUpdate", nil)
+		blockInboxRightClick = false
+		addon:SendMessage("AdiBags_UpdateClickRegistration")
+	elseif pendingSetItems[itemID] then
 		pendingSetItems[itemID] = nil
 		replacementTiers[itemID] = nil
 		replacementAttempts[itemID] = nil
@@ -211,7 +233,7 @@ function buttonProto:OnCreate()
 		self[childName] = _G[name .. childName]
 	end
 	self:RegisterForDrag("LeftButton")
-	self:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+	self:UpdateClickRegistration()
 	self:SetScript("OnShow", self.OnShow)
 	self:SetScript("OnHide", self.OnHide)
 	self:SetScript("OnEvent", self.OnEvent)
@@ -381,6 +403,14 @@ end
 -- Scripts & event handlers
 --------------------------------------------------------------------------------
 
+function buttonProto:UpdateClickRegistration()
+	if blockInboxRightClick then
+		self:RegisterForClicks("LeftButtonUp")
+	else
+		self:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+	end
+end
+
 function buttonProto:OnShow()
 	self:RegisterEvent("BAG_UPDATE_COOLDOWN")
 	self:RegisterEvent("ITEM_LOCK_CHANGED")
@@ -391,6 +421,8 @@ function buttonProto:OnShow()
 	self:RegisterEvent("UNIT_QUEST_LOG_CHANGED")
 	self:RegisterMessage("AdiBags_UpdateAllButtons", "Update")
 	self:RegisterMessage("AdiBags_GlobalLockChanged", "UpdateLock")
+	self:RegisterMessage("AdiBags_UpdateClickRegistration", "UpdateClickRegistration")
+	self:UpdateClickRegistration()
 	self:FullUpdate()
 end
 
