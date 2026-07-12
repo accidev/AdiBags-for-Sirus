@@ -4,6 +4,9 @@ local addonName, addon = ...
 local _G = _G
 local BankButtonIDToInvSlotID = _G.BankButtonIDToInvSlotID
 local BANK_CONTAINER = _G.BANK_CONTAINER
+local C_Item = _G.C_Item
+local C_Timer = _G.C_Timer
+local CreateFrame = _G.CreateFrame
 local ContainerFrame_UpdateCooldown = _G.ContainerFrame_UpdateCooldown
 local format = _G.format
 local GetContainerItemGUID = _G.GetContainerItemGUID
@@ -13,10 +16,13 @@ local GetContainerItemLink = _G.GetContainerItemLink
 local GetContainerItemQuestInfo = _G.GetContainerItemQuestInfo
 local GetContainerNumFreeSlots = _G.GetContainerNumFreeSlots
 local GetItemExpirationTimeLeft = _G.GetItemExpirationTimeLeft
+local GetItemInfoEx = _G.GetItemInfoEx
 local GetItemInfo = _G.GetItemInfo
+local GetItemSetInfo = _G.GetItemSetInfo
 local GetItemQualityColor = _G.GetItemQualityColor
 local IsInventoryItemLocked = _G.IsInventoryItemLocked
 local ITEM_QUALITY_POOR = _G.ITEM_QUALITY_POOR
+local NumberFontNormalSmall = _G.NumberFontNormalSmall
 local ITEM_QUALITY_UNCOMMON = _G.ITEM_QUALITY_UNCOMMON
 local KEYRING_CONTAINER = _G.KEYRING_CONTAINER
 local next = _G.next
@@ -37,6 +43,155 @@ local ITEM_SIZE = addon.ITEM_SIZE
 
 local Masque = LibStub("Masque", true)
 local AceTimer = LibStub("AceTimer-3.0")
+
+local setBadgeData = {}
+local replacementTiers = {}
+local replacementRetryItems = {}
+local replacementAttempts = {}
+local pendingSetItems = {}
+local setBadgeTooltip
+local replacementRetryScheduled
+
+local function ScheduleReplacementRetry(itemID)
+	if replacementRetryItems[itemID] then
+		return
+	end
+
+	local attempt = (replacementAttempts[itemID] or 0) + 1
+	replacementAttempts[itemID] = attempt
+	if attempt >= 3 then
+		replacementTiers[itemID] = false
+		return
+	end
+	replacementRetryItems[itemID] = true
+	if replacementRetryScheduled then
+		return
+	end
+
+	replacementRetryScheduled = true
+	C_Timer:After(attempt == 1 and 0.5 or 2, function()
+		replacementRetryScheduled = nil
+		local needsUpdate
+		for retryItemID in pairs(replacementRetryItems) do
+			replacementRetryItems[retryItemID] = nil
+			replacementTiers[retryItemID] = nil
+			needsUpdate = true
+		end
+		if needsUpdate then
+			addon:SendMessage("AdiBags_UpdateAllButtons")
+		end
+	end)
+end
+
+local function GetReplacementTier(item, itemID)
+	local tier = replacementTiers[itemID]
+	if tier ~= nil then
+		return tier or nil
+	end
+
+	if not setBadgeTooltip then
+		local name = addonName .. "ItemSetBadgeTooltip"
+		setBadgeTooltip = CreateFrame("GameTooltip", name, _G.UIParent, "GameTooltipTemplate")
+		setBadgeTooltip:SetOwner(_G.UIParent, "ANCHOR_NONE")
+	end
+
+	setBadgeTooltip:SetOwner(_G.UIParent, "ANCHOR_NONE")
+	setBadgeTooltip:ClearLines()
+	setBadgeTooltip:SetHyperlink(item)
+	local numLines = setBadgeTooltip:NumLines() or 0
+	if numLines == 0 then
+		setBadgeTooltip:Hide()
+		setBadgeTooltip:ClearLines()
+		ScheduleReplacementRetry(itemID)
+		return
+	end
+
+	local name = setBadgeTooltip:GetName()
+	local replacementText
+	for index = 1, numLines do
+		local line = _G[name .. "TextLeft" .. index]
+		local text = line and line:GetText()
+		if text and (replacementText or text:find("Замена комплектного предмета", 1, true)) then
+			replacementText = replacementText and (replacementText .. " " .. text) or text
+			tier = replacementText:match("тира%s*(%d+)%s+с%s+сетбонусами")
+			if tier then
+				break
+			end
+		end
+	end
+	setBadgeTooltip:Hide()
+	setBadgeTooltip:ClearLines()
+
+	if tier then
+		replacementTiers[itemID] = tier
+		replacementRetryItems[itemID] = nil
+		replacementAttempts[itemID] = nil
+	elseif replacementText then
+		ScheduleReplacementRetry(itemID)
+	else
+		replacementTiers[itemID] = false
+		replacementRetryItems[itemID] = nil
+		replacementAttempts[itemID] = nil
+	end
+	return tier
+end
+
+local function GetSetBadgeData(item, itemID)
+	local itemName, _, _, _, _, _, _, _, _, _, _, _, _, _, _, setID = GetItemInfoEx(item)
+	if not itemName then
+		if itemID then
+			pendingSetItems[itemID] = true
+			C_Item.GetItemInfo(itemID, true)
+		end
+		return
+	elseif itemID then
+		pendingSetItems[itemID] = nil
+	end
+
+	if setID and setID ~= 0 then
+		local data = setBadgeData[setID]
+		if data == nil then
+			local name = GetItemSetInfo(setID)
+			if not name then
+				return
+			end
+
+			local tier = name:match("Рейдовый комплект Тир%s*(%d+)")
+			if tier then
+				data = tier
+			elseif name:find("гладиатора", 1, true) or name:find("Гладиатор", 1, true) then
+				data = true
+			else
+				data = false
+			end
+			setBadgeData[setID] = data
+		end
+
+		if data == true then
+			return "pvp"
+		elseif data then
+			return "tier", data
+		end
+	end
+
+	local tier = GetReplacementTier(item, itemID)
+	if tier then
+		return "tier", tier
+	end
+end
+
+local itemInfoFrame = CreateFrame("Frame")
+itemInfoFrame:RegisterCustomEvent("GET_ITEM_INFO_RECEIVED")
+itemInfoFrame:SetScript("OnEvent", function(_, _, itemID, success)
+	if pendingSetItems[itemID] then
+		pendingSetItems[itemID] = nil
+		replacementTiers[itemID] = nil
+		replacementAttempts[itemID] = nil
+		if success then
+			addon:SendMessage("AdiBags_UpdateAllButtons")
+		end
+	end
+end)
 
 --------------------------------------------------------------------------------
 -- Button initialization
@@ -320,6 +475,44 @@ function buttonProto:Update()
 		self.Stock:Show()
 	else
 		self.Stock:Hide()
+	end
+
+	local setBadge = self.setBadgeText
+	local settings = addon.db.profile.setBadges
+	local badgeType, tier
+	if settings and settings.enabled and self.itemId then
+		badgeType, tier = GetSetBadgeData(self.itemLink or self.itemId, self.itemId)
+	end
+	local setLabel
+	if badgeType == "tier" then
+		setLabel = (settings.tierPrefix or "Т") .. tier
+	elseif badgeType == "pvp" then
+		setLabel = settings.pvpText or "ПвП"
+	end
+	if setLabel and setLabel ~= "" then
+		if not setBadge then
+			setBadge = self:CreateFontString(nil, "OVERLAY")
+			setBadge:SetJustifyH("CENTER")
+			setBadge:SetShadowColor(0, 0, 0, 1)
+			setBadge:SetShadowOffset(1, -1)
+			self.setBadgeText = setBadge
+		end
+		local anchor = settings.anchor or "TOP"
+		setBadge:ClearAllPoints()
+		setBadge:SetPoint(anchor, self, anchor, settings.offsetX or 0, settings.offsetY or -1)
+		local fontName = NumberFontNormalSmall:GetFont()
+		setBadge:SetFont(fontName, settings.fontSize or 10, "OUTLINE")
+		setBadge:SetText(setLabel)
+		if badgeType == "pvp" then
+			local color = settings.pvpColor
+			setBadge:SetTextColor(color[1], color[2], color[3])
+		else
+			local color = settings.tierColor
+			setBadge:SetTextColor(color[1], color[2], color[3])
+		end
+		setBadge:Show()
+	elseif setBadge then
+		setBadge:Hide()
 	end
 
 	------------------------------------------------------------

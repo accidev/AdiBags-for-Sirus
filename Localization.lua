@@ -87,6 +87,15 @@ L["Mythic Keystone"] = true
 L["Put mythic keystone items into their own section."] = true
 L["Sirus"] = true
 L["Put Sirus-specific items (Black Diamonds, legendary gems) in their own section."] = true
+L["Item set badges"] = true
+L["Display short labels for raid, PvP and set replacement items."] = true
+L["Tier prefix"] = true
+L["Text placed before the tier number."] = true
+L["PvP label"] = true
+L["Text shown on items from gladiator sets."] = true
+L["Font size"] = true
+L["Tier color"] = true
+L["PvP color"] = true
 L["Section setup"] = true
 L["Select the sections in which the items should be dispatched."] = true
 L["Select which first-level categories should be split by sub-categories."] = true
@@ -368,6 +377,16 @@ if locale == "ruRU" then
 	L["Sirus"] = "Sirus"
 	L["Put Sirus-specific items (Black Diamonds, legendary gems) in their own section."] =
 		"Поместить специфичные для Sirus предметы (Чёрные бриллианты, легендарные самоцветы) в отдельную секцию."
+	L["Item set badges"] = "Подписи комплектов"
+	L["Display short labels for raid, PvP and set replacement items."] =
+		"Показывать короткие подписи на рейдовых, PvP и заменяемых комплектных предметах."
+	L["Tier prefix"] = "Префикс тира"
+	L["Text placed before the tier number."] = "Текст перед номером тира."
+	L["PvP label"] = "Подпись PvP"
+	L["Text shown on items from gladiator sets."] = "Текст на предметах из комплектов гладиатора."
+	L["Font size"] = "Размер шрифта"
+	L["Tier color"] = "Цвет тира"
+	L["PvP color"] = "Цвет PvP"
 	L["Add a dropdown menu to bags that allow to hide the sections."] =
 		"Добавить выпадающее меню для сумок, в котором можно настроить отображение секций."
 	L["Add association"] = "Добавить объединение"
