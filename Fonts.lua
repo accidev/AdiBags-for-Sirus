@@ -39,6 +39,13 @@ local function GetFontFlags(font)
 	return flags or ""
 end
 
+local function ApplyFontFile(font, db)
+	local path = LSM:Fetch(FONT, db.name)
+	if (not path or not font:SetFont(path, db.size, db.outline)) and font.template then
+		font:SetFont((font.template:GetFont()), db.size, db.outline)
+	end
+end
+
 --------------------------------------------------------------------------------
 -- Font prototype
 --------------------------------------------------------------------------------
@@ -60,7 +67,7 @@ function proto:SetSetting(info, value, ...)
 			return
 		end
 		db[name] = value
-		self:SetFont(LSM:Fetch(FONT, db.name), db.size, db.outline)
+		ApplyFontFile(self, db)
 	else
 		return
 	end
@@ -80,7 +87,7 @@ end
 
 function proto:ApplySettings()
 	local db = self:GetDB()
-	self:SetFont(LSM:Fetch(FONT, db.name), db.size, db.outline)
+	ApplyFontFile(self, db)
 	self:SetTextColor(db.r, db.g, db.b)
 end
 

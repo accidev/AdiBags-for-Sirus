@@ -2,7 +2,7 @@
 ## Title: |cffA335EEAdiBags|r
 ## Notes: Адаптированно под Sirus - |cffA335EEAccidev|r
 ## Author: Adirelle, Sattva, |cffA335EEAccidev|r
-## Version: 2.2-Sirus
+## Version: 2.3-Sirus
 ## SavedVariables: AdiBagsDB
 ## OptionalDeps: LibStub, CallbackHandler-1.0, Ace3, LibBabble-Inventory-3.0, AdiDebug, LibSharedMedia-3.0, Scrap, BrainDead, ProfessionsVault, Masque
 
@@ -27,6 +27,8 @@ libs\AceGUI-3.0-SharedMediaWidgets\widget.xml
 #@end-no-lib-strip@
 
 libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+libs\LibSerialize\lib.xml
+libs\LibDeflate\lib.xml
 
 Fonts.lua
 Localization.lua
@@ -61,5 +63,7 @@ modules\Tradeable.lua
 modules\CrossCharacter.lua
 modules\BlackDiamondHighlight.lua
 modules\BoEIndicator.lua
+modules\CustomCategories.lua
 
 DefaultFilters.lua
+modules\ProfileImportExport.lua

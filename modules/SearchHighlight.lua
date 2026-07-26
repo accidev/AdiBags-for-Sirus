@@ -103,7 +103,7 @@ function mod:UpdateButton(event, button)
 	end
 	text = text:lower():trim()
 	local name = button.itemId and GetItemInfo(button.itemId)
-	if name and not name:lower():match(text) then
+	if name and not name:lower():find(text, 1, true) then
 		button.IconTexture:SetVertexColor(0.2, 0.2, 0.2)
 		button.IconQuestTexture:Hide()
 		button.Count:Hide()

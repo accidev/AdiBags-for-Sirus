@@ -243,17 +243,7 @@ function mod:GetOptions()
 				anchor = {
 					name = L["Anchor"],
 					type = "select",
-					values = {
-						TOPLEFT = "TOPLEFT",
-						TOP = "TOP",
-						TOPRIGHT = "TOPRIGHT",
-						LEFT = "LEFT",
-						CENTER = "CENTER",
-						RIGHT = "RIGHT",
-						BOTTOMLEFT = "BOTTOMLEFT",
-						BOTTOM = "BOTTOM",
-						BOTTOMRIGHT = "BOTTOMRIGHT",
-					},
+					values = addon.ANCHOR_POINTS,
 					-- sorting = {
 					-- 	[1] = "TOPLEFT",
 					-- 	[2] = "TOP",

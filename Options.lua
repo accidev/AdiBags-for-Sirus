@@ -288,17 +288,19 @@ local function MakeLockOption(order)
 	}
 end
 
+-- Keys are stored in the database and passed to SetPoint; only the values are displayed.
 local ANCHOR_POINTS = {
-	TOPLEFT = "TOPLEFT",
-	TOP = "TOP",
-	TOPRIGHT = "TOPRIGHT",
-	LEFT = "LEFT",
-	CENTER = "CENTER",
-	RIGHT = "RIGHT",
-	BOTTOMLEFT = "BOTTOMLEFT",
-	BOTTOM = "BOTTOM",
-	BOTTOMRIGHT = "BOTTOMRIGHT",
+	TOPLEFT = L["TOPLEFT"],
+	TOP = L["TOP"],
+	TOPRIGHT = L["TOPRIGHT"],
+	LEFT = L["LEFT"],
+	CENTER = L["CENTER"],
+	RIGHT = L["RIGHT"],
+	BOTTOMLEFT = L["BOTTOMLEFT"],
+	BOTTOM = L["BOTTOM"],
+	BOTTOMRIGHT = L["BOTTOMRIGHT"],
 }
+addon.ANCHOR_POINTS = ANCHOR_POINTS
 
 local function GetCountSetting(info)
 	return addon.db.profile[info[#info]]
@@ -354,6 +356,35 @@ local function CountTextOptions(order)
 	return opts
 end
 
+local DISCORD_URL = "https://discord.gg/uvRF2AtWzm"
+
+StaticPopupDialogs["ADIBAGS_DISCORD_LINK"] = {
+	text = L["AdiBags Discord — select the link and press Ctrl+C to copy."],
+	button1 = CLOSE,
+	hasEditBox = true,
+	timeout = 0,
+	whileDead = true,
+	hideOnEscape = true,
+	preferredIndex = 3,
+	OnShow = function(self)
+		self.editBox:SetText(DISCORD_URL)
+		self.editBox:HighlightText()
+		self.editBox:SetFocus()
+	end,
+	EditBoxOnTextChanged = function(self)
+		if self:GetText() ~= DISCORD_URL then
+			self:SetText(DISCORD_URL)
+			self:HighlightText()
+		end
+	end,
+	EditBoxOnEnterPressed = function(self)
+		self:GetParent():Hide()
+	end,
+	EditBoxOnEscapePressed = function(self)
+		self:GetParent():Hide()
+	end,
+}
+
 function addon:GetOptions()
 	if options then
 		return options
@@ -366,6 +397,42 @@ function addon:GetOptions()
 	local profiles = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)
 	profiles.order = 600
 	profiles.disabled = false
+
+	local function noProfileIO()
+		return not addon.ProfileIO
+	end
+	profiles.args.importexport = {
+		name = L["Profile import/export"],
+		type = "header",
+		order = 90,
+		hidden = noProfileIO,
+	}
+	profiles.args.importexportdesc = {
+		name = L["Export the current profile, with every filter and plugin setting, as a text code, or replace it with a code copied from somewhere else."],
+		type = "description",
+		order = 91,
+		hidden = noProfileIO,
+	}
+	profiles.args.export = {
+		name = L["Export"],
+		desc = L["Open a window with the code of the current profile."],
+		type = "execute",
+		order = 92,
+		hidden = noProfileIO,
+		func = function()
+			addon.ProfileIO:ShowExport()
+		end,
+	}
+	profiles.args.import = {
+		name = L["Import"],
+		desc = L["Open a window where you can paste a profile code. The current profile is entirely replaced."],
+		type = "execute",
+		order = 93,
+		hidden = noProfileIO,
+		func = function()
+			addon.ProfileIO:ShowImport()
+		end,
+	}
 	local bagList = {}
 	for name, module in self:IterateModules() do
 		if module.isBag then
@@ -391,7 +458,19 @@ function addon:GetOptions()
 				desc = L["Uncheck this to disable AdiBags."],
 				type = "toggle",
 				order = 10,
+				width = "half",
 				disabled = false,
+			},
+			discord = {
+				name = "|cffff2020" .. L["Discord"] .. "|r",
+				desc = L["Open a window with the Discord link."],
+				type = "execute",
+				order = 15,
+				width = "half",
+				disabled = false,
+				func = function()
+					StaticPopup_Show("ADIBAGS_DISCORD_LINK")
+				end,
 			},
 			general = {
 				name = L["General"],
@@ -726,17 +805,7 @@ function addon:GetOptions()
 							anchor = {
 								name = L["Anchor"],
 								type = "select",
-								values = {
-									TOPLEFT = "TOPLEFT",
-									TOP = "TOP",
-									TOPRIGHT = "TOPRIGHT",
-									LEFT = "LEFT",
-									CENTER = "CENTER",
-									RIGHT = "RIGHT",
-									BOTTOMLEFT = "BOTTOMLEFT",
-									BOTTOM = "BOTTOM",
-									BOTTOMRIGHT = "BOTTOMRIGHT",
-								},
+								values = ANCHOR_POINTS,
 								order = 40,
 								arg = { "setBadges", "anchor" },
 							},

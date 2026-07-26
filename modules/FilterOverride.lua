@@ -42,10 +42,14 @@ function mod:OnEnable()
 	self:UpdateOptions()
 	self:RegisterEvent("CURSOR_UPDATE")
 	self:CURSOR_UPDATE()
+
+	addon.filterProto.OnEnable(self)
 end
 
 function mod:OnDisable()
 	addon.UnregisterAllSectionHeaderScripts(self)
+
+	addon.filterProto.OnDisable(self)
 end
 
 function mod:Filter(slotData)
@@ -66,6 +70,22 @@ function mod:AssignItems(section, category, ...)
 	local acr = LibStub("AceConfigRegistry-3.0", true)
 	if acr then
 		acr:NotifyChange(addonName)
+	end
+end
+
+function mod:ReplaceCategory(oldCategory, newCategory)
+	local overrides = self.db.profile.overrides
+	local changed
+	for itemId, key in pairs(overrides) do
+		local section, category = strsplit("#", tostring(key))
+		if category == oldCategory then
+			overrides[itemId] = section .. "#" .. newCategory
+			changed = true
+		end
+	end
+	if changed then
+		self:SendMessage("AdiBags_FiltersChanged")
+		self:UpdateOptions()
 	end
 end
 
@@ -302,6 +322,7 @@ do
 			local section, category = strsplit("#", tostring(override))
 			local categoryGroup = categories[category]
 			if not categoryGroup then
+				categoryValues[category] = category
 				categoryGroup = tremove(categoryHeap)
 				if not categoryGroup then
 					categoryGroup = { name = category, type = "group", args = {} }

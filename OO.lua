@@ -1,4 +1,5 @@
 local addonName, addon = ...
+local L = addon.L
 local safecall = addon.safecall
 
 --<GLOBALS
@@ -230,13 +231,13 @@ function SlashCmdList.ADIBAGSOODEBUG()
 		-- Disable debugging
 		addon.debugEnabled = false
 		addon.Debug = function() end -- Set it to a no-op function
-		print("Debugging is now disabled.")
+		print(L["Debugging is now disabled."])
 	else
 		-- Enable debugging
 		addon.debugEnabled = true
 		addon.Debug = function(...)
 			print("AdiBags Debug:", ...)
 		end -- Enable debug printing
-		print("Debugging is now enabled.")
+		print(L["Debugging is now enabled."])
 	end
 end

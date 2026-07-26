@@ -76,6 +76,8 @@ function addon:SetupDefaultFilters()
 			self:RegisterMessage("AdiBags_PreFilter")
 			self:RegisterMessage("AdiBags_PreContentUpdate")
 			self:UpdateNames()
+
+			addon.filterProto.OnEnable(self)
 		end
 
 		local GetSlotId = addon.GetSlotId
@@ -119,7 +121,7 @@ function addon:SetupDefaultFilters()
 					missing = true
 				end
 			end
-			self.dirty = not missing
+			self.dirty = missing
 		end
 
 		function setFilter:EQUIPMENT_SETS_CHANGED(event)

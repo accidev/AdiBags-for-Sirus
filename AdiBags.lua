@@ -269,12 +269,17 @@ function addon:OnInitialize()
 	self:Debug("Initialized")
 end
 
+local greeted
+
 function addon:OnEnable()
-	self.After(8, function()
-		print(
-			"|cFF00BFFFAdiBags|r |cFFFF4444»|r Спасибо за использование моей адаптации под Sirus. Другие аддоны в: -> |cff9aedff|Hhttp:https://discord.gg/uvRF2AtWzm|h[Discord]|h|r"
-		)
-	end)
+	if not greeted then
+		greeted = true
+		self.After(8, function()
+			print(
+				"|cFF00BFFFAdiBags|r |cFFFF4444»|r Спасибо за использование моей адаптации под Sirus. Другие аддоны в: -> |cff9aedff|Hhttp:https://discord.gg/uvRF2AtWzm|h[Discord]|h|r"
+			)
+		end)
+	end
 
 	self.globalLock = false
 
@@ -327,6 +332,7 @@ function addon:OnEnable()
 	self.bagFont:ApplySettings()
 	self.sectionFont:ApplySettings()
 	self.countFont:ApplySettings()
+	self:UpdateCountAppearance()
 	self:UpdatePositionMode()
 
 	self:Debug("Enabled")
@@ -680,7 +686,7 @@ do
 			local old = current
 			current = new
 			self.atBank = (current == "BANKFRAME")
-			if self.db.profile.virtualStacks.notWhenTrading then
+			if (tonumber(self.db.profile.virtualStacks.notWhenTrading) or 0) > 1 then
 				self:SendMessage("AdiBags_FiltersChanged", 0)
 			end
 			self:SendMessage("AdiBags_InteractingWindowChanged", new, old)

@@ -37,7 +37,7 @@ end
 local function CreateText(button)
 	local fs = button:CreateFontString(nil, "OVERLAY", "NumberFontNormalSmall")
 	fs:SetPoint("TOPLEFT", button, "TOPLEFT", 2, -2)
-	fs:SetText("BoE")
+	fs:SetText(L["BoE"])
 	fs:SetJustifyH("LEFT")
 	fs:Hide()
 	texts[button] = fs

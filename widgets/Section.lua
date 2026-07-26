@@ -46,6 +46,10 @@ function addon:SetCategoryOrders(t)
 	end
 end
 
+function addon:RemoveCategory(name)
+	categoryOrder[name] = nil
+end
+
 function addon:IterateCategories()
 	return pairs(categoryOrder)
 end
