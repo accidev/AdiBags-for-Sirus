@@ -173,124 +173,135 @@ end
 
 function mod:GetOptions()
 	local options = {
-		useSyLevel = SyLevel and {
-			name = L["Use SyLevel"],
-			desc = L["Let SyLevel handle the the display."],
-			type = "toggle",
-			order = 5,
-		} or nil,
-		equippableOnly = {
-			name = L["Only equippable items"],
-			desc = L["Do not show level of items that cannot be equipped."],
-			type = "toggle",
-			order = 10,
-		},
-		colorScheme = {
-			name = L["Color scheme"],
-			desc = L["Which color scheme should be used to display the item level ?"],
-			type = "select",
-			hidden = SyLevelBypass,
-			values = {
-				none = L["Manual"],
-				original = L["Same as InventoryItemLevels"],
-				level = L["Related to player level"],
-				qualityColor = L["Same as quality color"],
-			},
+		display = {
+			name = L["What to display"],
+			type = "group",
+			inline = true,
 			order = 20,
-		},
-		minLevel = {
-			name = L["Mininum level"],
-			desc = L["Do not show levels under this threshold."],
-			type = "range",
-			min = 1,
-			max = 1000,
-			step = 1,
-			bigStep = 10,
-			order = 30,
-		},
-		ignoreJunk = {
-			name = L["Ignore low quality items"],
-			desc = L["Do not show level of poor quality items."],
-			type = "toggle",
-			order = 40,
-		},
-		ignoreHeirloom = {
-			name = L["Ignore heirloom items"],
-			desc = L["Do not show level of heirloom items."],
-			type = "toggle",
-			order = 50,
-		},
-		ignoreAmmo = {
-			name = L["Ignore ammunition"],
-			desc = L["Do not show level of arrows/bullets."],
-			type = "toggle",
-			order = 60,
-		},
-		positionHeader = {
-			name = L["Text Position"],
-			type = "header",
-			order = 70,
-		},
-		anchor = {
-			name = L["Anchor"],
-			type = "select",
-			values = {
-				TOPLEFT = "TOPLEFT",
-				TOP = "TOP",
-				TOPRIGHT = "TOPRIGHT",
-				LEFT = "LEFT",
-				CENTER = "CENTER",
-				RIGHT = "RIGHT",
-				BOTTOMLEFT = "BOTTOMLEFT",
-				BOTTOM = "BOTTOM",
-				BOTTOMRIGHT = "BOTTOMRIGHT",
+			args = {
+				useSyLevel = SyLevel and {
+					name = L["Use SyLevel"],
+					desc = L["Let SyLevel handle the the display."],
+					type = "toggle",
+					order = 10,
+				} or nil,
+				equippableOnly = {
+					name = L["Only equippable items"],
+					desc = L["Do not show level of items that cannot be equipped."],
+					type = "toggle",
+					order = 20,
+				},
+				colorScheme = {
+					name = L["Color scheme"],
+					desc = L["Which color scheme should be used to display the item level ?"],
+					type = "select",
+					hidden = SyLevelBypass,
+					values = {
+						none = L["Manual"],
+						original = L["Same as InventoryItemLevels"],
+						level = L["Related to player level"],
+						qualityColor = L["Same as quality color"],
+					},
+					order = 30,
+				},
+				minLevel = {
+					name = L["Mininum level"],
+					desc = L["Do not show levels under this threshold."],
+					type = "range",
+					min = 1,
+					max = 1000,
+					step = 1,
+					bigStep = 10,
+					order = 40,
+				},
+				ignoreJunk = {
+					name = L["Ignore low quality items"],
+					desc = L["Do not show level of poor quality items."],
+					type = "toggle",
+					order = 50,
+				},
+				ignoreHeirloom = {
+					name = L["Ignore heirloom items"],
+					desc = L["Do not show level of heirloom items."],
+					type = "toggle",
+					order = 60,
+				},
+				ignoreAmmo = {
+					name = L["Ignore ammunition"],
+					desc = L["Do not show level of arrows/bullets."],
+					type = "toggle",
+					order = 70,
+				},
 			},
-			-- sorting = {
-			-- 	[1] = "TOPLEFT",
-			-- 	[2] = "TOP",
-			-- 	[3] = "TOPRIGHT",
-			-- 	[4] = "LEFT",
-			-- 	[5] = "CENTER",
-			-- 	[6] = "RIGHT",
-			-- 	[7] = "BOTTOMLEFT",
-			-- 	[8] = "BOTTOM",
-			-- 	[9] = "BOTTOMRIGHT",
-			-- },
-			order = 71,
-			set = function(info, value)
-				mod.db.profile[info[#info]] = value
-				UpdateTextLocation()
-			end,
 		},
-		offsetX = {
-			name = L["X Offset"],
-			desc = L["Offset in X direction (horizontal) from the given anchor point."],
-			type = "range",
-			min = -20,
-			max = 20,
-			step = 1,
-			bigStep = 1,
-			order = 72,
-			set = function(info, value)
-				mod.db.profile[info[#info]] = value
-				UpdateTextLocation()
-			end,
+		position = {
+			name = L["Text Position"],
+			type = "group",
+			inline = true,
+			order = 30,
+			args = {
+				anchor = {
+					name = L["Anchor"],
+					type = "select",
+					values = {
+						TOPLEFT = "TOPLEFT",
+						TOP = "TOP",
+						TOPRIGHT = "TOPRIGHT",
+						LEFT = "LEFT",
+						CENTER = "CENTER",
+						RIGHT = "RIGHT",
+						BOTTOMLEFT = "BOTTOMLEFT",
+						BOTTOM = "BOTTOM",
+						BOTTOMRIGHT = "BOTTOMRIGHT",
+					},
+					-- sorting = {
+					-- 	[1] = "TOPLEFT",
+					-- 	[2] = "TOP",
+					-- 	[3] = "TOPRIGHT",
+					-- 	[4] = "LEFT",
+					-- 	[5] = "CENTER",
+					-- 	[6] = "RIGHT",
+					-- 	[7] = "BOTTOMLEFT",
+					-- 	[8] = "BOTTOM",
+					-- 	[9] = "BOTTOMRIGHT",
+					-- },
+					order = 10,
+					set = function(info, value)
+						mod.db.profile[info[#info]] = value
+						UpdateTextLocation()
+					end,
+				},
+				offsetX = {
+					name = L["X Offset"],
+					desc = L["Offset in X direction (horizontal) from the given anchor point."],
+					type = "range",
+					min = -20,
+					max = 20,
+					step = 1,
+					bigStep = 1,
+					order = 20,
+					set = function(info, value)
+						mod.db.profile[info[#info]] = value
+						UpdateTextLocation()
+					end,
+				},
+				offsetY = {
+					name = L["Y Offset"],
+					desc = L["Offset in Y direction (vertical) from the given anchor point."],
+					type = "range",
+					min = -20,
+					max = 20,
+					step = 1,
+					bigStep = 1,
+					order = 30,
+					set = function(info, value)
+						mod.db.profile[info[#info]] = value
+						UpdateTextLocation()
+					end,
+				},
+			},
 		},
-		offsetY = {
-			name = L["Y Offset"],
-			desc = L["Offset in Y direction (vertical) from the given anchor point."],
-			type = "range",
-			min = -20,
-			max = 20,
-			step = 1,
-			bigStep = 1,
-			order = 73,
-			set = function(info, value)
-				mod.db.profile[info[#info]] = value
-				UpdateTextLocation()
-			end,
-		},
-		text = addon:CreateFontOptions(self.font, nil, 80),
+		text = addon:CreateFontOptions(self.font, L["Font"], 40),
 	}
 	options.text.args.size.step = 1
 	options.text.args.color.disabled = function()

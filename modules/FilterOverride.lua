@@ -73,7 +73,7 @@ end
 -- Options
 --------------------------------------------------------------------------------
 
-local categoryValues
+local categoryValues = {}
 
 local function GetItemId(str)
 	local link = str and select(2, GetItemInfo(str))
@@ -85,10 +85,6 @@ local AceConfigRegistry = LibStub("AceConfigRegistry-3.0")
 local options
 function mod:GetOptions()
 	if not options then
-		categoryValues = {}
-		for name in addon:IterateCategories() do
-			categoryValues[name] = name
-		end
 		local newItemId, newSection, newCategory
 		options = {
 			newAssoc = {
@@ -288,6 +284,10 @@ do
 			return
 		end
 		setmetatable(handlerProto, { __index = addon:GetOptionHandler(self) })
+		wipe(categoryValues)
+		for name in addon:IterateCategories() do
+			categoryValues[name] = name
+		end
 		for category, categoryGroup in pairs(categories) do
 			options[category] = nil
 			for _, sectionGroup in pairs(categoryGroup.args) do
@@ -306,7 +306,7 @@ do
 				if not categoryGroup then
 					categoryGroup = { name = category, type = "group", args = {} }
 				end
-				categoryGroup.name, categoryGroup.order = category, addon:GetCategoryOrder(category)
+				categoryGroup.name, categoryGroup.order = category, 1000 - addon:GetCategoryOrder(category)
 				categories[category] = categoryGroup
 				options[category] = categoryGroup
 			end

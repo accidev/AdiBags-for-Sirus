@@ -385,6 +385,16 @@ L["No outline"] = true
 L["Thin"] = true
 L["Thick"] = true
 
+L["General"] = true
+L["Appearance"] = true
+L["Size and layout"] = true
+L["Indicators"] = true
+L["Anchor highlight and tooltip"] = true
+L["Choose how sections are placed: keep their strict order, group sections of the same category together, or fill each row as much as possible."] =
+	true
+
+L["What to display"] = true
+
 local locale = GetLocale()
 
 ------------------------ ruRU ------------------------
@@ -838,6 +848,14 @@ if locale == "ruRU" then
 	L["No outline"] = "Без обводки"
 	L["Thin"] = "Тонкая"
 	L["Thick"] = "Толстая"
+	L["General"] = "Основные"
+	L["Appearance"] = "Внешний вид"
+	L["Size and layout"] = "Размер и раскладка"
+	L["Indicators"] = "Индикаторы"
+	L["Anchor highlight and tooltip"] = "Подсветка и подсказки якоря"
+	L["Choose how sections are placed: keep their strict order, group sections of the same category together, or fill each row as much as possible."] =
+		"Выберите, как размещаются секции: строго сохранять порядок, группировать секции одной категории или максимально заполнять строки."
+	L["What to display"] = "Что показывать"
 end
 
 for k, v in pairs(L) do
