@@ -248,11 +248,11 @@ do
 				values = "ListCategories",
 			},
 			remove = {
-				name = "Remove",
+				name = L["Remove"],
 				type = "execute",
 				order = 30,
 				confirm = true,
-				confirmText = "Are you sure you want to remove this section?",
+				confirmText = L["Are you sure you want to remove this section ?"],
 				func = "Remove",
 			},
 			emptyTable = {
@@ -264,8 +264,8 @@ do
 				args = {},
 			},
 			items = {
-				name = "Items",
-				desc = "Click on an item to remove it from the list. You can drop an item on the empty slot to add it to the list.",
+				name = L["Items"],
+				desc = L["Click on a item to remove it from the list. You can drop an item on the empty slot to add it to the list."],
 				type = "multiselect",
 				dialogControl = "ItemList",
 				width = "full",

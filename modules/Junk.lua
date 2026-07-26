@@ -49,6 +49,8 @@ function mod:OnEnable()
 	self:RegisterMessage("AdiBags_OverrideFilter")
 	self:Hook(addon, "IsJunk")
 	wipe(cache)
+
+	addon.filterProto.OnEnable(self)
 end
 
 function mod:BaseCheckItem(itemId, force)

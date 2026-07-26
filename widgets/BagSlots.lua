@@ -143,7 +143,7 @@ do
 				currentSlot = currentSlot + 1
 				local itemId = GetContainerItemID(currentBag, currentSlot)
 				if itemId then
-					local _, count = select(2, GetContainerItemInfo(currentBag, currentSlot))
+					local _, count = GetContainerItemInfo(currentBag, currentSlot)
 					PickupContainerItem(currentBag, currentSlot)
 					if CursorHasItem() then
 						locked[currentBag] = true

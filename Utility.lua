@@ -129,28 +129,33 @@ end
 
 local function __GetDistinctItemID(link)
 	if not link or not addon.IsValidItemLink(link) then
-		return
+		return nil, true
 	end
-	local itemString, id, enchant, gem1, gem2, gem3, gem4, suffix, reforge =
-		strmatch(link, "(item:(%-?%d+):(%-?%d+):(%-?%d+):(%-?%d+):(%-?%d+):(%-?%d+):(%-?%d+):%-?%d+:%-?%d+:(%-?%d+))")
+	local id, enchant, gem1, gem2, gem3, gem4, suffix =
+		strmatch(link, "item:(%-?%d+):(%-?%d+):(%-?%d+):(%-?%d+):(%-?%d+):(%-?%d+):(%-?%d+):%-?%d+:%-?%d+")
 	id = tonumber(id)
-	local equipSlot = id and select(9, GetItemInfo(id))
-	if equipSlot and equipSlot ~= "" and equipSlot ~= "INVTYPE_BAG" then
-		-- Rebuild an item link without noise
-		id = strjoin(":", "item", id, enchant, gem1, gem2, gem3, gem4, suffix, "0", "0", reforge)
+	if not id then
+		return nil, true
 	end
-	return id
+	local equipSlot = select(9, GetItemInfo(id))
+	if equipSlot == nil then
+		return id, false
+	end
+	if equipSlot ~= "" and equipSlot ~= "INVTYPE_BAG" then
+
+		id = strjoin(":", "item", id, enchant, gem1, gem2, gem3, gem4, suffix, "0", "0")
+	end
+	return id, true
 end
 
 local distinctIDs = setmetatable({}, {
 	__index = function(t, link)
-		local result = __GetDistinctItemID(link)
-		if result then
+		local result, isFinal = __GetDistinctItemID(link)
+		result = result or link
+		if isFinal then
 			t[link] = result
-			return result
-		else
-			return link
 		end
+		return result
 	end,
 })
 

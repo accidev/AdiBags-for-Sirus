@@ -243,6 +243,66 @@ local lockOption = {
 	end,
 }
 
+local ANCHOR_POINTS = {
+	TOPLEFT = "TOPLEFT",
+	TOP = "TOP",
+	TOPRIGHT = "TOPRIGHT",
+	LEFT = "LEFT",
+	CENTER = "CENTER",
+	RIGHT = "RIGHT",
+	BOTTOMLEFT = "BOTTOMLEFT",
+	BOTTOM = "BOTTOM",
+	BOTTOMRIGHT = "BOTTOMRIGHT",
+}
+
+local function GetCountSetting(info)
+	return addon.db.profile[info[#info]]
+end
+
+local function SetCountSetting(info, value)
+	addon.db.profile[info[#info]] = value
+	addon:UpdateCountAppearance()
+end
+
+local function CountTextOptions(order)
+	local opts = addon:CreateFontOptions(addon.countFont, L["Stack count"], order, true)
+	opts.args.size.step = 1
+	opts.args.countAnchor = {
+		name = L["Anchor"],
+		desc = L["Corner of the item button the stack count is attached to."],
+		type = "select",
+		order = 50,
+		values = ANCHOR_POINTS,
+		get = GetCountSetting,
+		set = SetCountSetting,
+	}
+	opts.args.countOffsetX = {
+		name = L["X Offset"],
+		desc = L["Offset in X direction (horizontal) from the given anchor point."],
+		type = "range",
+		order = 60,
+		min = -20,
+		max = 20,
+		step = 1,
+		bigStep = 1,
+		get = GetCountSetting,
+		set = SetCountSetting,
+	}
+	opts.args.countOffsetY = {
+		name = L["Y Offset"],
+		desc = L["Offset in Y direction (vertical) from the given anchor point."],
+		type = "range",
+		order = 70,
+		min = -20,
+		max = 20,
+		step = 1,
+		bigStep = 1,
+		get = GetCountSetting,
+		set = SetCountSetting,
+	}
+	return opts
+end
+
 function addon:GetOptions()
 	if options then
 		return options
@@ -417,6 +477,7 @@ function addon:GetOptions()
 				args = {
 					bagFont = addon:CreateFontOptions(addon.bagFont, L["Bag title"], 10),
 					sectionFont = addon:CreateFontOptions(addon.sectionFont, L["Section header"], 15),
+					countFont = CountTextOptions(18),
 					background = {
 						name = L["Bag background"],
 						type = "group",

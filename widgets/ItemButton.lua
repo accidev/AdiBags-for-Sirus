@@ -31,7 +31,6 @@ local next = _G.next
 local pairs = _G.pairs
 local select = _G.select
 local SetItemButtonDesaturated = _G.SetItemButtonDesaturated
-local StackSplitFrame = _G.StackSplitFrame
 local TEXTURE_ITEM_QUEST_BANG = _G.TEXTURE_ITEM_QUEST_BANG
 local TEXTURE_ITEM_QUEST_BORDER = _G.TEXTURE_ITEM_QUEST_BORDER
 local tostring = _G.tostring
@@ -53,6 +52,20 @@ local replacementAttempts = {}
 local pendingSetItems = {}
 local setBadgeTooltip
 local replacementRetryScheduled
+
+local bagFamilyCache = {}
+
+local function GetBagFamily(bag)
+	if bag == KEYRING_CONTAINER then
+		return 256
+	end
+	local family = bagFamilyCache[bag]
+	if family == nil then
+		family = select(2, GetContainerNumFreeSlots(bag))
+		bagFamilyCache[bag] = family
+	end
+	return family
+end
 
 local function ScheduleReplacementRetry(itemID)
 	if replacementRetryItems[itemID] then
@@ -194,17 +207,32 @@ local function UpdateInboxClickState()
 	end
 end
 
+local inboxCheckElapsed = 0
+local function InboxClickStateOnUpdate(_, elapsed)
+	inboxCheckElapsed = inboxCheckElapsed + elapsed
+	if inboxCheckElapsed < 0.1 then
+		return
+	end
+	inboxCheckElapsed = 0
+	UpdateInboxClickState()
+end
+
 itemInfoFrame:RegisterCustomEvent("GET_ITEM_INFO_RECEIVED")
 itemInfoFrame:RegisterEvent("MAIL_SHOW")
 itemInfoFrame:RegisterEvent("MAIL_CLOSED")
+itemInfoFrame:RegisterEvent("BAG_UPDATE")
+itemInfoFrame:RegisterEvent("PLAYERBANKBAGSLOTS_CHANGED")
 itemInfoFrame:SetScript("OnEvent", function(self, event, itemID, success)
 	if event == "MAIL_SHOW" then
-		self:SetScript("OnUpdate", UpdateInboxClickState)
+		inboxCheckElapsed = 0
+		self:SetScript("OnUpdate", InboxClickStateOnUpdate)
 		UpdateInboxClickState()
 	elseif event == "MAIL_CLOSED" then
 		self:SetScript("OnUpdate", nil)
 		blockInboxRightClick = false
 		addon:SendMessage("AdiBags_UpdateClickRegistration")
+	elseif event == "BAG_UPDATE" or event == "PLAYERBANKBAGSLOTS_CHANGED" then
+		wipe(bagFamilyCache)
 	elseif pendingSetItems[itemID] then
 		pendingSetItems[itemID] = nil
 		replacementTiers[itemID] = nil
@@ -239,6 +267,18 @@ function buttonProto:OnCreate()
 	self:SetScript("OnEvent", self.OnEvent)
 	self:SetWidth(ITEM_SIZE)
 	self:SetHeight(ITEM_SIZE)
+	self:UpdateCountAppearance()
+end
+
+function buttonProto:UpdateCountAppearance()
+	local text = self.Count
+	if not text or not addon.db then
+		return
+	end
+	local db = addon.db.profile
+	text:SetFontObject(addon.countFont)
+	text:ClearAllPoints()
+	text:SetPoint(db.countAnchor, self, db.countOffsetX, db.countOffsetY)
 end
 
 function buttonProto:OnAcquire(container, bag, slot)
@@ -285,11 +325,11 @@ function buttonProto:OnRelease()
 	self.texture = nil
 	self.bagFamily = nil
 	self.stack = nil
-	self.isUpgrade = nil
-	self.isDowngrade = nil
-	self.beingSold = nil
-	-- Reset Masque flags on button release
-	self.masqueInitialized = false
+	self.itemQuality = nil
+	self.isQuestItem = nil
+	self.questId = nil
+	self.slotCount = nil
+	self.slotLocked = nil
 end
 
 function buttonProto:ToString()
@@ -297,6 +337,11 @@ function buttonProto:ToString()
 end
 
 function buttonProto:IsLocked()
+	local locked = self.slotLocked
+	if locked ~= nil then
+		self.slotLocked = nil
+		return locked
+	end
 	return select(3, GetContainerItemInfo(self.bag, self.slot))
 end
 
@@ -323,6 +368,15 @@ function addon:AcquireItemButton(container, bag, slot)
 		return bankButtonPool:Acquire(container, bag, slot)
 	else
 		return containerButtonPool:Acquire(container, bag, slot)
+	end
+end
+
+function addon:UpdateCountAppearance()
+	for button in containerButtonPool:IterateActiveObjects() do
+		button:UpdateCountAppearance()
+	end
+	for button in bankButtonPool:IterateActiveObjects() do
+		button:UpdateCountAppearance()
 	end
 end
 
@@ -361,7 +415,21 @@ function buttonProto:GetItemLink()
 end
 
 function buttonProto:GetCount()
+	local count = self.slotCount
+	if count ~= nil then
+		self.slotCount = nil
+		return count
+	end
 	return select(2, GetContainerItemInfo(self.bag, self.slot)) or 0
+end
+
+function buttonProto:GetItemQuality()
+	local quality = self.itemQuality
+	if quality == nil and self.itemId then
+		quality = select(3, GetItemInfo(self.itemId))
+		self.itemQuality = quality
+	end
+	return quality
 end
 
 function buttonProto:GetBagFamily()
@@ -429,9 +497,6 @@ end
 function buttonProto:OnHide()
 	self:UnregisterAllEvents()
 	self:UnregisterAllMessages()
-	if self.hasStackSplit and self.hasStackSplit == 1 then
-		StackSplitFrame:Hide()
-	end
 end
 
 function buttonProto:OnEvent(event, ...)
@@ -475,9 +540,14 @@ function buttonProto:FullUpdate()
 	self.itemId = GetContainerItemID(bag, slot)
 	self.itemLink = GetContainerItemLink(bag, slot)
 	self.hasItem = not not self.itemId
-	self.texture = GetContainerItemInfo(bag, slot)
-	self.bagFamily = bag == KEYRING_CONTAINER and 256 or select(2, GetContainerNumFreeSlots(bag))
+	local texture, count, locked = GetContainerItemInfo(bag, slot)
+	self.texture = texture
+	self.slotCount = count or 0
+	self.slotLocked = locked or false
+	self.itemQuality = nil
+	self.bagFamily = GetBagFamily(bag)
 	self:Update()
+	self.slotCount, self.slotLocked = nil, nil
 end
 
 function buttonProto:Update()
@@ -547,39 +617,6 @@ function buttonProto:Update()
 		setBadge:Hide()
 	end
 
-	------------------------------------------------------------
-	-- 1) upgrade‐overlay (lazy create + show/hide)
-	------------------------------------------------------------
-	if self.isUpgrade then
-		if not self.upgradeTexture then
-			local t = self:CreateTexture(nil, "OVERLAY")
-			t:SetTexture([[Interface\AddOns\AdiBags\assets\UpgradeArrow.tga]])
-			t:SetPoint("TOPLEFT", self.IconTexture, 10, -2)
-			t:SetSize(18, 18)
-			self.upgradeTexture = t
-		end
-		self.upgradeTexture:Show()
-	elseif self.upgradeTexture then
-		self.upgradeTexture:Hide()
-	end
-
-	------------------------------------------------------------
-	-- 2) sell‐overlay (lazy create + show/hide)
-	------------------------------------------------------------
-	if self.beingSold then
-		if not self.sellTexture then
-			local t = self:CreateTexture(nil, "OVERLAY")
-			t:SetTexture("Interface\\Buttons\\UI-GroupLoot-Coin-Up.blp")
-			t:SetPoint("TOPRIGHT", self.IconTexture, -10, -1)
-			t:SetSize(18, 18)
-			self.sellTexture = t
-		end
-		self.sellTexture:Show()
-	elseif self.sellTexture then
-		self.sellTexture:Hide()
-	end
-
-	-- the rest of your existing update chain
 	self:UpdateCount()
 	self:UpdateBorder()
 	self:UpdateCooldown()
@@ -623,13 +660,14 @@ function buttonProto:UpdateBorder(isolatedEvent)
 	if self.hasItem then
 		local texture, r, g, b, a, x1, x2, y1, y2, blendMode = nil, 1, 1, 1, 1, 0, 1, 0, 1, "BLEND"
 		local isQuestItem, questId, isActive = GetContainerItemQuestInfo(self.bag, self.slot)
+		self.isQuestItem, self.questId = isQuestItem, questId
 
 		if addon.db.profile.questIndicator and (questId and not isActive) then
 			texture = TEXTURE_ITEM_QUEST_BANG
 		elseif addon.db.profile.questIndicator and (questId or isQuestItem) then
 			texture = TEXTURE_ITEM_QUEST_BORDER
 		elseif addon.db.profile.qualityHighlight then
-			local _, _, quality = GetItemInfo(self.itemId)
+			local quality = self:GetItemQuality()
 			if quality and quality >= ITEM_QUALITY_UNCOMMON then
 				r, g, b = GetItemQualityColor(quality)
 				a = addon.db.profile.qualityOpacity
@@ -735,8 +773,8 @@ if Masque then
 		-- Recolor the Masque Normal-region via the public API Core.SetNormalColor
 		-- This avoids manual region searching and works faster.
 		if self.hasItem then
-			local _, _, itemQuality = GetItemInfo(self.itemId)
-			local isQuestItem, questId = GetContainerItemQuestInfo(self.bag, self.slot)
+			local itemQuality = self:GetItemQuality()
+			local isQuestItem, questId = self.isQuestItem, self.questId
 
 			local r, g, b, a
 			if isQuestItem or questId then
@@ -769,7 +807,7 @@ if Masque then
 
 		-- Dim the icon for junk items (as in the original AdiBags)
 		if self.hasItem then
-			local _, _, itemQuality = GetItemInfo(self.itemId)
+			local itemQuality = self:GetItemQuality()
 			if itemQuality == ITEM_QUALITY_POOR and addon.db.profile.dimJunk then
 				-- Dim the junk item icon
 				local v = 1 - 0.5 * (addon.db.profile.qualityOpacity or 1)
@@ -796,7 +834,7 @@ if Masque then
 
 		-- Dim the button for junk items via SetAlpha (more reliable than VertexColor)
 		if self.hasItem then
-			local _, _, itemQuality = GetItemInfo(self.itemId)
+			local itemQuality = self:GetItemQuality()
 			if itemQuality == ITEM_QUALITY_POOR and addon.db.profile.dimJunk then
 				-- Dim the whole button
 				self:SetAlpha(0.5)

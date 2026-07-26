@@ -1,4 +1,5 @@
 local addonName, addon = ...
+local L = addon.L
 
 local _G = _G
 local GetItemGem = _G.GetItemGem
@@ -7,8 +8,8 @@ local GetItemQualityColor = _G.GetItemQualityColor
 local pairs = _G.pairs
 
 local mod = addon:NewModule("BlackDiamondHighlight", "AceEvent-3.0")
-mod.uiName = "Предметы с ЧБ"
-mod.uiDesc = "Подсветить в инвентаре предметы с Черными Бриллиантами"
+mod.uiName = L["Black Diamond items"]
+mod.uiDesc = L["Highlight items with Black Diamonds in your bags"]
 
 local glows = {}
 
@@ -75,8 +76,8 @@ end
 function mod:GetOptions()
 	return {
 		glowColor = {
-			name = "Цвет свечения",
-			desc = "Цвет подсветки предметов с Черными Бриллиантами",
+			name = L["Glow color"],
+			desc = L["Color of the highlight for items with Black Diamonds"],
 			type = "color",
 			hasAlpha = true,
 			order = 10,

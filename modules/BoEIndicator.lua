@@ -1,4 +1,5 @@
 local addonName, addon = ...
+local L = addon.L
 
 local _G = _G
 local GetContainerItemGUID = _G.GetContainerItemGUID
@@ -9,9 +10,8 @@ local pairs = _G.pairs
 local select = _G.select
 
 local mod = addon:NewModule("BoEIndicator", "AceEvent-3.0")
-mod.uiName = "BoE indicator"
-mod.uiDesc =
-	"Отображает метку 'BoE' на экипировке, которая ещё не привязана к персонажу."
+mod.uiName = L["BoE indicator"]
+mod.uiDesc = L["Displays a 'BoE' tag on equipment that is not bound to your character yet."]
 
 local texts = {}
 
@@ -78,8 +78,8 @@ end
 function mod:GetOptions()
 	return {
 		color = {
-			name = "Цвет метки",
-			desc = "Цвет текста 'BoE'.",
+			name = L["Tag color"],
+			desc = L["Color of the 'BoE' text."],
 			type = "color",
 			hasAlpha = true,
 			order = 10,

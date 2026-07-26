@@ -3,16 +3,15 @@ local L = addon.L
 
 --<GLOBALS
 local _G = _G
-local assert = _G.assert
 local BACKPACK_CONTAINER = _G.BACKPACK_CONTAINER
 local band = _G.bit.band
 local BANK_CONTAINER = _G.BANK_CONTAINER
 local CreateFrame = _G.CreateFrame
+local error = _G.error
 local format = _G.format
 local GetContainerFreeSlots = _G.GetContainerFreeSlots
 local GetContainerItemID = _G.GetContainerItemID
 local GetContainerItemInfo = _G.GetContainerItemInfo
-local GetContainerItemLink = _G.GetContainerItemLink
 local GetContainerNumFreeSlots = _G.GetContainerNumFreeSlots
 local GetContainerNumSlots = _G.GetContainerNumSlots
 local GetCursorInfo = _G.GetCursorInfo
@@ -26,29 +25,24 @@ local next = _G.next
 local NUM_BAG_SLOTS = _G.NUM_BAG_SLOTS
 local pairs = _G.pairs
 local PlaySound = _G.PlaySound
-local select = _G.select
 local strjoin = _G.strjoin
 local tinsert = _G.tinsert
 local tostring = _G.tostring
 local tremove = _G.tremove
 local tsort = _G.table.sort
 local UIParent = _G.UIParent
-local unpack = _G.unpack
 local wipe = _G.wipe
 --GLOBALS>
 
 local GetSlotId = addon.GetSlotId
-local GetBagSlotFromId = addon.GetBagSlotFromId
 
 local ITEM_SIZE = addon.ITEM_SIZE
 local ITEM_SPACING = addon.ITEM_SPACING
 local SECTION_SPACING = addon.SECTION_SPACING
 local BAG_INSET = addon.BAG_INSET
-local HEADER_SIZE = addon.HEADER_SIZE
 
 local EasyMenu = EasyMenu
 local CreateFrame = CreateFrame
-local ToggleDropDownMenu = ToggleDropDownMenu
 
 local function BuildBagMenu(includeUnlockAnchor)
 	local menu = {
@@ -778,7 +772,7 @@ function containerProto:UpdateContent(bag)
 			end
 		else
 			-- ✅ Normal item handling logic
-			local link = GetContainerItemLink(bag, slot)
+			local _, itemCount, _, _, _, _, link = GetContainerItemInfo(bag, slot)
 			if not itemId or (link and IsValidItemLink(link)) then
 				local slotData = content[slot]
 				if not slotData then
@@ -793,17 +787,10 @@ function containerProto:UpdateContent(bag)
 					content[slot] = slotData
 				end
 
-				local name, count, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice
+				local count
 				local isKeystoneLink = link and link:find("keystone:")
 				if link then
-					if isKeystoneLink and itemId then
-						name, _, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice =
-							GetItemInfo(itemId)
-					else
-						name, _, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice =
-							GetItemInfo(link)
-					end
-					count = select(2, GetContainerItemInfo(bag, slot)) or 0
+					count = itemCount or 0
 				else
 					link, count = false, 0
 				end
@@ -815,6 +802,16 @@ function containerProto:UpdateContent(bag)
 					slotData.count = count
 					slotData.link = link
 					slotData.itemId = itemId
+					local name, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice
+					if link then
+						if isKeystoneLink and itemId then
+							name, _, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice =
+								GetItemInfo(itemId)
+						else
+							name, _, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice =
+								GetItemInfo(link)
+						end
+					end
 					slotData.name, slotData.quality, slotData.iLevel, slotData.reqLevel, slotData.class, slotData.subclass, slotData.equipSlot, slotData.texture, slotData.vendorPrice =
 						name, quality, iLevel, reqLevel, class, subclass, equipSlot, texture, vendorPrice
 					slotData.maxStack = maxStack or (link and 1 or 0)
@@ -901,7 +898,9 @@ end
 function containerProto:DispatchItem(slotData)
 	local slotId = slotData.slotId
 	local sectionName, category, filterName, shouldStack, stackHint = self:FilterSlot(slotData)
-	assert(sectionName, "sectionName is nil, item: " .. (slotData.link or "none"))
+	if not sectionName then
+		error("sectionName is nil, item: " .. (slotData.link or "none"), 0)
+	end
 	local stackKey = shouldStack and strjoin("#", stackHint, tostring(slotData.bagFamily)) or nil
 	local button = self.buttons[slotId]
 	if button then
@@ -1072,6 +1071,7 @@ local getNextSection = {
 }
 
 local function DoLayoutSections(self, rowWidth, maxHeight)
+	wipe(sections)
 	rowWidth = rowWidth + ITEM_SIZE - SECTION_SPACING
 
 	local minHeight = 0

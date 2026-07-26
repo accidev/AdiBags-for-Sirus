@@ -153,7 +153,7 @@ local function CreateGlow(button)
 	glow:SetWidth(addon.ITEM_SIZE)
 	glow:SetHeight(addon.ITEM_SIZE)
 
-	local tex = glow:CreateTexture("OVERLAY")
+	local tex = glow:CreateTexture(nil, "OVERLAY")
 	tex:SetTexture([[Interface\Cooldown\starburst]])
 	tex:SetBlendMode("ADD")
 	tex:SetAllPoints(glow)

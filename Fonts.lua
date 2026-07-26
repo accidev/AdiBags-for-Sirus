@@ -34,6 +34,11 @@ local function GetFontSettings(font)
 	return ALL_NAMES[file], floor(size), font:GetTextColor()
 end
 
+local function GetFontFlags(font)
+	local _, _, flags = font:GetFont()
+	return flags or ""
+end
+
 --------------------------------------------------------------------------------
 -- Font prototype
 --------------------------------------------------------------------------------
@@ -45,17 +50,17 @@ function proto:SetSetting(info, value, ...)
 	local name, db = info[#info], self:GetDB()
 	if name == "color" then
 		local r, g, b = value, ...
-		if db.r == r or db.g == g or db.b == b then
+		if db.r == r and db.g == g and db.b == b then
 			return
 		end
 		db.r, db.g, db.b = r, g, b
 		self:SetTextColor(r, g, b)
-	elseif name == "name" or name == "size" then
+	elseif name == "name" or name == "size" or name == "outline" then
 		if db[name] == value then
 			return
 		end
 		db[name] = value
-		self:SetFont(LSM:Fetch(FONT, db.name), db.size)
+		self:SetFont(LSM:Fetch(FONT, db.name), db.size, db.outline)
 	else
 		return
 	end
@@ -75,13 +80,16 @@ end
 
 function proto:ApplySettings()
 	local db = self:GetDB()
-	self:SetFont(LSM:Fetch(FONT, db.name), db.size)
+	self:SetFont(LSM:Fetch(FONT, db.name), db.size, db.outline)
 	self:SetTextColor(db.r, db.g, db.b)
 end
 
 function proto:ResetSettings()
 	local db = self:GetDB()
 	db.name, db.size, db.r, db.g, db.b = GetFontSettings(self.template)
+	if db.outline ~= nil then
+		db.outline = GetFontFlags(self.template)
+	end
 	self:ApplySettings()
 	if type(self.SettingHook) == "function" then
 		self:SettingHook()
@@ -91,6 +99,9 @@ end
 function proto:IsDefault()
 	local db = self:GetDB()
 	local name, size, r, g, b = GetFontSettings(self.template)
+	if db.outline ~= nil and db.outline ~= GetFontFlags(self.template) then
+		return false
+	end
 	return db.name == name and db.size == size and db.r == r and db.g == g and db.b == b
 end
 
@@ -115,10 +126,24 @@ end
 -- Helpers
 --------------------------------------------------------------------------------
 
-function addon:CreateFontOptions(font, title, order)
+function addon:CreateFontOptions(font, title, order, withOutline)
 	local L = addon.L
 	local _, mediumSize = font.template:GetFont()
 	mediumSize = floor(mediumSize)
+	local outline
+	if withOutline then
+		outline = {
+			name = L["Outline"],
+			desc = L["Outline makes the text readable over bright item icons."],
+			type = "select",
+			order = 35,
+			values = {
+				[""] = L["No outline"],
+				OUTLINE = L["Thin"],
+				THICKOUTLINE = L["Thick"],
+			},
+		}
+	end
 	return {
 		name = title or L["Text"],
 		type = "group",
@@ -150,6 +175,7 @@ function addon:CreateFontOptions(font, title, order)
 				order = 30,
 				hasAlpha = false,
 			},
+			outline = outline,
 			reset = {
 				name = L["Reset"],
 				type = "execute",

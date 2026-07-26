@@ -177,6 +177,9 @@ local DEFAULT_SETTINGS = {
 			tierColor = { 1, 0.82, 0 },
 			pvpColor = { 1, 0.35, 0.35 },
 		},
+		countAnchor = "BOTTOMRIGHT",
+		countOffsetX = -5,
+		countOffsetY = 2,
 		filters = { ["*"] = true },
 		filterPriorities = {},
 		sortingOrder = "default",
@@ -214,6 +217,10 @@ function addon:OnInitialize()
 	DEFAULT_SETTINGS.profile.bagFont = bfd
 	DEFAULT_SETTINGS.profile.sectionFont = self:GetFontDefaults(GameFontNormalLeft)
 
+	local cfd = self:GetFontDefaults(NumberFontNormal)
+	cfd.outline = select(3, NumberFontNormal:GetFont()) or ""
+	DEFAULT_SETTINGS.profile.countFont = cfd
+
 	self.db = LibStub("AceDB-3.0"):New(addonName .. "DB", DEFAULT_SETTINGS, true)
 	self.db.RegisterCallback(self, "OnProfileChanged")
 	self.db.RegisterCallback(self, "OnProfileCopied", "OnProfileChanged")
@@ -225,6 +232,9 @@ function addon:OnInitialize()
 	end)
 	self.sectionFont = self:CreateFont(addonName .. "SectionFont", GameFontNormalLeft, function()
 		return self.db.profile.sectionFont
+	end)
+	self.countFont = self:CreateFont(addonName .. "CountFont", NumberFontNormal, function()
+		return self.db.profile.countFont
 	end)
 
 	self.itemParentFrames = {}
@@ -316,6 +326,7 @@ function addon:OnEnable()
 
 	self.bagFont:ApplySettings()
 	self.sectionFont:ApplySettings()
+	self.countFont:ApplySettings()
 	self:UpdatePositionMode()
 
 	self:Debug("Enabled")
@@ -588,15 +599,20 @@ function addon:OpenAllBags(forceOpen)
 end
 
 function addon:CloseAllBags()
+	local closed = false
 	for i, bag in self:IterateBags() do
-		bag:Close()
+		if bag:Close() then
+			closed = true
+		end
 	end
 	for id in IterateBuiltInContainers() do
 		local frame = GetContainerFrame(id)
 		if frame then
 			frame:Hide()
+			closed = true
 		end
 	end
+	return closed
 end
 
 function addon:ToggleBag(id)

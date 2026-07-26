@@ -121,6 +121,8 @@ function mod:OnEnable()
 	self:RegisterMessage("AdiBags_UpdateButton", "UpdateButton")
 	self.refreshTimer = self:ScheduleRepeatingTimer("Refresh", REFRESH_INTERVAL)
 	self:SendMessage("AdiBags_UpdateAllButtons")
+
+	addon.filterProto.OnEnable(self)
 end
 
 function mod:OnDisable()
@@ -131,6 +133,8 @@ function mod:OnDisable()
 	for _, text in pairs(self.texts or {}) do
 		text:Hide()
 	end
+
+	addon.filterProto.OnDisable(self)
 end
 
 function mod:Refresh()

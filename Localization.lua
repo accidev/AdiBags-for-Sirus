@@ -367,6 +367,24 @@ L["to toggle anchor mode."] = true
 L["to move bag container."] = true
 L["mode."] = true
 
+L["Black Diamond items"] = true
+L["Highlight items with Black Diamonds in your bags"] = true
+L["Glow color"] = true
+L["Color of the highlight for items with Black Diamonds"] = true
+
+L["BoE indicator"] = true
+L["Displays a 'BoE' tag on equipment that is not bound to your character yet."] = true
+L["Tag color"] = true
+L["Color of the 'BoE' text."] = true
+
+L["Stack count"] = true
+L["Corner of the item button the stack count is attached to."] = true
+L["Outline"] = true
+L["Outline makes the text readable over bright item icons."] = true
+L["No outline"] = true
+L["Thin"] = true
+L["Thick"] = true
+
 local locale = GetLocale()
 
 ------------------------ ruRU ------------------------
@@ -404,7 +422,6 @@ if locale == "ruRU" then
 	L["Always"] = "Всегда"
 	L["AMMO_TAG"] = "Бп"
 	L["Ammunition"] = "Боеприпасы"
-	L["Anchored"] = "Закрепленные"
 	L["Background colors"] = "Цвета фона"
 	L["Backpack"] = "Рюкзак"
 	L["Bag #%d"] = "Сумка #%d"
@@ -560,11 +577,10 @@ if locale == "ruRU" then
 		"Включите это, чтобы автоматически группировать предметы, у которых есть срок действия."
 	L["KEYRING_TAG"] = "Клч"
 	L["Keyring"] = "Связка ключей"
-	L["Layout priority"] = "Приоритет слоя"
+	L["Layout priority"] = "Приоритет раскладки"
 	L["LDB Plugin"] = "Плагин LDB"
 	L["LEATHERWORKING_BAG_TAG"] = "Кж"
 	L["Lock anchor"] = "Блокировать якорь"
-	L["Manual"] = "В ручную"
 	L["Manual filtering"] = "Ручная фильтрация"
 	L["Maximum bag height"] = "Максимальная высота сумки"
 	L["Maximum row width"] = "Максимальная ширина ряда"
@@ -797,6 +813,31 @@ if locale == "ruRU" then
 		"Менять объединение стопок у торговцев, на аукционе, в банке, у почтовых ящиков или при обмене."
 	-- DefaultFilters.lua
 	L["TACKLE_BOX_TAG"] = "Рб"
+	L["Black Diamond items"] = "Предметы с ЧБ"
+	L["Highlight items with Black Diamonds in your bags"] =
+		"Подсветить в инвентаре предметы с Черными Бриллиантами"
+	L["Glow color"] = "Цвет свечения"
+	L["Color of the highlight for items with Black Diamonds"] =
+		"Цвет подсветки предметов с Черными Бриллиантами"
+	L["BoE indicator"] = "Индикатор BoE"
+	L["Displays a 'BoE' tag on equipment that is not bound to your character yet."] =
+		"Отображает метку 'BoE' на экипировке, которая ещё не привязана к персонажу."
+	L["Tag color"] = "Цвет метки"
+	L["Color of the 'BoE' text."] = "Цвет текста 'BoE'."
+	L["Remove"] = "Удалить"
+	L["Are you sure you want to remove this section ?"] =
+		"Вы уверены, что хотите удалить эту секцию?"
+	L["Click on a item to remove it from the list. You can drop an item on the empty slot to add it to the list."] =
+		"Кликните по предмету, чтобы убрать его из списка. Перетащите предмет в пустой слот, чтобы добавить его в список."
+	L["Stack count"] = "Счётчик стопок"
+	L["Corner of the item button the stack count is attached to."] =
+		"Угол кнопки предмета, к которому привязан счётчик."
+	L["Outline"] = "Обводка"
+	L["Outline makes the text readable over bright item icons."] =
+		"Обводка делает текст читаемым поверх ярких иконок предметов."
+	L["No outline"] = "Без обводки"
+	L["Thin"] = "Тонкая"
+	L["Thick"] = "Толстая"
 end
 
 for k, v in pairs(L) do
