@@ -3,6 +3,7 @@ local L = addon.L
 
 --<GLOBALS
 local _G = _G
+local C_EncounterJournal = _G.C_EncounterJournal
 local format = _G.format
 local GameTooltip = _G.GameTooltip
 local IsAltKeyDown = _G.IsAltKeyDown
@@ -11,6 +12,7 @@ local IsModifierKeyDown = _G.IsModifierKeyDown
 local IsShiftKeyDown = _G.IsShiftKeyDown
 local pairs = _G.pairs
 local setmetatable = _G.setmetatable
+local strtrim = _G.strtrim
 local tconcat = _G.table.concat
 local tinsert = _G.tinsert
 local tsort = _G.table.sort
@@ -34,6 +36,7 @@ function mod:OnInitialize()
 			item = "ctrl",
 			container = "ctrl",
 			filter = "ctrl",
+			source = "always",
 		} }
 	)
 end
@@ -77,6 +80,10 @@ function mod:GetOptions()
 			name = L["Show filtering information..."],
 			order = 30,
 		}, modMeta),
+		source = setmetatable({
+			name = L["Show source information..."],
+			order = 40,
+		}, modMeta),
 	},
 		addon:GetOptionHandler(self)
 end
@@ -98,6 +105,21 @@ end
 
 local t = {}
 local GetBagSlotFromId = addon.GetBagSlotFromId
+local GetItemSourceDrops = C_EncounterJournal and C_EncounterJournal.GetItemSourceDrops
+
+local BOSS_COLOR = "|cff00ff9a%s|r"
+
+local DIFFICULTY_SHORT = {
+	["10 игроков"] = "10",
+	["25 игроков"] = "25",
+	["10 игроков (героич.)"] = "10 ХМ",
+	["25 игроков (героич.)"] = "25 ХМ",
+	["Обычный"] = "об.",
+	["Героический"] = "ХМ",
+	["Эпохальный"] = "эп.",
+}
+
+local difficultyParts = {}
 
 function mod:OnTooltipSetItem(tt)
 	local button = tt:GetOwner()
@@ -158,6 +180,24 @@ function mod:OnTooltipSetItem(tt)
 		local section = button:GetSection()
 		tt:AddDoubleLine(L["Section"], section.name or "-")
 		tt:AddDoubleLine(L["Category"], section.category or "-")
+	end
+
+	if GetItemSourceDrops and slotData.itemId and TestModifier("source") then
+		local instance, encounter, difficulties = GetItemSourceDrops(slotData.itemId)
+		if instance and encounter then
+			local line = format(BOSS_COLOR, strtrim(encounter)) .. " - " .. strtrim(instance)
+			if difficulties and #difficulties > 0 then
+				wipe(difficultyParts)
+				for i = 1, #difficulties do
+					local d = difficulties[i]
+					difficultyParts[i] = DIFFICULTY_SHORT[d] or d
+				end
+				line = line .. " " .. tconcat(difficultyParts, ", ")
+			end
+			tt:AddLine(" ")
+			tt:AddLine(L["Source:"], 1, 1, 1)
+			tt:AddLine(line)
+		end
 	end
 
 	if tt:NumLines() > numLines then

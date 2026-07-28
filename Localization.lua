@@ -543,6 +543,9 @@ L["The import failed and the profile could not be restored. Please reload your i
 	"Импорт не удался, восстановить профиль не получилось. Перезагрузите интерфейс."
 L["Profile imported."] = "Профиль импортирован."
 L["%d unknown section(s) were skipped."] = "Пропущено неизвестных разделов: %d."
+-- modules/TooltipInfo.lua
+L["Show source information..."] = "Показать данные об источнике..."
+L["Source:"] = "Источник:"
 -- OO.lua
 L["Debugging is now enabled."] = "Отладка включена."
 L["Debugging is now disabled."] = "Отладка выключена."
