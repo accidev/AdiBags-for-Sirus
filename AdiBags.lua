@@ -178,7 +178,7 @@ local DEFAULT_SETTINGS = {
 		countAnchor = "BOTTOMRIGHT",
 		countOffsetX = -5,
 		countOffsetY = 2,
-		filters = { ["*"] = true },
+		filters = { ["*"] = true, Collections = false },
 		filterPriorities = {},
 		sortingOrder = "default",
 		modules = { ["*"] = true },

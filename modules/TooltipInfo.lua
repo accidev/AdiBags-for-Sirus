@@ -37,6 +37,7 @@ function mod:OnInitialize()
 			container = "ctrl",
 			filter = "ctrl",
 			source = "always",
+			appearance = "always",
 		} }
 	)
 end
@@ -84,6 +85,10 @@ function mod:GetOptions()
 			name = L["Show source information..."],
 			order = 40,
 		}, modMeta),
+		appearance = setmetatable({
+			name = L["Show appearance information..."],
+			order = 50,
+		}, modMeta),
 	},
 		addon:GetOptionHandler(self)
 end
@@ -101,6 +106,10 @@ local modifierTests = {
 
 local function TestModifier(name)
 	return modifierTests[mod.db.profile[name] or "never"]()
+end
+
+function addon.TestTooltipModifier(name)
+	return mod:IsEnabled() and not not TestModifier(name)
 end
 
 local t = {}

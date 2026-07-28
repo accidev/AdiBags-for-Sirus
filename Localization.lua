@@ -227,6 +227,9 @@ L["Expiring Items"] = "Временные предметы"
 L["Put items that have an expiration time or lifetime in a specific section."] =
 	"Поместите предметы, у которых есть время или срок действия в специальную секцию."
 L["Enable Expiring Items Category"] = "Включить категорию временных предметов"
+L["Show remaining time"] = "Показывать остаток времени"
+L["Display the remaining lifetime on the item icon and keep it ticking."] =
+	"Показывать оставшийся срок действия на значке предмета и обновлять его по ходу времени."
 L["Check this to automatically group items that have an expiration time or lifetime."] =
 	"Включите это, чтобы автоматически группировать предметы, у которых есть срок действия."
 L["KEYRING_TAG"] = "Клч"
@@ -407,6 +410,28 @@ L["Color"] = "Цвет"
 L["Reset"] = "Сброс"
 
 L["Anchor"] = "Привязка"
+L["Collection badges"] = "Значки коллекций"
+L["Mark mounts, companions, toys and heirlooms you have already collected."] =
+	"Отмечать маунтов, питомцев, игрушки и предметы наследия, которые уже собраны."
+L["Badge size"] = "Размер значка"
+L["Size of the badge shown on already collected items."] =
+	"Размер значка на уже собранных предметах."
+L["Uncollected appearances"] = "Несобранные облики"
+L["Mark equipment whose appearance is not collected yet."] =
+	"Отмечать экипировку, облик которой ещё не собран."
+L["Size of the badge shown on items with an uncollected appearance."] =
+	"Размер значка на предметах с несобранным обликом."
+L["Show appearance information..."] = "Показывать сведения об облике..."
+L["Appearance not collected"] = "Облик не собран"
+L["Upgradeable items"] = "Улучшаемые предметы"
+L["Display an arrow on items that can still be upgraded."] =
+	"Показывать стрелку на предметах, которые ещё можно улучшить."
+L["Arrow size"] = "Размер стрелки"
+L["Size of the arrow shown on upgradeable items."] =
+	"Размер стрелки на улучшаемых предметах."
+L["Collections"] = "Коллекции"
+L["Put mounts, companions, toys and heirlooms in their own section."] =
+	"Поместить маунтов, питомцев, игрушки и предметы наследия в отдельную секцию."
 L["TOPLEFT"] = "Сверху слева"
 L["TOP"] = "Сверху"
 L["TOPRIGHT"] = "Сверху справа"

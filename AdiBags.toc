@@ -61,6 +61,9 @@ modules\Tradeable.lua
 modules\CrossCharacter.lua
 modules\BlackDiamondHighlight.lua
 modules\BoEIndicator.lua
+modules\Collections.lua
+modules\UpgradeIndicator.lua
+modules\Transmog.lua
 modules\CustomCategories.lua
 
 DefaultFilters.lua
