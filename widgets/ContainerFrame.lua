@@ -190,6 +190,29 @@ function containerProto:OnCreate(name, bagIds, isBank)
 	button:SetScript("OnReceiveDrag", function()
 		return self:OnClick("LeftButton")
 	end)
+
+	button:RegisterForDrag("LeftButton")
+	button:SetScript("OnDragStart", function()
+		if not addon.db.profile.backgroundDrag or addon.db.profile.positionMode ~= "manual" then
+			return
+		end
+		if GetCursorInfo() then
+			return
+		end
+		local anchor = self.Anchor
+		if anchor then
+			CloseMenus()
+			GameTooltip:Hide()
+			anchor:StartMoving()
+		end
+	end)
+	button:SetScript("OnDragStop", function()
+		local anchor = self.Anchor
+		if anchor then
+			anchor:StopMoving()
+		end
+	end)
+
 	self.ClickReceiver = button
 	local minFrameLevel = button:GetFrameLevel() + 1
 
@@ -343,8 +366,8 @@ function containerProto:OnCreate(name, bagIds, isBank)
 	-- Create Anchor to move bag in Manual Mode and add bag menu to it.
 	--------------------------------------------------------------------------------
 
-	self.isMovingContainer = false
 	local anchor = addon:CreateAnchorWidget(self, name, L[name], self)
+	anchor.isMovingContainer = false
 	anchor:SetAllPoints(title)
 	anchor:EnableMouse(true)
 	anchor:SetFrameLevel(self:GetFrameLevel() + 10)

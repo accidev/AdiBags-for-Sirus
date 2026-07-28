@@ -509,6 +509,16 @@ function addon:GetOptions()
 								or addon.db.profile.positionMode == "anchored"
 						end,
 					},
+					backgroundDrag = {
+						name = L["Drag by empty space"],
+						desc = L["Allow moving a bag by dragging any empty spot of its background, not only by its title bar."],
+						type = "toggle",
+						order = 35,
+						disabled = function(info)
+							return (info.handler and info.handler:IsDisabled(info))
+								or addon.db.profile.positionMode == "anchored"
+						end,
+					},
 					toggleAnchor = MakeLockOption(40),
 					reset = {
 						name = L["Reset position"],

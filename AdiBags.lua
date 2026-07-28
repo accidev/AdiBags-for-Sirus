@@ -157,6 +157,7 @@ local DEFAULT_SETTINGS = {
 		scale = 0.8,
 		rowWidth = { ["*"] = 9 },
 		maxHeight = 0.60,
+		backgroundDrag = true,
 		clickMode = 1,
 		showAnchorHighlight = false,
 		showAnchorTooltip = true,

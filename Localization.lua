@@ -344,6 +344,9 @@ L["Unlock Anchor"] = "Разблокировать якорь"
 L["Manual Filtering"] = "Ручная фильтрация"
 L["Settings"] = "Настройки"
 L["Manual mode click behavior"] = "Поведение кликов в ручном режиме"
+L["Drag by empty space"] = "Перетаскивать за фон"
+L["Allow moving a bag by dragging any empty spot of its background, not only by its title bar."] =
+	"Позволяет двигать сумку, потянув за любое пустое место её фона, а не только за заголовок."
 L["Choose how mouse clicks work in manual mode:\n\nNormal: Left-click opens menu, Shift+Left-click moves bag\nSwapped: Left-click moves bag, Shift+Left-click opens menu"] =
 	"Выберите как работают клики мыши в ручном режиме:\n\nОбычный: Левый клик открывает меню, Shift+Левый клик перемещает сумку\nПереключенный: Левый клик перемещает сумку, Shift+Левый клик открывает меню"
 L["Normal"] = "Обычный"
