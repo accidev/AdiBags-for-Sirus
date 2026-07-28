@@ -271,23 +271,6 @@ end
 -- Core options
 --------------------------------------------------------------------------------
 
-local function MakeLockOption(order)
-	return {
-		name = function()
-			return addon.anchor:IsShown() and L["Lock anchor"] or L["Unlock anchor"]
-		end,
-		desc = L["Click to toggle the bag anchor."],
-		type = "execute",
-		order = order,
-		func = function()
-			addon:ToggleAnchor()
-		end,
-		disabled = function(info)
-			return (info.handler and info.handler:IsDisabled(info)) or addon.db.profile.positionMode ~= "anchored"
-		end,
-	}
-end
-
 -- Keys are stored in the database and passed to SetPoint; only the values are displayed.
 local ANCHOR_POINTS = {
 	TOPLEFT = L["TOPLEFT"],
@@ -484,42 +467,12 @@ function addon:GetOptions()
 						order = 10,
 						values = bagList,
 					},
-					positionMode = {
-						name = L["Position mode"],
-						desc = L["Select how the bag are positionned."],
-						type = "select",
-						order = 20,
-						values = {
-							anchored = L["Anchored"],
-							manual = L["Manual"],
-						},
-					},
-					clickMode = {
-						name = L["Manual mode click behavior"],
-						desc = L["Choose how mouse clicks work in manual mode:\n\nNormal: Left-click opens menu, Shift+Left-click moves bag\nSwapped: Left-click moves bag, Shift+Left-click opens menu"],
-						type = "select",
-						-- width = "half",
-						order = 30,
-						values = {
-							[0] = L["Normal"],
-							[1] = L["Swapped"],
-						},
-						disabled = function(info)
-							return (info.handler and info.handler:IsDisabled(info))
-								or addon.db.profile.positionMode == "anchored"
-						end,
-					},
 					backgroundDrag = {
 						name = L["Drag by empty space"],
 						desc = L["Allow moving a bag by dragging any empty spot of its background, not only by its title bar."],
 						type = "toggle",
 						order = 35,
-						disabled = function(info)
-							return (info.handler and info.handler:IsDisabled(info))
-								or addon.db.profile.positionMode == "anchored"
-						end,
 					},
-					toggleAnchor = MakeLockOption(40),
 					reset = {
 						name = L["Reset position"],
 						desc = L["Click there to reset the bag positions and sizes."],
@@ -530,14 +483,14 @@ function addon:GetOptions()
 						end,
 					},
 					anchorFeedback = {
-						name = L["Anchor highlight and tooltip"],
+						name = L["Title bar highlight and tooltip"],
 						type = "group",
 						inline = true,
 						order = 60,
 						args = {
 							showAnchorHighlight = {
-								name = L["Show anchor highlight"],
-								desc = L["Show green/orange highlight when hovering over bag anchors in manual mode"],
+								name = L["Show title bar highlight"],
+								desc = L["Show a highlight when hovering over the bag title bar"],
 								type = "toggle",
 								order = 10,
 								disabled = function(info)
@@ -545,8 +498,8 @@ function addon:GetOptions()
 								end,
 							},
 							showAnchorTooltip = {
-								name = L["Show anchor tooltip"],
-								desc = L["Show tooltip when hovering over bag anchors in both modes"],
+								name = L["Show title bar tooltip"],
+								desc = L["Show a tooltip when hovering over the bag title bar"],
 								type = "toggle",
 								order = 20,
 								disabled = function(info)
@@ -978,7 +931,6 @@ function addon:InitializeOptions()
 					LibStub("AceTimer-3.0").ScheduleTimer(addonName, addon.OpenOptions, 0)
 				end,
 			},
-			lock = MakeLockOption(110),
 		},
 	})
 	AceConfigDialog:AddToBlizOptions(addonName .. "BlizzOptions", addonName)

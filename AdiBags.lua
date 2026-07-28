@@ -148,9 +148,7 @@ local DEFAULT_SETTINGS = {
 		bags = {
 			["*"] = true,
 		},
-		positionMode = "anchored",
 		positions = {
-			anchor = { point = "BOTTOMRIGHT", xOffset = -111, yOffset = 220 },
 			Backpack = { point = "BOTTOMRIGHT", xOffset = -111, yOffset = 220 },
 			Bank = { point = "TOPLEFT", xOffset = 32, yOffset = -104 },
 		},
@@ -158,7 +156,6 @@ local DEFAULT_SETTINGS = {
 		rowWidth = { ["*"] = 9 },
 		maxHeight = 0.60,
 		backgroundDrag = true,
-		clickMode = 1,
 		showAnchorHighlight = false,
 		showAnchorTooltip = true,
 		laxOrdering = 1,
@@ -241,7 +238,6 @@ function addon:OnInitialize()
 	self.itemParentFrames = {}
 
 	self:InitializeFilters()
-	self:CreateBagAnchor()
 	addon:InitializeOptions()
 
 	self:SetEnabledState(false)
@@ -334,13 +330,12 @@ function addon:OnEnable()
 	self.sectionFont:ApplySettings()
 	self.countFont:ApplySettings()
 	self:UpdateCountAppearance()
-	self:UpdatePositionMode()
+	self:LayoutBags()
 
 	self:Debug("Enabled")
 end
 
 function addon:OnDisable()
-	self.anchor:Hide()
 	self:CloseAllBags()
 	self:Debug("Disabled")
 end
@@ -367,17 +362,15 @@ function addon:UpgradeProfile()
 	end
 
 	-- Convert old anchor settings
-	local oldData = profile.anchor
-	if oldData then
-		local scale = oldData.scale or 0.8
-		profile.scale = scale
-
-		local newData = profile.positions.anchor
-		newData.point = oldData.pointFrom or "BOTTOMRIGHT"
-		newData.xOffset = (oldData.xOffset or -32) / scale
-		newData.yOffset = (oldData.yOffset or 200) / scale
-
+	if profile.anchor then
+		profile.scale = profile.anchor.scale or 0.8
 		profile.anchor = nil
+	end
+
+	profile.positionMode = nil
+	profile.clickMode = nil
+	if profile.positions then
+		profile.positions.anchor = nil
 	end
 
 	-- Convert old "notWhenTrading" setting
@@ -510,8 +503,6 @@ function addon:ConfigChanged(vars)
 		return self:SendMessage("AdiBags_LayoutChanged")
 	elseif vars.scale then
 		return self:LayoutBags()
-	elseif vars.positionMode then
-		return self:UpdatePositionMode()
 	else
 		self:SendMessage("AdiBags_UpdateAllButtons")
 	end
@@ -691,7 +682,6 @@ do
 				self:SendMessage("AdiBags_FiltersChanged", 0)
 			end
 			self:SendMessage("AdiBags_InteractingWindowChanged", new, old)
-			self:SendMessage("AdiBags_TimeToCheckAnchorMode")
 		end
 	end
 
@@ -969,82 +959,8 @@ do
 end
 
 --------------------------------------------------------------------------------
--- Bag anchor and layout
+-- Bag layout
 --------------------------------------------------------------------------------
-
-function addon:CreateBagAnchor()
-	local anchor = self:CreateAnchorWidget(UIParent, "anchor", L["AdiBags Anchor"])
-	anchor:SetSize(80, 80)
-	anchor:SetFrameStrata("TOOLTIP")
-	anchor:SetBackdrop(self.ANCHOR_BACKDROP)
-	anchor:SetBackdropColor(0, 1, 0, 1)
-	anchor:SetBackdropBorderColor(0, 0, 0, 0)
-	anchor:EnableMouse(true)
-	anchor:SetClampedToScreen(true)
-	anchor:SetMovable(true)
-	anchor.OnMovingStopped = function()
-		addon:LayoutBags()
-	end
-	anchor:SetScript("OnMouseDown", anchor.StartMoving)
-	anchor:SetScript("OnMouseUp", anchor.StopMoving)
-	anchor:Hide()
-
-	local text = anchor:CreateFontString(nil, "ARTWORK", "GameFontWhite")
-	text:SetAllPoints(anchor)
-	text:SetText(L["AdiBags Anchor"])
-	text:SetJustifyH("CENTER")
-	text:SetJustifyV("MIDDLE")
-	text:SetShadowColor(0, 0, 0, 1)
-	text:SetShadowOffset(1, -1)
-	anchor.text = text
-
-	self.anchor = anchor
-end
-
-local function AnchoredBagLayout(self)
-	self.anchor:ApplySettings()
-
-	local nextBag, data, firstIndex = self:IterateBags(true)
-	local index, bag = nextBag(data, firstIndex)
-	if not bag then
-		return
-	end
-
-	local anchor = self.anchor
-	local anchorPoint = anchor:GetPosition()
-
-	local frame = bag:GetFrame()
-	self:Debug("AnchoredBagLayout", anchorPoint)
-	frame:ClearAndSetPoint(anchorPoint, anchor, anchorPoint, 0, 0)
-
-	local lastFrame = frame
-	index, bag = nextBag(data, index)
-	if not bag then
-		return
-	end
-
-	local vPart = anchorPoint:match("TOP") or anchorPoint:match("BOTTOM") or ""
-	local hFrom, hTo, x = "LEFT", "RIGHT", 10
-	if anchorPoint:match("RIGHT") then
-		hFrom, hTo, x = "RIGHT", "LEFT", -10
-	end
-	local fromPoint = vPart .. hFrom
-	local toPoint = vPart .. hTo
-
-	while bag do
-		local frame = bag:GetFrame()
-		frame:ClearAndSetPoint(fromPoint, lastFrame, toPoint, x / frame:GetScale(), 0)
-		lastFrame, index, bag = frame, nextBag(data, index)
-	end
-end
-
-local function ManualBagLayout(self)
-	for index, bag in self:IterateBags(true) do
-		bag:GetFrame().Anchor:ApplySettings()
-	end
-end
-
---===== Sets position of either anchored or manual layout =====--
 
 function addon:LayoutBags()
 	local scale = self.db.profile.scale
@@ -1053,59 +969,9 @@ function addon:LayoutBags()
 			bag:GetFrame():SetScale(scale)
 		end
 	end
-	if self.db.profile.positionMode == "anchored" then
-		AnchoredBagLayout(self)
-		-- print("anchored layout")
-		self:SendMessage("AdiBags_AnchoredLayout")
-	else
-		ManualBagLayout(self)
-		-- print("manual layout")
-		self:SendMessage("AdiBags_ManualLayout")
+	for index, bag in self:IterateBags(true) do
+		bag:GetFrame().Anchor:ApplySettings()
 	end
-end
-
-local MODE_STYLE = {
-	manual = { color = "|cFFFFA500", restoreTimeVisible = 3 },
-	anchored = { color = "|cFF00FF00", restoreTimeVisible = 5 },
-}
-
-local function AnnounceMode(mode)
-	local style = MODE_STYLE[mode]
-	local label = mode == "manual" and L["Manual"] or L["Anchored"]
-	UIErrorsFrame:AddMessage(style.color .. label .. "|r |cff00bfff" .. L["mode."] .. "|r", 1, 0, 0, 53, 1)
-	UIErrorsFrame:SetTimeVisible(0.5)
-	LibCompat.After(0.6, function()
-		UIErrorsFrame:SetTimeVisible(style.restoreTimeVisible)
-	end)
-end
-
-function addon:ToggleCurrentLayout()
-	local newMode = self.db.profile.positionMode == "anchored" and "manual" or "anchored"
-	self.db.profile.positionMode = newMode
-	CloseMenus()
-	AnnounceMode(newMode)
-	self:UpdatePositionMode()
-end
-
-function addon:ToggleAnchor()
-	if self.db.profile.positionMode == "anchored" and not self.anchor:IsShown() then
-		self.anchor:Show()
-	else
-		self.anchor:Hide()
-	end
-end
-
-function addon:UpdatePositionMode()
-	self.anchor:Hide()
-	for _, bag in self:IterateBags() do
-		if bag:HasFrame() then
-			local frame = bag:GetFrame()
-			if frame.UpdateAnchorVisibility then
-				frame:UpdateAnchorVisibility()
-			end
-		end
-	end
-	self:LayoutBags()
 end
 
 function addon:ResetBagPositions()

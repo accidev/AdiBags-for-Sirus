@@ -51,4 +51,5 @@ function mod:OnBagFrameCreated(bag)
 	overlay:SetScript("OnLeave", function()
 		GameTooltip:Hide()
 	end)
+	frame:EnableBackgroundDrag(overlay)
 end

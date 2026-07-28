@@ -44,53 +44,37 @@ local BAG_INSET = addon.BAG_INSET
 local EasyMenu = EasyMenu
 local CreateFrame = CreateFrame
 
-local function BuildBagMenu(includeUnlockAnchor)
-	local menu = {
-		{
-			text = "|TInterface\\Buttons\\UI-Panel-MinimizeButton-Up:24|t |cffFFA500Close|r",
-			func = function()
-				CloseMenus()
-			end,
-			fontObject = GameFontNormalLarge,
-		},
-		{ text = "  ", notClickable = true },
-		{
-			text = "  |TInterface\\Icons\\INV_Misc_Spyglass_03:20|t    " .. L["Reset bag position"],
-			func = function()
-				addon:ResetBagPositions()
-			end,
-		},
-	}
-	if includeUnlockAnchor then
-		menu[#menu + 1] = {
-			text = "  |TInterface\\Icons\\INV_Misc_Spyglass_03:20|t    " .. L["Unlock Anchor"],
-			func = function()
-				addon:ToggleAnchor()
-			end,
-		}
-	end
-	menu[#menu + 1] = {
+local menuFrame = CreateFrame("Frame", "menuFrame", UIParent, "UIDropDownMenuTemplate")
+local menuList = {
+	{
+		text = "|TInterface\\Buttons\\UI-Panel-MinimizeButton-Up:24|t |cffFFA500Close|r",
+		func = function()
+			CloseMenus()
+		end,
+		fontObject = GameFontNormalLarge,
+	},
+	{ text = "  ", notClickable = true },
+	{
+		text = "  |TInterface\\Icons\\INV_Misc_Spyglass_03:20|t    " .. L["Reset bag position"],
+		func = function()
+			addon:ResetBagPositions()
+		end,
+	},
+	{
 		text = "  |TInterface\\Icons\\INV_TradeskillItem_03:20|t    " .. L["Manual Filtering"],
 		func = function()
 			addon:OpenOptions("filters", "FilterOverride")
 		end,
-	}
-	menu[#menu + 1] = {
+	},
+	{
 		text = "  |TInterface\\Icons\\INV_Misc_Gear_01:20|t    " .. L["Settings"],
 		func = function()
 			addon:OpenOptions()
 		end,
-	}
-	return menu
-end
+	},
+}
 
-local menuFrame = CreateFrame("Frame", "menuFrame", UIParent, "UIDropDownMenuTemplate")
-local menuList = BuildBagMenu(true)
-
-local menuFrame2 = CreateFrame("Frame", "menuFrame2", UIParent, "UIDropDownMenuTemplate")
-local menuList2 = BuildBagMenu(false)
-
-local function ShowModeTooltip(owner, headerText, bodyLines)
+local function ShowAnchorTooltip(owner, headerText, bodyLines)
 	GameTooltip:SetOwner(owner, "ANCHOR_TOPLEFT", -25, 8)
 	GameTooltip:SetText(headerText)
 	GameTooltip:AddLine(" ")
@@ -98,7 +82,6 @@ local function ShowModeTooltip(owner, headerText, bodyLines)
 		GameTooltip:AddLine(line)
 	end
 	GameTooltip:AddLine("|cffeda55f" .. L["Right-Click"] .. "|r |cff99ff00" .. L["to open AdiBags options."] .. "|r")
-	GameTooltip:AddLine("|cffeda55f" .. L["Alt-Left-Click"] .. "|r |cff99ff00" .. L["to toggle anchor mode."] .. "|r")
 	GameTooltip:SetBackdropColor(0, 0, 0, 1)
 	GameTooltip:Show()
 end
@@ -191,9 +174,8 @@ function containerProto:OnCreate(name, bagIds, isBank)
 		return self:OnClick("LeftButton")
 	end)
 
-	button:RegisterForDrag("LeftButton")
-	button:SetScript("OnDragStart", function()
-		if not addon.db.profile.backgroundDrag or addon.db.profile.positionMode ~= "manual" then
+	self.StartBackgroundDrag = function()
+		if not addon.db.profile.backgroundDrag then
 			return
 		end
 		if GetCursorInfo() then
@@ -205,13 +187,16 @@ function containerProto:OnCreate(name, bagIds, isBank)
 			GameTooltip:Hide()
 			anchor:StartMoving()
 		end
-	end)
-	button:SetScript("OnDragStop", function()
+	end
+
+	self.StopBackgroundDrag = function()
 		local anchor = self.Anchor
 		if anchor then
 			anchor:StopMoving()
 		end
-	end)
+	end
+
+	self:EnableBackgroundDrag(button)
 
 	self.ClickReceiver = button
 	local minFrameLevel = button:GetFrameLevel() + 1
@@ -275,95 +260,7 @@ function containerProto:OnCreate(name, bagIds, isBank)
 	title:SetPoint("RIGHT", headerRightRegion, "LEFT", -4, 0)
 
 	--------------------------------------------------------------------------------
-	-- Create Anchored Bag Menu
-	--------------------------------------------------------------------------------
-
-	-- create the frame
-	local AdiBagsBagMenu = CreateFrame("Frame", "AdiBagsBagMenu", self)
-	AdiBagsBagMenu:SetHeight(18)
-	AdiBagsBagMenu:SetPoint("LEFT", headerLeftRegion, "RIGHT", 4, 0)
-	AdiBagsBagMenu:SetPoint("RIGHT", headerRightRegion, "LEFT", -20, 0)
-
-	local function ShowTooltipAnchored()
-		ShowModeTooltip(AdiBagsBagMenu, "|cFF00FF00" .. L["Anchored"] .. "|r|cff00bfff " .. L["Mode"] .. "|r", {
-			"|cffeda55f" .. L["Click"] .. "|r |cff99ff00" .. L["to toggle the anchor."] .. "|r",
-			"|cffeda55f" .. L["Shift-Click"] .. "|r |cff99ff00" .. L["to open bag menu."] .. "|r",
-		})
-	end
-
-	local background = CreateAnchorBackground(AdiBagsBagMenu)
-
-	AdiBagsBagMenu:SetScript("OnMouseUp", function(self, button)
-		local position = self:GetPoint()
-		GameTooltip:Hide()
-
-		if button == "RightButton" then -- check if right button was clicked
-			addon:OpenOptions()
-			self.lastClickTime = 0
-			CloseMenus()
-		elseif button == "LeftButton" then -- check if left button was clicked
-			--===== Create a menu  =====--
-			--===== And adjust its position if bag is too close to top edge of screen. =====--
-			local x, y = GetCursorPosition()
-			local screenHeight = UIParent:GetTop()
-			local threshold = 200 -- adjust this value to change the distance from the top edge
-
-			if
-				y > screenHeight - threshold
-				and not IsAltKeyDown()
-				and IsShiftKeyDown()
-				and GetTime() - (self.lastClickTime or 0) < 1
-			then
-				CloseMenus()
-				self.lastClickTime = 0
-				if addon.db.profile.showAnchorTooltip then
-					ShowTooltipAnchored()
-				end
-			elseif y > screenHeight - threshold and not IsAltKeyDown() and IsShiftKeyDown() then -- if the cursor is within the "threshold" distance
-				self.lastClickTime = GetTime()
-				EasyMenu(menuList, menuFrame, "AdiBagsBagMenu", 0, 0, "MENU", 2)
-			elseif not IsShiftKeyDown() and not IsAltKeyDown() then
-				addon:ToggleAnchor()
-				CloseMenus()
-				self.lastClickTime = 0
-			elseif IsAltKeyDown() then
-				addon:ToggleCurrentLayout()
-				self.lastClickTime = 0
-			elseif button == "LeftButton" and IsShiftKeyDown() and GetTime() - (self.lastClickTime or 0) < 1 then
-				CloseMenus()
-				self.lastClickTime = 0
-				if addon.db.profile.showAnchorTooltip then
-					ShowTooltipAnchored()
-				end
-			elseif button == "LeftButton" and IsShiftKeyDown() then
-				self.lastClickTime = GetTime()
-				EasyMenu(menuList, menuFrame, "AdiBagsBagMenu", -23, 146, "MENU", 2)
-			end
-		end
-	end)
-
-	AdiBagsBagMenu:SetScript("OnEnter", function()
-		if addon.db.profile.showAnchorHighlight then
-			background:SetTexture(0, 1, 0, 0.5)
-		end
-		if addon.db.profile.showAnchorTooltip then
-			ShowTooltipAnchored()
-		end
-	end)
-
-	AdiBagsBagMenu:SetScript("OnLeave", function()
-		if addon.db.profile.showAnchorHighlight then
-			background:SetTexture(0, 1, 0, 0)
-		end
-		if addon.db.profile.showAnchorTooltip then
-			GameTooltip:Hide()
-		end
-	end)
-
-	AdiBagsBagMenu:EnableMouse(true)
-
-	--------------------------------------------------------------------------------
-	-- Create Anchor to move bag in Manual Mode and add bag menu to it.
+	-- Create Anchor to move the bag and add the bag menu to it.
 	--------------------------------------------------------------------------------
 
 	local anchor = addon:CreateAnchorWidget(self, name, L[name], self)
@@ -371,46 +268,24 @@ function containerProto:OnCreate(name, bagIds, isBank)
 	anchor:SetAllPoints(title)
 	anchor:EnableMouse(true)
 	anchor:SetFrameLevel(self:GetFrameLevel() + 10)
+	anchor:Show()
 
-	local function ShowTooltipManual()
-		local lines
-		if addon.db.profile.clickMode == 0 then
-			lines = {
-				"|cffeda55f" .. L["Click"] .. "|r |cff99ff00" .. L["to open bag menu."] .. "|r",
-				"|cffeda55f" .. L["Shift-Click"] .. "|r |cff99ff00" .. L["to move bag container."] .. "|r",
-			}
-		else
-			lines = {
-				"|cffeda55f" .. L["Click"] .. "|r |cff99ff00" .. L["to move bag container."] .. "|r",
-				"|cffeda55f" .. L["Shift-Click"] .. "|r |cff99ff00" .. L["to open bag menu."] .. "|r",
-			}
-		end
-		ShowModeTooltip(anchor, "|cFFFFA500" .. L["Manual"] .. "|r |cff00bfff" .. L["Mode"] .. "|r", lines)
+	local function ShowTitleTooltip()
+		ShowAnchorTooltip(anchor, "|cFFFFA500" .. L[name] .. "|r", {
+			"|cffeda55f" .. L["Click"] .. "|r |cff99ff00" .. L["to move bag container."] .. "|r",
+			"|cffeda55f" .. L["Shift-Click"] .. "|r |cff99ff00" .. L["to open bag menu."] .. "|r",
+		})
 	end
 
 	local background = CreateAnchorBackground(anchor)
 
 	anchor:SetScript("OnMouseDown", function(self, button, ...)
-		if button == "LeftButton" then
-			if IsAltKeyDown() then
-				addon:ToggleCurrentLayout()
-			elseif addon.db.profile.clickMode == 0 and IsShiftKeyDown() then
-				self:StartMoving()
-				GameTooltip:Hide()
-				CloseMenus()
-				self.isMovingContainer = true
-			elseif addon.db.profile.clickMode == 1 and not IsShiftKeyDown() then
-				self:StartMoving()
-				GameTooltip:Hide()
-				CloseMenus()
-				self.isMovingContainer = true
-
-				-- else
-				-- CloseMenus()
-			end
-		end
-
-		if button == "RightButton" then
+		if button == "LeftButton" and not IsShiftKeyDown() then
+			self:StartMoving()
+			GameTooltip:Hide()
+			CloseMenus()
+			self.isMovingContainer = true
+		elseif button == "RightButton" then
 			addon:OpenOptions()
 			GameTooltip:Hide()
 			CloseMenus()
@@ -424,9 +299,9 @@ function containerProto:OnCreate(name, bagIds, isBank)
 			self.isMovingContainer = false
 			CloseMenus()
 			if addon.db.profile.showAnchorTooltip then
-				ShowTooltipManual()
+				ShowTitleTooltip()
 			end
-		elseif addon.db.profile.clickMode == 0 and button == "LeftButton" and not IsShiftKeyDown() then
+		elseif button == "LeftButton" and IsShiftKeyDown() then
 			GameTooltip:Hide()
 
 			-- create a menu and adjust its position if dropdown is too close to top edge of screen.
@@ -434,71 +309,18 @@ function containerProto:OnCreate(name, bagIds, isBank)
 			local screenHeight = UIParent:GetTop()
 			local threshold = 200
 
-			if
-				y > screenHeight - threshold
-				and not IsAltKeyDown()
-				and not IsShiftKeyDown()
-				and GetTime() - (self.lastClickTime or 0) < 1
-			then
+			if y > screenHeight - threshold and not IsAltKeyDown() then
+				self.lastClickTime = GetTime()
+				EasyMenu(menuList, menuFrame, background, 0, 0, "MENU", 2)
+			elseif GetTime() - (self.lastClickTime or 0) < 1 then
 				CloseMenus()
 				self.lastClickTime = 0
 				if addon.db.profile.showAnchorTooltip then
-					ShowTooltipManual()
+					ShowTitleTooltip()
 				end
-			elseif y > screenHeight - threshold and not IsAltKeyDown() and not IsShiftKeyDown() then
+			else
 				self.lastClickTime = GetTime()
-				EasyMenu(menuList2, menuFrame2, background, 0, 0, "MENU", 2)
-			elseif button == "LeftButton" and GetTime() - (self.lastClickTime or 0) < 1 then
-				CloseMenus()
-				self.lastClickTime = 0
-				if addon.db.profile.showAnchorTooltip then
-					ShowTooltipManual()
-				end
-			elseif button == "LeftButton" then
-				self.lastClickTime = GetTime()
-				EasyMenu(menuList2, menuFrame2, background, -23, 130, "MENU", 2) -- default position
-			end
-		elseif addon.db.profile.clickMode == 1 and button == "LeftButton" and IsShiftKeyDown() then
-			GameTooltip:Hide()
-
-			-- create a menu and adjust its position if dropdown is too close to top edge of screen.
-			local x, y = GetCursorPosition()
-			local screenHeight = UIParent:GetTop()
-			local threshold = 200
-
-			if
-				addon.db.profile.clickMode == 1
-				and y > screenHeight - threshold
-				and not IsAltKeyDown()
-				and not IsShiftKeyDown()
-				and GetTime() - (self.lastClickTime or 0) < 1
-			then
-				CloseMenus()
-				self.lastClickTime = 0
-				if addon.db.profile.showAnchorTooltip then
-					ShowTooltipManual()
-				end
-			elseif
-				addon.db.profile.clickMode == 1
-				and y > screenHeight - threshold
-				and not IsAltKeyDown()
-				and IsShiftKeyDown()
-			then
-				self.lastClickTime = GetTime()
-				EasyMenu(menuList2, menuFrame2, background, 0, 0, "MENU", 2)
-			elseif
-				addon.db.profile.clickMode == 1
-				and button == "LeftButton"
-				and GetTime() - (self.lastClickTime or 0) < 1
-			then
-				CloseMenus()
-				self.lastClickTime = 0
-				if addon.db.profile.showAnchorTooltip then
-					ShowTooltipManual()
-				end
-			elseif addon.db.profile.clickMode == 1 and button == "LeftButton" and IsShiftKeyDown() then
-				self.lastClickTime = GetTime()
-				EasyMenu(menuList2, menuFrame2, background, -23, 130, "MENU", 2) -- default position
+				EasyMenu(menuList, menuFrame, background, -23, 130, "MENU", 2) -- default position
 			end
 		end
 	end)
@@ -508,7 +330,7 @@ function containerProto:OnCreate(name, bagIds, isBank)
 			background:SetTexture(1, 0.5, 0, 0.5)
 		end
 		if addon.db.profile.showAnchorTooltip then
-			ShowTooltipManual()
+			ShowTitleTooltip()
 		end
 	end)
 
@@ -522,26 +344,6 @@ function containerProto:OnCreate(name, bagIds, isBank)
 	end)
 
 	self.Anchor = anchor
-
-	--------------------------------------------------------------------------------
-	-- Show or Hide the title frames depending on current positionmode setting.
-	--------------------------------------------------------------------------------
-
-	function self:UpdateAnchorVisibility()
-		if addon.db.profile.positionMode == "manual" then
-			AdiBagsBagMenu:Hide()
-			anchor:Show()
-		else
-			AdiBagsBagMenu:Show()
-			anchor:Hide()
-		end
-	end
-
-	self:UpdateAnchorVisibility()
-
-	self:RegisterMessage("AdiBags_ManualLayout", self.UpdateAnchorVisibility)
-	self:RegisterMessage("AdiBags_AnchoredLayout", self.UpdateAnchorVisibility)
-	self:RegisterMessage("AdiBags_TimeToCheckAnchorMode", self.UpdateAnchorVisibility)
 
 	--------------------------------------------------------------------------------
 	-- Some Updating Bag Slots Stuff
@@ -724,6 +526,12 @@ end
 function containerProto:AddHeaderWidget(widget, order, width, yOffset, side)
 	local region = (side == "LEFT") and self.HeaderLeftRegion or self.HeaderRightRegion
 	region:AddWidget(widget, order, width, 0, yOffset)
+end
+
+function containerProto:EnableBackgroundDrag(frame)
+	frame:RegisterForDrag("LeftButton")
+	frame:SetScript("OnDragStart", self.StartBackgroundDrag)
+	frame:SetScript("OnDragStop", self.StopBackgroundDrag)
 end
 
 function containerProto:AddBottomWidget(widget, side, order, height, xOffset, yOffset)

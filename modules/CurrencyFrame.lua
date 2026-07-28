@@ -105,6 +105,7 @@ local function GetOrCreateCurrencyButton(parent, index)
 	btn.fs:SetPoint("LEFT", 0, 1)
 	btn:SetScript("OnEnter", CurrencyButton_OnEnter)
 	btn:SetScript("OnLeave", CurrencyButton_OnLeave)
+	parent:GetParent():EnableBackgroundDrag(btn)
 	currencyButtons[index] = btn
 	return btn
 end

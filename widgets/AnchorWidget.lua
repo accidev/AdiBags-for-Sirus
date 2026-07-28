@@ -30,7 +30,6 @@ local BACKDROP = {
 	tile = true,
 	tileSize = 16,
 }
-addon.ANCHOR_BACKDROP = BACKDROP
 
 function anchorProto:OnCreate(parent, name, label, target)
 	self:SetParent(parent or UIParent)
@@ -92,12 +91,7 @@ function anchorProto:SaveSettings()
 	db.point, db.xOffset, db.yOffset = self:GetPosition()
 end
 
-function anchorProto:StartMoving(button)
-	if button == "RightButton" then
-		addon:ToggleAnchor()
-		return
-	end
-
+function anchorProto:StartMoving()
 	if self.moving then
 		return
 	end
@@ -118,16 +112,12 @@ function anchorProto:StartMoving(button)
 	end
 end
 
-function anchorProto:StopMoving(button)
-	if button == "RightButton" then
-		addon:ToggleAnchor()
-		return
-	end
-
+function anchorProto:StopMoving()
 	if not self.moving then
 		return
 	end
 	self.moving = nil
+	self.isMovingContainer = false
 	local target = self.target
 	if self.toggleMovable then
 		self.toggleMovable = nil

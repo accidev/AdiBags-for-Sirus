@@ -66,7 +66,6 @@ L["Add a dropdown menu to bags that allow to hide the sections."] =
 L["Add association"] = "Добавить объединение"
 L["Add more information in tooltips related to items in your bags."] =
 	"Добавить Дополнительную информацию во всплывающих подсказках, касающихся предметов, в вашей сумке"
-L["AdiBags Anchor"] = "AdiBags Якорь"
 L["Adjust the maximum height of the bags, relative to screen size."] =
 	"Регулировка максимальной высоты сумок, относительно размеру экрана."
 L["Adjust the maximum number of items per row."] =
@@ -129,7 +128,6 @@ L["Click to reset item status."] = "Кликните чтобы сбросить
 L["Click to select which sections should be shown or hidden. Section visibility is common to all bags."] =
 	"Кликните что бы выбрать какие секции должны показываться, а какие скрываться. Настройки видимости секций общие для всех сумок."
 L["Click to tidy bags."] = "Кликните, что бы прибраться в сумках."
-L["Click to toggle the bag anchor."] = "Кликните чтобы переключить якорь сумки."
 L["Click to toggle the equipped bag panel, so you can change them."] =
 	"Кликните для переключения панели надетых сумок, так что вы можете их изменить."
 L["Close"] = "Закрыть"
@@ -236,7 +234,6 @@ L["Keyring"] = "Связка ключей"
 L["Layout priority"] = "Приоритет раскладки"
 L["LDB Plugin"] = "Плагин LDB"
 L["LEATHERWORKING_BAG_TAG"] = "Кж"
-L["Lock anchor"] = "Блокировать якорь"
 L["Manual filtering"] = "Ручная фильтрация"
 L["Maximum bag height"] = "Максимальная высота сумки"
 L["Maximum row width"] = "Максимальная ширина ряда"
@@ -260,7 +257,6 @@ L["Opacity"] = "Непрозрачность"
 L["Please note this filter matchs every item. Any filter with lower priority than this one will have no effect."] =
 	"Имейте ввиду, что этот фильтр будет использоваться для всех вещей. Любой фильтр с меньшим приоритетом чем этот, не будет применяться."
 L["Plugins"] = "Плагины"
-L["Position mode"] = "Режим позиционирования" -- Needs review
 L["Priority"] = "Приоритет"
 L["Provides a LDB data source to be displayed by LDB display addons."] =
 	"Позволяет отображать источник LDB данных другими аддонами для отображения LDB." -- Needs review
@@ -296,8 +292,6 @@ L["Select how bag usage should be formatted in the plugin."] =
 	"Выберите способ, которым следует упорядочивать использование сумок плагином." -- Needs review
 L["Select how items should be sorted within each section."] =
 	"Выберите как предметы должны сортироваться в пределах каждой секции."
-L["Select how the bag are positionned."] =
-	"Выбрать то, как окно сумок будет расположено на экране."
 L["Select the category of the section to associate. This is used to group sections together."] =
 	"Выберите категорию секции для того, что бы ее связать. Это необходимо для того, чтобы сгруппировать секции вместе."
 L["Select the sections in which the items should be dispatched."] =
@@ -340,36 +334,25 @@ L['Track new items in each bag, displaying a glowing aura over them and putting 
 	'Отслеживать новые предметы в каждой сумке, подсвечивать их и помещать в отдельную секцию. Статус "Новое" может быть сброшен кликом по небольшой кнопке "N" находящейся, в верхней левой стороне окна сумок.'
 L["Uncheck this to disable AdiBags."] = "Снимите галочку штобы выключить AdiBags."
 L["Reset bag position"] = "Сброс позиции сумки"
-L["Unlock Anchor"] = "Разблокировать якорь"
 L["Manual Filtering"] = "Ручная фильтрация"
 L["Settings"] = "Настройки"
-L["Manual mode click behavior"] = "Поведение кликов в ручном режиме"
 L["Drag by empty space"] = "Перетаскивать за фон"
 L["Allow moving a bag by dragging any empty spot of its background, not only by its title bar."] =
 	"Позволяет двигать сумку, потянув за любое пустое место её фона, а не только за заголовок."
-L["Choose how mouse clicks work in manual mode:\n\nNormal: Left-click opens menu, Shift+Left-click moves bag\nSwapped: Left-click moves bag, Shift+Left-click opens menu"] =
-	"Выберите как работают клики мыши в ручном режиме:\n\nОбычный: Левый клик открывает меню, Shift+Левый клик перемещает сумку\nПереключенный: Левый клик перемещает сумку, Shift+Левый клик открывает меню"
-L["Normal"] = "Обычный"
-L["Swapped"] = "Переключенный"
-L["Show anchor highlight"] = "Подсветка якоря"
-L["Show green/orange highlight when hovering over bag anchors in manual mode"] =
-	"Зеленая/оранжевая подсветка при наведении на якорь в ручном режиме"
-L["Show anchor tooltip"] = "Подсказка якоря"
-L["Show tooltip when hovering over bag anchors in both modes"] =
-	"Показывать подсказку при наведении на якорь в обоих режимах"
-L["Anchored"] = "Якорный"
-L["Mode"] = "Режим"
+L["Title bar highlight and tooltip"] = "Подсветка и подсказки заголовка"
+L["Show title bar highlight"] = "Подсветка заголовка"
+L["Show a highlight when hovering over the bag title bar"] =
+	"Показывать подсветку при наведении на заголовок сумки"
+L["Show title bar tooltip"] = "Подсказка заголовка"
+L["Show a tooltip when hovering over the bag title bar"] =
+	"Показывать подсказку при наведении на заголовок сумки"
 L["Manual"] = "Ручной"
 L["Click"] = "Клик"
 L["Shift-Click"] = "Shift-Клик"
 L["Right-Click"] = "Правый клик"
-L["Alt-Left-Click"] = "Alt-Левый клик"
-L["to toggle the anchor."] = "переключить якорь."
 L["to open bag menu."] = "открыть меню сумки."
 L["to open AdiBags options."] = "открыть настройки AdiBags."
-L["to toggle anchor mode."] = "переключить режим якоря."
 L["to move bag container."] = "переместить контейнер сумки."
-L["mode."] = "режим."
 L["Cross-character items"] = "Предметы других персонажей"
 L["Show item and currency counts from other characters in tooltips."] =
 	"Показывать количество предметов и валюты других персонажей в подсказках."
@@ -391,7 +374,6 @@ L["Equipped"] = "Надето"
 L["Show other realms"] = "Показывать другие реалмы"
 L["Show characters from other realms. When disabled, only characters from the current realm are shown."] =
 	"Показывать персонажей с других реалмов. Если выключено, отображаются только персонажи текущего реалма."
-L["Unlock anchor"] = "Разблок. якорь"
 L["Use this section to define any item-section association."] =
 	"Использовать эту секцию, для определения любой связной с ней секцией" -- Needs review
 L["Use this to adjust the bag scale."] = "Регулировка масштаба сумок."
@@ -511,7 +493,6 @@ L["General"] = "Основные"
 L["Appearance"] = "Внешний вид"
 L["Size and layout"] = "Размер и раскладка"
 L["Indicators"] = "Индикаторы"
-L["Anchor highlight and tooltip"] = "Подсветка и подсказки якоря"
 L["Choose how sections are placed: keep their strict order, group sections of the same category together, or fill each row as much as possible."] =
 	"Выберите, как размещаются секции: строго сохранять порядок, группировать секции одной категории или максимально заполнять строки."
 L["What to display"] = "Что показывать"
