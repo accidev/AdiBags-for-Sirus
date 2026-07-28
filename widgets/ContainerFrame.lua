@@ -244,6 +244,7 @@ function containerProto:OnCreate(name, bagIds, isBank)
 	bagSlotButton:GetCheckedTexture():SetBlendMode("ADD")
 	bagSlotButton:SetScript("OnClick", BagSlotButton_OnClick)
 	bagSlotButton.panel = bagSlotPanel
+	self.BagSlotButton = bagSlotButton
 	bagSlotButton:SetWidth(18)
 	bagSlotButton:SetHeight(18)
 	addon.SetupTooltip(bagSlotButton, {
@@ -686,6 +687,10 @@ function containerProto:GetStackButton(key)
 	return stack
 end
 
+function containerProto:AcquireItemButton(slotData)
+	return addon:AcquireItemButton(self, slotData.bag, slotData.slot)
+end
+
 function containerProto:GetSection(name, category)
 	local key = addon:BuildSectionKey(name, category)
 	local section = self.sections[key]
@@ -755,7 +760,7 @@ function containerProto:DispatchItem(slotData)
 			button = self:GetStackButton(stackKey)
 			button:AddSlot(slotId)
 		else
-			button = addon:AcquireItemButton(self, slotData.bag, slotData.slot)
+			button = self:AcquireItemButton(slotData)
 		end
 	else
 		-- a stack button is shared by every slot it holds; one FullUpdate per sweep is enough

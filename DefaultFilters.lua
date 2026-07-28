@@ -154,6 +154,9 @@ function addon:SetupDefaultFilters()
 
 		local SETS, SET_NAME = L["Sets"], L["Set: %s"]
 		function setFilter:Filter(slotData)
+			if slotData.preview then
+				return
+			end
 			local name = self.slots[slotData.slotId]
 			if name then
 				if not self.db.profile.oneSectionPerSet or self.db.char.mergedSets[name] then
@@ -260,7 +263,7 @@ function addon:SetupDefaultFilters()
 		local questItemFilter = addon:RegisterFilter("Quest", 75, function(self, slotData)
 			if slotData.classID == CLASS_QUEST then
 				return QUEST
-			else
+			elseif not slotData.preview then
 				local isQuestItem, questId = GetContainerItemQuestInfo(slotData.bag, slotData.slot)
 				return (questId or isQuestItem) and QUEST
 			end

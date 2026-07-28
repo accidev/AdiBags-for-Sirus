@@ -78,6 +78,9 @@ function mod:OnDisable()
 end
 
 function mod:UpdateButton(event, button)
+	if button.preview then
+		return
+	end
 	local itemId = button:GetItemId()
 	local arrow = arrows[button]
 	if itemId and CanUpgrade(button.bag, button.slot, itemId) then

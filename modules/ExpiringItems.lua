@@ -53,7 +53,7 @@ local function GetSlotTimeLeft(bag, slot)
 end
 
 function mod:Filter(slotData)
-	if not self.db.profile.enabled then
+	if not self.db.profile.enabled or slotData.preview then
 		return nil
 	end
 
@@ -174,6 +174,9 @@ function mod:Resync()
 end
 
 function mod:UpdateButton(event, button)
+	if button.preview then
+		return
+	end
 	local remaining = self.db.profile.showCountdown and GetSlotTimeLeft(button.bag, button.slot)
 	if not remaining then
 		watched[button] = nil

@@ -204,7 +204,7 @@ function mod:Refresh()
 end
 
 function mod:Filter(slotData)
-	if not self.db.profile.enabled then
+	if not self.db.profile.enabled or slotData.preview then
 		return nil
 	end
 	if GetTradeRemaining(slotData.bag, slotData.slot, true) then
@@ -214,6 +214,9 @@ function mod:Filter(slotData)
 end
 
 function mod:UpdateButton(event, button)
+	if button.preview then
+		return
+	end
 	local texts = self.texts
 	if not texts then
 		texts = {}

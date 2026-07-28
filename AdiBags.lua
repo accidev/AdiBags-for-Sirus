@@ -151,9 +151,10 @@ local DEFAULT_SETTINGS = {
 		positions = {
 			Backpack = { point = "BOTTOMRIGHT", xOffset = -111, yOffset = 220 },
 			Bank = { point = "TOPLEFT", xOffset = 32, yOffset = -104 },
+			Preview = { point = "TOPLEFT", xOffset = 32, yOffset = -104 },
 		},
 		scale = 0.8,
-		rowWidth = { ["*"] = 9 },
+		rowWidth = { ["*"] = 9, Preview = 9 },
 		maxHeight = 0.60,
 		backgroundDrag = true,
 		showAnchorHighlight = false,
@@ -194,6 +195,7 @@ local DEFAULT_SETTINGS = {
 			insets = 3,
 			BackpackColor = { 0, 0, 0, 1 },
 			BankColor = { 0, 0, 0.5, 1 },
+			PreviewColor = { 0.15, 0.08, 0, 1 },
 		},
 	},
 	char = {

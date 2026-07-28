@@ -133,6 +133,9 @@ end
 --------------------------------------------------------------------------------
 
 function mod:Filter(slotData)
+	if slotData.preview then
+		return
+	end
 	if IsNewItemSlot(slotData.bag, slotData.slot) then
 		return L["New"]
 	end
@@ -188,6 +191,9 @@ local function Button_OnEnter(button)
 end
 
 function mod:UpdateButton(event, button)
+	if button.preview then
+		return
+	end
 	if not hookedButtons[button] then
 		button:HookScript("OnEnter", Button_OnEnter)
 		hookedButtons[button] = true

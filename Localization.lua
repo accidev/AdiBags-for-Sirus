@@ -574,6 +574,27 @@ L["Source:"] = "Источник:"
 -- OO.lua
 L["Debugging is now enabled."] = "Отладка включена."
 L["Debugging is now disabled."] = "Отладка выключена."
+-- modules/Preview.lua
+L["Preview"] = "Предпросмотр"
+L["Bag preview"] = "Просмотр сумок"
+L["Show bags and bank of another character."] =
+	"Показать сумки и банк другого персонажа."
+L["Leave preview mode"] = "Выйти из режима просмотра"
+L["Other realms"] = "Другие реалмы"
+L["PREVIEW - data from %s"] = "ПРЕДПРОСМОТР · данные от %s"
+L["PREVIEW - date unknown"] = "ПРЕДПРОСМОТР · дата данных неизвестна"
+L["The bank has never been seen"] = "Банк не просматривался"
+L["Log in on this character and visit the bank to store its contents."] =
+	"Зайдите этим персонажем в банк, чтобы сохранить содержимое."
+L["The bank is empty"] = "Банк пуст"
+L["No data"] = "Нет данных"
+L["unknown"] = "неизвестно"
+L["Preview window color"] = "Цвет фона окна предпросмотра"
+L["Close the preview when entering combat"] =
+	"Закрывать предпросмотр при входе в бой"
+L["Save character bag layout"] = "Сохранять раскладку сумок персонажей"
+L["Store a per-slot snapshot of bags and bank so they can be previewed later."] =
+	"Сохранять послотовый снимок сумок и банка, чтобы их можно было просмотреть позже."
 
 for k, v in pairs(L) do
 	if v == true then

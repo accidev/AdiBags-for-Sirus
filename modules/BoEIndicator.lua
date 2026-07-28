@@ -60,6 +60,9 @@ local function IsEquippableUnbound(bag, slot, itemId)
 end
 
 function mod:UpdateButton(event, button)
+	if button.preview then
+		return
+	end
 	local text = texts[button]
 	local itemId = button:GetItemId()
 

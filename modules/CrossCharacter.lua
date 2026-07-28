@@ -6,10 +6,15 @@ local pairs = pairs
 local ipairs = ipairs
 local format = format
 local select = select
+local type = type
 local tinsert = table.insert
 local tsort = table.sort
+local tconcat = table.concat
 local wipe = wipe
 local tonumber = tonumber
+local strmatch = string.match
+local strsub = string.sub
+local time = time
 local GetContainerNumSlots = _G.GetContainerNumSlots
 local GetContainerNumFreeSlots = _G.GetContainerNumFreeSlots
 local GetContainerItemInfo = _G.GetContainerItemInfo
@@ -38,7 +43,7 @@ local mod = addon:NewModule("CrossCharacter", "AceEvent-3.0", "AceBucket-3.0", "
 mod.uiName = L["Cross-character items"]
 mod.uiDesc = L["Show item and currency counts from other characters in tooltips."]
 
-local DB_VERSION = 2
+local DB_VERSION = 3
 
 function mod:OnInitialize()
 	self.db = addon.db:RegisterNamespace(self.moduleName, {
@@ -50,6 +55,7 @@ function mod:OnInitialize()
 			showMoney = true,
 			showCurrencies = true,
 			showOtherRealms = false,
+			saveLayout = true,
 		},
 	})
 	addon.db.RegisterCallback(self, "OnProfileChanged", "OnProfileUpdated")
@@ -74,6 +80,15 @@ local function MigrateDB()
 		for _, realm in pairs(db.realms) do
 			for _, char in pairs(realm) do
 				char.currencies = {}
+			end
+		end
+	end
+	if version < 3 then
+		for _, realm in pairs(db.realms) do
+			for _, char in pairs(realm) do
+				if type(char.snapshot) ~= "table" then
+					char.snapshot = { bags = {}, bank = {} }
+				end
 			end
 		end
 	end
@@ -118,8 +133,146 @@ local function EnsureCharDB()
 		realmDB[currentPlayer] = charDB
 		entriesDirty = true
 	end
+	if type(charDB.snapshot) ~= "table" then
+		charDB.snapshot = { bags = {}, bank = {} }
+	end
 	charDB.class = currentClass
 	return charDB
+end
+
+local linkFields = {}
+
+local function EncodeSlot(link, count)
+	local id, ench, g1, g2, g3, g4, suffix, unique =
+		strmatch(link, "item:(%-?%d+):(%-?%d+):(%-?%d+):(%-?%d+):(%-?%d+):(%-?%d+):(%-?%d+):(%-?%d+)")
+	if not id then
+		id = strmatch(link, "item:(%-?%d+)")
+		if not id then
+			return nil
+		end
+		ench, g1, g2, g3, g4, suffix, unique = "0", "0", "0", "0", "0", "0", "0"
+	end
+
+	linkFields[1], linkFields[2], linkFields[3], linkFields[4] = id, ench, g1, g2
+	linkFields[5], linkFields[6], linkFields[7], linkFields[8] = g3, g4, suffix, unique
+
+	local last = 1
+	for i = 8, 2, -1 do
+		if linkFields[i] ~= "0" then
+			last = i
+			break
+		end
+	end
+
+	local body = tconcat(linkFields, ":", 1, last)
+	if count and count > 1 then
+		body = body .. "x" .. count
+	end
+	return body
+end
+
+local function DecodeSlot(body)
+	local count = 1
+	local mult = strmatch(body, "x(%d+)$")
+	if mult then
+		count = tonumber(mult) or 1
+		body = strsub(body, 1, -(#mult + 2))
+	end
+
+	local num = 0
+	for field in body:gmatch("[^:]+") do
+		num = num + 1
+		linkFields[num] = field
+	end
+	if num == 0 then
+		return nil
+	end
+	for i = num + 1, 8 do
+		linkFields[i] = "0"
+	end
+	linkFields[9] = "0"
+
+	local id = tonumber(linkFields[1])
+	if not id then
+		return nil
+	end
+	return id, "item:" .. tconcat(linkFields, ":", 1, 9), count
+end
+
+local encodeBuffer = {}
+
+local function EncodeContainer(bag)
+	local numSlots = GetContainerNumSlots(bag) or 0
+	if numSlots == 0 then
+		return nil
+	end
+
+	local num = 1
+	encodeBuffer[1] = numSlots
+	for slot = 1, numSlots do
+		local link = GetContainerItemLink(bag, slot)
+		if link then
+			local _, count = GetContainerItemInfo(bag, slot)
+			local body = EncodeSlot(link, count)
+			if body then
+				num = num + 1
+				encodeBuffer[num] = slot .. "=" .. body
+			end
+		end
+	end
+	return tconcat(encodeBuffer, ";", 1, num)
+end
+
+-- Возвращает { size = <всего слотов>, [слот] = { id, link, count } } либо nil
+function mod:DecodeContainer(text)
+	if type(text) ~= "string" then
+		return nil
+	end
+	local content
+	for chunk in text:gmatch("[^;]+") do
+		if not content then
+			content = { size = tonumber(chunk) or 0 }
+		else
+			local slot, body = strmatch(chunk, "^(%d+)=(.+)$")
+			slot = tonumber(slot)
+			if slot and body then
+				local id, link, count = DecodeSlot(body)
+				if id then
+					content[slot] = { id = id, link = link, count = count }
+				end
+			end
+		end
+	end
+	return content
+end
+
+local function SaveContainers(store, first, last, extra)
+	for bag = first, last do
+		store[bag] = EncodeContainer(bag)
+	end
+	if extra then
+		store[extra] = EncodeContainer(extra)
+	end
+end
+
+function mod:SaveBagLayout()
+	if not self.db.profile.saveLayout then
+		return
+	end
+	local snapshot = EnsureCharDB().snapshot
+	wipe(snapshot.bags)
+	SaveContainers(snapshot.bags, 0, NUM_BAG_SLOTS, KEYRING_CONTAINER)
+end
+
+function mod:SaveBankLayout()
+	if not self.db.profile.saveLayout then
+		return
+	end
+	local charDB = EnsureCharDB()
+	local snapshot = charDB.snapshot
+	wipe(snapshot.bank)
+	SaveContainers(snapshot.bank, NUM_BAG_SLOTS + 1, NUM_BAG_SLOTS + NUM_BANKBAGSLOTS, BANK_CONTAINER)
+	charDB.bankSeen = time()
 end
 
 local function EnsureItem(items, id)
@@ -214,6 +367,7 @@ function mod:SaveBagItems()
 	end
 
 	RemoveEmptyItems(items)
+	self:SaveBagLayout()
 end
 
 local function IsBankReadable()
@@ -277,6 +431,7 @@ function mod:SaveBankItems()
 	end
 
 	RemoveEmptyItems(items)
+	self:SaveBankLayout()
 end
 
 function mod:SaveCurrencies()
@@ -318,6 +473,21 @@ end
 
 local sortedEntries = {}
 
+local function CompareEntries(a, b)
+	local aIsCurrent = (a.name == currentPlayer and a.realm == currentRealm)
+	local bIsCurrent = (b.name == currentPlayer and b.realm == currentRealm)
+	if aIsCurrent then
+		return true
+	end
+	if bIsCurrent then
+		return false
+	end
+	if a.realm ~= b.realm then
+		return a.realm < b.realm
+	end
+	return a.name < b.name
+end
+
 local function CollectEntries()
 	if not entriesDirty then
 		return sortedEntries
@@ -342,24 +512,35 @@ local function CollectEntries()
 		end
 	end
 
-	tsort(sortedEntries, function(a, b)
-		local aIsCurrent = (a.name == currentPlayer and a.realm == currentRealm)
-		local bIsCurrent = (b.name == currentPlayer and b.realm == currentRealm)
-		if aIsCurrent then
-			return true
-		end
-		if bIsCurrent then
-			return false
-		end
-		if a.realm ~= b.realm then
-			return a.realm < b.realm
-		end
-		return a.name < b.name
-	end)
+	tsort(sortedEntries, CompareEntries)
 
 	entriesDirty = false
 	return sortedEntries
 end
+
+local allEntries = {}
+
+function mod:GetAllEntries()
+	wipe(allEntries)
+	for realm, chars in pairs(self.db.global.realms) do
+		for name, data in pairs(chars) do
+			tinsert(allEntries, { name = name, realm = realm, data = data })
+		end
+	end
+	tsort(allEntries, CompareEntries)
+	return allEntries
+end
+
+function mod:GetIdentity()
+	return currentPlayer, currentRealm
+end
+
+function mod:GetCharData(name, realm)
+	local realmDB = self.db.global.realms[realm]
+	return realmDB and realmDB[name]
+end
+
+mod.ClassColor = GetClassColor
 
 local function GetDisplayName(entry)
 	if mod.db.profile.showOtherRealms and entry.realm ~= currentRealm then
@@ -539,6 +720,7 @@ function mod:OnEnable()
 	self:SaveMoney()
 	self:SaveBagItems()
 	self:SaveCurrencies()
+	EnsureCharDB().lastSeen = time()
 
 	self:RegisterBucketEvent("BAG_UPDATE", 0.2, "OnBagUpdate")
 	self:RegisterEvent("PLAYER_MONEY", "OnMoneyUpdate")
@@ -660,6 +842,7 @@ function mod:OnLogout()
 		self:SaveBankItems()
 	end
 	self:SaveCurrencies()
+	EnsureCharDB().lastSeen = time()
 end
 
 function mod:GetOptions()
@@ -696,6 +879,13 @@ function mod:GetOptions()
 				entriesDirty = true
 			end,
 		},
+		saveLayout = {
+			name = L["Save character bag layout"],
+			desc = L["Store a per-slot snapshot of bags and bank so they can be previewed later."],
+			type = "toggle",
+			order = 37,
+			width = "double",
+		},
 		deleteChar = {
 			name = L["Delete character data"],
 			type = "select",
@@ -730,6 +920,7 @@ function mod:GetOptions()
 						mod.db.global.realms[realm] = nil
 					end
 					entriesDirty = true
+					addon:SendMessage("AdiBags_CharacterDataDeleted", name, realm)
 				end
 			end,
 			confirm = function(_, key)

@@ -429,6 +429,9 @@ function addon:UpdateCountAppearance()
 	for button in bankButtonPool:IterateActiveObjects() do
 		button:UpdateCountAppearance()
 	end
+	if addon.UpdatePreviewCountAppearance then
+		addon:UpdatePreviewCountAppearance()
+	end
 end
 
 -- Pre-spawn a bunch of buttons, when we are out of combat

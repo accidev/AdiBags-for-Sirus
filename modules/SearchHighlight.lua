@@ -12,13 +12,14 @@ mod.uiName = L["Item search"]
 mod.uiDesc =
 	L["Provides a text widget at top of the backpack where you can type (part of) an item name to locate it in your bags."]
 
-local lastSearch
 local lowerNames = {}
 
 function mod:OnEnable()
 	addon:HookBagFrameCreation(self, "OnBagFrameCreated")
-	lastSearch = nil
+	self:RegisterMessage("AdiBags_PreviewFrameCreated", "OnPreviewFrameCreated")
+	self:RegisterMessage("AdiBags_PreviewOpened", "OnPreviewOpened")
 	if self.widget then
+		self.widget.lastSearch = nil
 		self.widget:Show()
 		self:SendMessage("AdiBags_UpdateAllButtons")
 	end
@@ -28,6 +29,9 @@ function mod:OnEnable()
 end
 
 function mod:OnDisable()
+	if self.previewWidget then
+		self.previewWidget:Hide()
+	end
 	if self.widget then
 		self.widget:Hide()
 		self:SendMessage("AdiBags_UpdateAllButtons")
@@ -42,10 +46,10 @@ local function SearchEditBox_OnTextChanged(editBox)
 	else
 		editBox.clearButton:Show()
 	end
-	if search == lastSearch then
+	if search == editBox.lastSearch then
 		return
 	end
-	lastSearch = search
+	editBox.lastSearch = search
 	mod:SendMessage("AdiBags_UpdateAllButtons")
 end
 
@@ -60,13 +64,8 @@ local function SearchEditBox_OnEscapePressed(editBox)
 	return SearchEditBox_OnTextChanged(editBox)
 end
 
-function mod:OnBagFrameCreated(bag)
-	if bag.bagName ~= "Backpack" then
-		return
-	end
-	local frame = bag:GetFrame()
-
-	local searchEditBox = CreateFrame("EditBox", addonName .. "SearchFrame", frame, "InputBoxTemplate")
+local function CreateSearchBox(frame, name)
+	local searchEditBox = CreateFrame("EditBox", name, frame, "InputBoxTemplate")
 	searchEditBox:SetSize(100, 18)
 	searchEditBox:SetAutoFocus(false)
 	searchEditBox:SetPoint("TOPLEFT")
@@ -75,7 +74,6 @@ function mod:OnBagFrameCreated(bag)
 	searchEditBox:SetScript("OnEnterPressed", SearchEditBox_OnEnterPressed)
 	searchEditBox:SetScript("OnEscapePressed", SearchEditBox_OnEscapePressed)
 	searchEditBox:SetScript("OnTextChanged", SearchEditBox_OnTextChanged)
-	self.widget = searchEditBox
 
 	local searchIcon = searchEditBox:CreateTexture(nil, "OVERLAY")
 	searchIcon:SetPoint("LEFT", 0, -2)
@@ -100,13 +98,38 @@ function mod:OnBagFrameCreated(bag)
 	}, "ANCHOR_TOPLEFT", 0, 8)
 
 	frame:AddHeaderWidget(searchEditBox, -10, 100, -1)
+	return searchEditBox
+end
+
+function mod:OnBagFrameCreated(bag)
+	if bag.bagName ~= "Backpack" or self.widget then
+		return
+	end
+	self.widget = CreateSearchBox(bag:GetFrame(), addonName .. "SearchFrame")
+end
+
+function mod:OnPreviewFrameCreated(event, frame)
+	if self.previewWidget then
+		return
+	end
+	self.previewWidget = CreateSearchBox(frame, addonName .. "PreviewSearchFrame")
+end
+
+function mod:OnPreviewOpened()
+	local widget = self.previewWidget
+	if widget then
+		widget:ClearFocus()
+		widget:SetText("")
+		SearchEditBox_OnTextChanged(widget)
+	end
 end
 
 function mod:UpdateButton(event, button)
-	if not self.widget then
+	local widget = button.preview and self.previewWidget or self.widget
+	if not widget then
 		return
 	end
-	local text = self.widget:GetText()
+	local text = widget:GetText()
 	if not text or text:trim() == "" then
 		return
 	end

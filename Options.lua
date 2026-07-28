@@ -655,6 +655,13 @@ function addon:GetOptions()
 								hasAlpha = true,
 								arg = { "skin", "BankColor" },
 							},
+							previewColor = {
+								name = L["Preview window color"],
+								type = "color",
+								order = 70,
+								hasAlpha = true,
+								arg = { "skin", "PreviewColor" },
+							},
 						},
 					},
 					text = {
