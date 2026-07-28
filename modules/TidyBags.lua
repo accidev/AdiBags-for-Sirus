@@ -214,6 +214,7 @@ end
 
 function mod:RefreshAllBags(event)
 	for name, bag in pairs(bags) do
+		bag.cached = nil
 		bag:UpdateButton(event)
 	end
 end
@@ -368,8 +369,10 @@ local itemMaxStackMemo = setmetatable({}, {
 		if not id then
 			return
 		end
-		local count = select(8, GetItemInfo(id)) or false
-		t[id] = count
+		local count = select(8, GetItemInfo(id))
+		if count then
+			t[id] = count
+		end
 		return count
 	end,
 })
@@ -378,8 +381,10 @@ local itemFamilyMemo = setmetatable({}, {
 		if not id then
 			return
 		end
-		local family = GetItemFamily(id) or false
-		t[id] = family
+		local family = GetItemFamily(id)
+		if family then
+			t[id] = family
+		end
 		return family
 	end,
 })

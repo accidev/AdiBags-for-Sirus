@@ -183,10 +183,18 @@ function addon:SetupDefaultFilters()
 
 	-- [85] Mythic Keystone
 	do
+		local IsItemKeystoneByID = C_Item and C_Item.IsItemKeystoneByID
+		local keystoneCache = {}
 		local keystoneFilter = addon:RegisterFilter("MythicKeystone", 85, function(self, slotData)
-			if slotData.itemId and C_Item and C_Item.IsItemKeystoneByID then
-				local ok, result = pcall(C_Item.IsItemKeystoneByID, slotData.itemId)
-				if ok and result then
+			local itemId = slotData.itemId
+			if itemId and IsItemKeystoneByID then
+				local isKeystone = keystoneCache[itemId]
+				if isKeystone == nil then
+					local ok, result = pcall(IsItemKeystoneByID, itemId)
+					isKeystone = (ok and result) and true or false
+					keystoneCache[itemId] = isKeystone
+				end
+				if isKeystone then
 					return MYTHIC_KEYSTONE
 				end
 			end

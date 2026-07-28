@@ -345,14 +345,16 @@ StaticPopupDialogs["ADIBAGS_DISCORD_LINK"] = {
 	text = L["AdiBags Discord — select the link and press Ctrl+C to copy."],
 	button1 = CLOSE,
 	hasEditBox = true,
+	hasWideEditBox = true,
 	timeout = 0,
 	whileDead = true,
 	hideOnEscape = true,
 	preferredIndex = 3,
 	OnShow = function(self)
-		self.editBox:SetText(DISCORD_URL)
-		self.editBox:HighlightText()
-		self.editBox:SetFocus()
+		local editBox = self.wideEditBox or self.editBox
+		editBox:SetText(DISCORD_URL)
+		editBox:HighlightText()
+		editBox:SetFocus()
 	end,
 	EditBoxOnTextChanged = function(self)
 		if self:GetText() ~= DISCORD_URL then

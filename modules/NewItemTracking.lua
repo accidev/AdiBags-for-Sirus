@@ -27,7 +27,7 @@ function mod:OnInitialize()
 end
 
 function mod:OnEnable()
-	for _, bag in addon:IterateBags() do
+	for _, bag in addon:IterateDefinedBags() do
 		if not bags[bag.bagName] then
 			bags[bag.bagName] = {}
 		end

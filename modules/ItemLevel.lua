@@ -26,7 +26,6 @@ local colorSchemes = {
 }
 
 local texts = {}
-local ItemUpgradeInfo = LibStub("LibItemUpgradeInfo-1.0")
 
 local SyLevel = _G.SyLevel
 local SyLevelBypass
@@ -134,8 +133,8 @@ function mod:UpdateButton(event, button)
 	local text = texts[button]
 
 	if link then
-		local name, _, quality, _, reqLevel, _, _, _, loc = GetItemInfo(link)
-		local level = ItemUpgradeInfo:GetUpgradedItemLevel(link) or 0 -- Ugly workaround
+		local name, _, quality, iLevel, reqLevel, _, _, _, loc = GetItemInfo(link)
+		local level = iLevel or 0
 		if
 			name
 			and level >= settings.minLevel
@@ -159,7 +158,8 @@ function mod:UpdateButton(event, button)
 				text = CreateText(button)
 			end
 			text:SetText(level)
-			text:SetTextColor(colorSchemes[settings.colorScheme](level, quality, reqLevel, (loc ~= "")))
+			local colorScheme = colorSchemes[settings.colorScheme] or colorSchemes.none
+			text:SetTextColor(colorScheme(level, quality, reqLevel, (loc ~= "")))
 			return text:Show()
 		end
 	end

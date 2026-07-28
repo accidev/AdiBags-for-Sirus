@@ -20,6 +20,7 @@ local GetItemInfoEx = _G.GetItemInfoEx
 local GetItemInfo = _G.GetItemInfo
 local GetItemSetInfo = _G.GetItemSetInfo
 local GetItemQualityColor = _G.GetItemQualityColor
+local GetTime = _G.GetTime
 local InboxFrame = _G.InboxFrame
 local IsInventoryItemLocked = _G.IsInventoryItemLocked
 local ITEM_QUALITY_POOR = _G.ITEM_QUALITY_POOR
@@ -99,12 +100,7 @@ local function ScheduleReplacementRetry(itemID)
 	end)
 end
 
-local function GetReplacementTier(item, itemID)
-	local tier = replacementTiers[itemID]
-	if tier ~= nil then
-		return tier or nil
-	end
-
+local function ScanReplacementTier(item, itemID)
 	if not setBadgeTooltip then
 		local name = addonName .. "ItemSetBadgeTooltip"
 		setBadgeTooltip = CreateFrame("GameTooltip", name, _G.UIParent, "GameTooltipTemplate")
@@ -123,7 +119,7 @@ local function GetReplacementTier(item, itemID)
 	end
 
 	local name = setBadgeTooltip:GetName()
-	local replacementText
+	local replacementText, tier
 	for index = 1, numLines do
 		local line = _G[name .. "TextLeft" .. index]
 		local text = line and line:GetText()
@@ -150,6 +146,60 @@ local function GetReplacementTier(item, itemID)
 		replacementAttempts[itemID] = nil
 	end
 	return tier
+end
+
+local REPLACEMENT_SCAN_BUDGET = 10
+local deferredScans = {}
+local deferredScanScheduled
+local scanBudgetFrame, scanBudgetUsed = 0, 0
+
+local function TakeScanBudget()
+	local now = GetTime()
+	if now ~= scanBudgetFrame then
+		scanBudgetFrame, scanBudgetUsed = now, 0
+	end
+	if scanBudgetUsed >= REPLACEMENT_SCAN_BUDGET then
+		return false
+	end
+	scanBudgetUsed = scanBudgetUsed + 1
+	return true
+end
+
+local FlushDeferredScans
+function FlushDeferredScans()
+	deferredScanScheduled = nil
+	for itemID, item in pairs(deferredScans) do
+		if not TakeScanBudget() then
+			break
+		end
+		deferredScans[itemID] = nil
+		ScanReplacementTier(item, itemID)
+	end
+	if next(deferredScans) then
+		deferredScanScheduled = true
+		C_Timer:After(0.02, FlushDeferredScans)
+	end
+	addon:SendMessage("AdiBags_UpdateAllButtons")
+end
+
+local function GetReplacementTier(item, itemID)
+	local tier = replacementTiers[itemID]
+	if tier ~= nil then
+		return tier or nil
+	end
+
+	if not TakeScanBudget() and itemID then
+		if not deferredScans[itemID] then
+			deferredScans[itemID] = item
+			if not deferredScanScheduled then
+				deferredScanScheduled = true
+				C_Timer:After(0.02, FlushDeferredScans)
+			end
+		end
+		return
+	end
+
+	return ScanReplacementTier(item, itemID)
 end
 
 local function GetSetBadgeData(item, itemID)
@@ -561,6 +611,7 @@ function buttonProto:Update()
 
 	-- icon & empty-slot handling
 	local icon = self.IconTexture
+	icon:SetVertexColor(1, 1, 1)
 	if self.texture then
 		icon:SetTexture(self.texture)
 		icon:SetTexCoord(0, 1, 0, 1)

@@ -417,6 +417,7 @@ function sectionProto:ReorderButtons()
 	-- Use L["Free space"] to build the locale-independent section key for comparison
 	local isFreeSpaceSection = self.key == addon:BuildSectionKey(L["Free space"], L["Free space"])
 
+	wipe(buttonOrder)
 	for button in pairs(self.buttons) do
 		local buttonFamilyIsKeyChain = button.bagFamily == 256 or (button:IsStack() and button:GetBagFamily() == 256)
 		local shouldShow = not (isFreeSpaceSection and buttonFamilyIsKeyChain)

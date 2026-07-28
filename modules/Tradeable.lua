@@ -3,12 +3,18 @@ local L = addon.L
 
 --<GLOBALS
 local _G = _G
+local BANK_CONTAINER = _G.BANK_CONTAINER
 local ceil = _G.ceil
 local CreateFrame = _G.CreateFrame
 local GetContainerItemGUID = _G.GetContainerItemGUID
+local GetContainerNumSlots = _G.GetContainerNumSlots
 local GetLocale = _G.GetLocale
 local GetTime = _G.GetTime
 local gsub = _G.gsub
+local ipairs = _G.ipairs
+local KEYRING_CONTAINER = _G.KEYRING_CONTAINER
+local NUM_BAG_SLOTS = _G.NUM_BAG_SLOTS
+local NUM_BANKBAGSLOTS = _G.NUM_BANKBAGSLOTS
 local pairs = _G.pairs
 local tonumber = _G.tonumber
 local wipe = _G.wipe
@@ -30,6 +36,7 @@ local scanTip = CreateFrame("GameTooltip", "AdiBagsTradeableScanTooltip", nil, "
 scanTip:SetOwner(_G.UIParent, "ANCHOR_NONE")
 
 local cache = {}
+local cacheBag = {}
 
 local function ParseTradeSeconds(cap)
 	local seconds = 0
@@ -85,6 +92,7 @@ local function GetTradeRemaining(bag, slot, allowScan)
 		local secs = ScanTradeSeconds(bag, slot)
 		exp = (secs and secs > 0) and (now + secs) or false
 		cache[guid] = exp
+		cacheBag[guid] = bag
 	end
 	if not exp then
 		return nil
@@ -106,6 +114,41 @@ local function HasTracked()
 	return false
 end
 
+local SCANNED_BAGS = { KEYRING_CONTAINER, BANK_CONTAINER }
+for bag = 0, NUM_BAG_SLOTS + NUM_BANKBAGSLOTS do
+	SCANNED_BAGS[#SCANNED_BAGS + 1] = bag
+end
+
+local liveGuids, readableBags = {}, {}
+
+local function PruneCache()
+	if not GetContainerItemGUID then
+		return
+	end
+	wipe(liveGuids)
+	wipe(readableBags)
+	for _, bag in ipairs(SCANNED_BAGS) do
+		local numSlots = GetContainerNumSlots(bag) or 0
+		if numSlots > 0 then
+			readableBags[bag] = true
+			for slot = 1, numSlots do
+				local guid = GetContainerItemGUID(bag, slot)
+				if guid then
+					liveGuids[guid] = true
+				end
+			end
+		end
+	end
+	for guid, bag in pairs(cacheBag) do
+		if readableBags[bag] and not liveGuids[guid] then
+			cache[guid] = nil
+			cacheBag[guid] = nil
+		end
+	end
+	wipe(liveGuids)
+	wipe(readableBags)
+end
+
 function mod:OnInitialize()
 	self.db = addon.db:RegisterNamespace(self.moduleName, {
 		profile = {
@@ -118,6 +161,7 @@ end
 function mod:OnEnable()
 	addon:SetCategoryOrder(TRADEABLE, TRADEABLE_ORDER)
 	wipe(cache)
+	wipe(cacheBag)
 	self:RegisterMessage("AdiBags_UpdateButton", "UpdateButton")
 	self.refreshTimer = self:ScheduleRepeatingTimer("Refresh", REFRESH_INTERVAL)
 	self:SendMessage("AdiBags_UpdateAllButtons")
@@ -138,7 +182,11 @@ function mod:OnDisable()
 end
 
 function mod:Refresh()
-	if not self.db.profile.enabled or not HasTracked() then
+	if not self.db.profile.enabled then
+		return
+	end
+	PruneCache()
+	if not HasTracked() then
 		return
 	end
 	local now = GetTime()
@@ -195,6 +243,7 @@ function mod:GetOptions()
 	function handler.Set(info, ...)
 		Set(info, ...)
 		wipe(cache)
+		wipe(cacheBag)
 		mod:SendMessage("AdiBags_FiltersChanged")
 		mod:SendMessage("AdiBags_UpdateAllButtons")
 	end

@@ -12,8 +12,12 @@ mod.uiName = L["Item search"]
 mod.uiDesc =
 	L["Provides a text widget at top of the backpack where you can type (part of) an item name to locate it in your bags."]
 
+local lastSearch
+local lowerNames = {}
+
 function mod:OnEnable()
 	addon:HookBagFrameCreation(self, "OnBagFrameCreated")
+	lastSearch = nil
 	if self.widget then
 		self.widget:Show()
 		self:SendMessage("AdiBags_UpdateAllButtons")
@@ -32,11 +36,16 @@ end
 
 local function SearchEditBox_OnTextChanged(editBox)
 	local text = editBox:GetText()
-	if not text or text:trim() == "" then
+	local search = text and text:lower():trim() or ""
+	if search == "" then
 		editBox.clearButton:Hide()
 	else
 		editBox.clearButton:Show()
 	end
+	if search == lastSearch then
+		return
+	end
+	lastSearch = search
 	mod:SendMessage("AdiBags_UpdateAllButtons")
 end
 
@@ -102,8 +111,16 @@ function mod:UpdateButton(event, button)
 		return
 	end
 	text = text:lower():trim()
-	local name = button.itemId and GetItemInfo(button.itemId)
-	if name and not name:lower():find(text, 1, true) then
+	local itemId = button.itemId
+	local name = itemId and lowerNames[itemId]
+	if name == nil and itemId then
+		name = GetItemInfo(itemId)
+		if name then
+			name = name:lower()
+			lowerNames[itemId] = name
+		end
+	end
+	if name and not name:find(text, 1, true) then
 		button.IconTexture:SetVertexColor(0.2, 0.2, 0.2)
 		button.IconQuestTexture:Hide()
 		button.Count:Hide()

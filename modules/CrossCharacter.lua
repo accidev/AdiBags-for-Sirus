@@ -516,7 +516,7 @@ function mod:OnEnable()
 	self:RegisterEvent("CURRENCY_DISPLAY_UPDATE", "OnCurrencyUpdate")
 	self:RegisterEvent("KNOWN_CURRENCY_TYPES_UPDATE", "OnCurrencyUpdate")
 	self:RegisterEvent("PLAYER_LOGOUT", "OnLogout")
-	self:RegisterEvent("UNIT_INVENTORY_CHANGED", "OnEquipmentChanged")
+	self:RegisterBucketEvent("UNIT_INVENTORY_CHANGED", 0.2, "OnEquipmentChanged")
 
 	if not self.hooked then
 		addon:RegisterItemTooltipHandler(function(tt, itemLink)
@@ -613,8 +613,8 @@ function mod:OnCurrencyUpdate()
 	end, 1.0)
 end
 
-function mod:OnEquipmentChanged(_, unit)
-	if unit == "player" then
+function mod:OnEquipmentChanged(units)
+	if units["player"] then
 		self:SaveEquipped()
 	end
 end

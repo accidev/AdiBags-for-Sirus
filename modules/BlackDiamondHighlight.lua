@@ -46,26 +46,49 @@ local function CreateGlow(button)
 	return t
 end
 
+local NO_GEMS = "0:0:0:0"
+local gemCache = {}
+
+local function HasBlackDiamond(link)
+	local key = link:match("item:%-?%d+:%-?%d+:(%-?%d+:%-?%d+:%-?%d+:%-?%d+)")
+	if not key or key == NO_GEMS then
+		return false
+	end
+	local cached = gemCache[key]
+	if cached ~= nil then
+		return cached
+	end
+	local found, pending = false, false
+	for i = 1, 4 do
+		local _, gemLink = GetItemGem(link, i)
+		if gemLink then
+			local _, _, gemQuality = GetItemInfo(gemLink)
+			if gemQuality == 5 then
+				found = true
+				break
+			elseif not gemQuality then
+				pending = true
+			end
+		end
+	end
+	if not pending then
+		gemCache[key] = found
+	end
+	return found
+end
+
 function mod:UpdateButton(event, button)
 	local link = button:GetItemLink()
 	local glow = glows[button]
 
-	if link then
-		for i = 1, 3 do
-			local _, gemLink = GetItemGem(link, i)
-			if gemLink then
-				local _, _, gemQuality = GetItemInfo(gemLink)
-				if gemQuality == 5 then
-					if not glow then
-						glow = CreateGlow(button)
-					end
-					local c = self.db.profile.glowColor
-					glow:SetVertexColor(c.r, c.g, c.b, c.a)
-					glow:Show()
-					return
-				end
-			end
+	if link and HasBlackDiamond(link) then
+		if not glow then
+			glow = CreateGlow(button)
 		end
+		local c = self.db.profile.glowColor
+		glow:SetVertexColor(c.r, c.g, c.b, c.a)
+		glow:Show()
+		return
 	end
 
 	if glow then

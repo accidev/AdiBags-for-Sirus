@@ -753,7 +753,14 @@ function containerProto:DispatchItem(slotData)
 			button = addon:AcquireItemButton(self, slotData.bag, slotData.slot)
 		end
 	else
-		button:FullUpdate()
+		-- a stack button is shared by every slot it holds; one FullUpdate per sweep is enough
+		local swept = self.sweptButtons
+		if not swept then
+			button:FullUpdate()
+		elseif not swept[button] then
+			swept[button] = true
+			button:FullUpdate()
+		end
 	end
 	local section = self:GetSection(sectionName, category or sectionName)
 	if button:GetSection() ~= section then
@@ -780,6 +787,7 @@ function containerProto:RemoveSlot(slotId)
 end
 
 function containerProto:UpdateButtons()
+	self.sweptButtons = nil
 	if not self:HasContentChanged() then
 		return
 	end
@@ -835,6 +843,10 @@ function containerProto:RedispatchAllItems()
 	if self.filtersChanged then
 		self:Debug("RedispatchAllItems")
 		self:SendMessage("AdiBags_PreFilter", self)
+		local swept = self.sweptButtonsPool or {}
+		self.sweptButtonsPool = swept
+		wipe(swept)
+		self.sweptButtons = swept
 		for bag, content in pairs(self.content) do
 			for slot = 1, content.size do
 				local slotData = content[slot]
@@ -843,6 +855,8 @@ function containerProto:RedispatchAllItems()
 				end
 			end
 		end
+		self.sweptButtons = nil
+		wipe(swept)
 		self:SendMessage("AdiBags_PostFilter", self)
 		self.filtersChanged = nil
 	end
