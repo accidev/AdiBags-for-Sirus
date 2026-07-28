@@ -39,6 +39,19 @@ function addon:SetupDefaultFilters()
 	local DECOR = L["Decorate."]
 	local TEMPORARY_ITEMS = L["Temporary items"]
 
+	-- Numeric class/subclass ids: what filters MATCH on. The strings above stay display-only.
+	local CLASS_CONSUMABLE = 0
+	local CLASS_WEAPON = 2
+	local CLASS_GEM = 3
+	local CLASS_ARMOR = 4
+	local CLASS_TRADE_GOODS = 7
+	local CLASS_RECIPE = 9
+	local CLASS_QUEST = 12
+	local CLASS_KEY = 13
+	local CLASS_MISCELLANEOUS = 15
+	local CLASS_GLYPH = 16
+	local SUBCLASS_ARMOR_DECORATIVE = 5
+
 	-- Define global ordering
 	self:SetCategoryOrders({
 		[TEMPORARY_ITEMS] = 50,
@@ -207,7 +220,7 @@ function addon:SetupDefaultFilters()
 	-- [90] Key
 	do
 		local keyFilter = addon:RegisterFilter("Key", 90, function(self, slotData)
-			if slotData.bagFamily == 256 or slotData.class == KEY or slotData.subclass == KEY then
+			if slotData.bagFamily == 256 or slotData.classID == CLASS_KEY then
 				return KEY
 			else
 				return false
@@ -233,7 +246,7 @@ function addon:SetupDefaultFilters()
 			if slotData.itemId and sirusItems[slotData.itemId] then
 				return SIRUS
 			end
-			if slotData.class == GEM and slotData.quality == 5 then
+			if slotData.classID == CLASS_GEM and slotData.quality == 5 then
 				return SIRUS
 			end
 			return false
@@ -245,7 +258,7 @@ function addon:SetupDefaultFilters()
 	-- [75] Quest Items
 	do
 		local questItemFilter = addon:RegisterFilter("Quest", 75, function(self, slotData)
-			if slotData.class == QUEST or slotData.subclass == QUEST then
+			if slotData.classID == CLASS_QUEST then
 				return QUEST
 			else
 				local isQuestItem, questId = GetContainerItemQuestInfo(slotData.bag, slotData.slot)
@@ -257,9 +270,9 @@ function addon:SetupDefaultFilters()
 	end
 	do
 		local TransmogFilter = addon:RegisterFilter("Decorate", 65, function(self, slotData)
-			if slotData.class == ARMOR and slotData.subclass == L["Decorative item"] then
+			if slotData.classID == CLASS_ARMOR and slotData.subclassID == SUBCLASS_ARMOR_DECORATIVE then
 				return DECOR
-			elseif slotData.class == WEAPON then
+			elseif slotData.classID == CLASS_WEAPON then
 				if slotData.quality == 4 and slotData.iLevel == 1 then
 					return DECOR
 				end
@@ -366,14 +379,38 @@ function addon:SetupDefaultFilters()
 			.. L["Please note this filter matchs every item. Any filter with lower priority than this one will have no effect."]
 			.. "|r"
 
+		local legacySplitKeys = {
+			[TRADE_GOODS] = CLASS_TRADE_GOODS,
+			[CONSUMMABLE] = CLASS_CONSUMABLE,
+			[MISCELLANEOUS] = CLASS_MISCELLANEOUS,
+			[GEM] = CLASS_GEM,
+			[GLYPH] = CLASS_GLYPH,
+			[RECIPE] = CLASS_RECIPE,
+		}
+
 		function itemCat:OnInitialize(slotData)
 			self.db = addon.db:RegisterNamespace(self.moduleName, {
 				profile = {
 					splitBySubclass = { false },
 					mergeGems = true,
-					mergeGlyphs = true,
+					mergeGlyphs = false,
 				},
 			})
+			self:MigrateSplitKeys()
+			self.db.RegisterCallback(self, "OnProfileChanged", "MigrateSplitKeys")
+			self.db.RegisterCallback(self, "OnProfileCopied", "MigrateSplitKeys")
+		end
+
+		function itemCat:MigrateSplitKeys()
+			local split = self.db.profile.splitBySubclass
+			for name, classID in pairs(legacySplitKeys) do
+				if split[name] ~= nil then
+					if split[classID] == nil then
+						split[classID] = split[name]
+					end
+					split[name] = nil
+				end
+			end
 		end
 
 		function itemCat:GetFilterOptions()
@@ -384,12 +421,12 @@ function addon:SetupDefaultFilters()
 					type = "multiselect",
 					order = 10,
 					values = {
-						[TRADE_GOODS] = TRADE_GOODS,
-						[CONSUMMABLE] = CONSUMMABLE,
-						[MISCELLANEOUS] = MISCELLANEOUS,
-						[GEM] = GEM,
-						[GLYPH] = GLYPH,
-						[RECIPE] = RECIPE,
+						[CLASS_TRADE_GOODS] = TRADE_GOODS,
+						[CLASS_CONSUMABLE] = CONSUMMABLE,
+						[CLASS_MISCELLANEOUS] = MISCELLANEOUS,
+						[CLASS_GEM] = GEM,
+						[CLASS_GLYPH] = GLYPH,
+						[CLASS_RECIPE] = RECIPE,
 					},
 				},
 				mergeGems = {
@@ -412,12 +449,13 @@ function addon:SetupDefaultFilters()
 
 		function itemCat:Filter(slotData)
 			local class, subclass = slotData.class, slotData.subclass
-			if class == GEM and self.db.profile.mergeGems then
-				class, subclass = TRADE_GOODS, class
-			elseif class == GLYPH and self.db.profile.mergeGlyphs then
-				class, subclass = TRADE_GOODS, class
+			local classID = slotData.classID
+			if classID == CLASS_GEM and self.db.profile.mergeGems then
+				class, subclass, classID = TRADE_GOODS, class, CLASS_TRADE_GOODS
+			elseif classID == CLASS_GLYPH and self.db.profile.mergeGlyphs then
+				class, subclass, classID = TRADE_GOODS, class, CLASS_TRADE_GOODS
 			end
-			if self.db.profile.splitBySubclass[class] then
+			if self.db.profile.splitBySubclass[classID] then
 				return subclass, class
 			else
 				return class

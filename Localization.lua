@@ -533,6 +533,14 @@ L["This is not an AdiBags profile code."] = "Это не код профиля A
 L["Unsupported profile code version: %s (expected %d)."] =
 	"Неподдерживаемая версия кода профиля: %s (ожидается %d)."
 L["The profile code is damaged or incomplete."] = "Код профиля повреждён или неполный."
+L["The profile code does not match the current AdiBags settings."] =
+	"Код профиля не соответствует текущим настройкам AdiBags."
+L["Importing replaces the current profile and every filter and plugin setting it contains. Continue?"] =
+	"Импорт заменит текущий профиль и все содержащиеся в нём настройки фильтров и плагинов. Продолжить?"
+L["The import failed, the previous profile has been restored."] =
+	"Импорт не удался, предыдущий профиль восстановлен."
+L["The import failed and the profile could not be restored. Please reload your interface."] =
+	"Импорт не удался, восстановить профиль не получилось. Перезагрузите интерфейс."
 L["Profile imported."] = "Профиль импортирован."
 L["%d unknown section(s) were skipped."] = "Пропущено неизвестных разделов: %d."
 -- OO.lua

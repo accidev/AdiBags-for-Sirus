@@ -54,14 +54,14 @@ function mod:OnEnable()
 end
 
 function mod:BaseCheckItem(itemId, force)
-	local _, _, quality, _, _, class, subclass = GetItemInfo(itemId)
+	local quality = select(3, GetItemInfo(itemId))
 	if
 		((force or prefs.sources.lowQuality) and quality == ITEM_QUALITY_POOR)
 		or (
 			(force or prefs.sources.junkCategory)
 			and quality
 			and quality < ITEM_QUALITY_UNCOMMON
-			and (class == JUNK or subclass == JUNK)
+			and addon.IsJunkCategory(itemId)
 		)
 	then
 		return true

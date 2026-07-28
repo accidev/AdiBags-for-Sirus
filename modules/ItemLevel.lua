@@ -85,7 +85,12 @@ function mod:OnInitialize()
 			self:SendMessage("AdiBags_UpdateAllButtons")
 		end, "AdiBags")
 		SyLevel:RegisterFilterOnPipe("Adibags", "Item level text")
-		SyLevelDB.EnabledFilters["Item level text"]["Adibags"] = true
+		local syDB = _G.SyLevelDB
+		local filters = syDB and syDB.EnabledFilters
+		local filter = filters and filters["Item level text"]
+		if filter then
+			filter["Adibags"] = true
+		end
 	end
 end
 

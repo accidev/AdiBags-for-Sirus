@@ -22,8 +22,14 @@ mod.uiName = L["Tooltip information"]
 mod.uiDesc = L["Add more information in tooltips related to items in your bags."]
 
 function mod:OnInitialize()
+	local legacy = addonName .. "_" .. self.moduleName
+	if addon.db.sv.namespaces and addon.db.sv.namespaces[legacy] ~= nil then
+		addon.db.sv.namespaces[self.moduleName] = addon.db.sv.namespaces[legacy]
+		addon.db.sv.namespaces[legacy] = nil
+	end
+
 	self.db = addon.db:RegisterNamespace(
-		self.name,
+		self.moduleName,
 		{ profile = {
 			item = "ctrl",
 			container = "ctrl",
@@ -103,7 +109,11 @@ function mod:OnTooltipSetItem(tt)
 		return
 	end
 
-	local slotData = container.content[bag][slot]
+	local bagContent = container.content and container.content[bag]
+	local slotData = bagContent and bagContent[slot]
+	if not slotData then
+		return
+	end
 
 	local stack = button:GetStack()
 	if stack then

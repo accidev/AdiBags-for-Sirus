@@ -8,6 +8,8 @@ local LibStub = _G.LibStub
 local pairs = _G.pairs
 local pcall = _G.pcall
 local print = _G.print
+local StaticPopupDialogs = _G.StaticPopupDialogs
+local StaticPopup_Show = _G.StaticPopup_Show
 local strtrim = _G.strtrim
 local tonumber = _G.tonumber
 local tostring = _G.tostring
@@ -20,6 +22,7 @@ local LibDeflate = LibStub("LibDeflate-AdiBags")
 
 local FORMAT_VERSION = 1
 local DEFLATE_CONFIG = { level = 9 }
+local MAX_DEPTH = 24
 
 local ProfileIO = {}
 addon.ProfileIO = ProfileIO
@@ -40,7 +43,11 @@ local function Snapshot(src)
 	return dst
 end
 
-local function ApplyInto(dst, src)
+local function ApplyInto(dst, src, depth, seen)
+	if depth > MAX_DEPTH or seen[src] then
+		return
+	end
+	seen[src] = true
 	for k, v in pairs(src) do
 		if type(v) == "table" then
 			local sub = dst[k]
@@ -48,11 +55,55 @@ local function ApplyInto(dst, src)
 				sub = {}
 				dst[k] = sub
 			end
-			ApplyInto(sub, v)
+			ApplyInto(sub, v, depth + 1, seen)
 		else
 			dst[k] = v
 		end
 	end
+	seen[src] = nil
+end
+
+local function ValidateStructure(value, depth, seen)
+	if depth > MAX_DEPTH or seen[value] then
+		return false
+	end
+	seen[value] = true
+	for k, v in pairs(value) do
+		local kt, vt = type(k), type(v)
+		if kt ~= "string" and kt ~= "number" and kt ~= "boolean" then
+			return false
+		end
+		if vt == "table" then
+			if not ValidateStructure(v, depth + 1, seen) then
+				return false
+			end
+		elseif vt ~= "string" and vt ~= "number" and vt ~= "boolean" then
+			return false
+		end
+	end
+	return true
+end
+
+local function ValidateShape(values, defaults, depth)
+	if depth > MAX_DEPTH then
+		return false
+	end
+	for k, v in pairs(values) do
+		local expected = defaults[k]
+		if expected == nil then
+			expected = defaults["*"]
+		end
+		if expected ~= nil then
+			local isTable = (type(v) == "table")
+			if (type(expected) == "table") ~= isTable then
+				return false
+			end
+			if isTable and not ValidateShape(v, expected, depth + 1) then
+				return false
+			end
+		end
+	end
+	return true
 end
 
 function ProfileIO:BuildPayload()
@@ -121,20 +172,50 @@ function ProfileIO:Decode(code)
 	if type(data.profile) ~= "table" then
 		return nil, damaged
 	end
+	if data.namespaces ~= nil and type(data.namespaces) ~= "table" then
+		return nil, damaged
+	end
+
+	local seen = {}
+	if not ValidateStructure(data.profile, 1, seen) then
+		return nil, damaged
+	end
+	for name, values in pairs(data.namespaces or {}) do
+		if type(name) ~= "string" or type(values) ~= "table" or not ValidateStructure(values, 1, seen) then
+			return nil, damaged
+		end
+	end
+
+	local invalid = L["The profile code does not match the current AdiBags settings."]
+	local db = addon.db
+	local defaults = db and db.defaults
+	if type(defaults) == "table" and type(defaults.profile) == "table" then
+		if not ValidateShape(data.profile, defaults.profile, 1) then
+			return nil, invalid
+		end
+	end
+	for name, values in pairs(data.namespaces or {}) do
+		local child = db and db.children and db.children[name]
+		local childDefaults = child and child.defaults and child.defaults.profile
+		if type(childDefaults) == "table" and not ValidateShape(values, childDefaults, 1) then
+			return nil, invalid
+		end
+	end
+
 	return data
 end
 
 function ProfileIO:Apply(data)
 	local db = addon.db
 	db:ResetProfile(nil, true)
-	ApplyInto(db.profile, data.profile)
+	ApplyInto(db.profile, data.profile, 1, {})
 
 	local skipped = 0
 	if type(data.namespaces) == "table" then
 		for name, values in pairs(data.namespaces) do
 			local child = db.children and db.children[name]
 			if child and type(values) == "table" then
-				ApplyInto(child.profile, values)
+				ApplyInto(child.profile, values, 1, {})
 			else
 				skipped = skipped + 1
 			end
@@ -153,7 +234,18 @@ function ProfileIO:Import(code)
 	if not data then
 		return false, err
 	end
-	local skipped = self:Apply(data)
+
+	local backup = self:BuildPayload()
+	local ok, skipped = pcall(self.Apply, self, data)
+	if not ok then
+		addon:Debug("Import failed", skipped)
+		local restored = pcall(self.Apply, self, backup)
+		local message = restored and L["The import failed, the previous profile has been restored."]
+			or L["The import failed and the profile could not be restored. Please reload your interface."]
+		Print(message)
+		return false, message
+	end
+
 	local message = L["Profile imported."]
 	if skipped > 0 then
 		message = message .. " " .. format(L["%d unknown section(s) were skipped."], skipped)
@@ -163,6 +255,30 @@ function ProfileIO:Import(code)
 end
 
 local exportWindow, importWindow
+local pendingImport
+
+StaticPopupDialogs["ADIBAGS_CONFIRM_IMPORT"] = {
+	text = L["Importing replaces the current profile and every filter and plugin setting it contains. Continue?"],
+	button1 = _G.YES,
+	button2 = _G.NO,
+	timeout = 0,
+	whileDead = 1,
+	hideOnEscape = 1,
+	OnAccept = function()
+		local request = pendingImport
+		pendingImport = nil
+		if not request then
+			return
+		end
+		local ok, message = ProfileIO:Import(request.code)
+		if message and request.frame == importWindow then
+			request.frame:SetStatusText(ok and message or ("|cffff5555" .. message .. "|r"))
+		end
+	end,
+	OnCancel = function()
+		pendingImport = nil
+	end,
+}
 
 local function CreateWindow(title, width, height)
 	local frame = AceGUI:Create("Frame")
@@ -243,10 +359,12 @@ function ProfileIO:ShowImport()
 	button:SetText(L["Import"])
 	button:SetWidth(200)
 	button:SetCallback("OnClick", function()
-		local ok, message = ProfileIO:Import(edit:GetText())
-		if message then
-			frame:SetStatusText(ok and message or ("|cffff5555" .. message .. "|r"))
+		local code = edit:GetText()
+		if type(code) ~= "string" or strtrim(code) == "" then
+			return
 		end
+		pendingImport = { code = code, frame = frame }
+		StaticPopup_Show("ADIBAGS_CONFIRM_IMPORT")
 	end)
 	frame:AddChild(button)
 

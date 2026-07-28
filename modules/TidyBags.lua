@@ -56,6 +56,7 @@ local function ForceUnlock(reason)
 		wipe(bag.locked)
 		bag.running = nil
 		bag.cached = nil
+		bag.processing = nil
 		bag:UpdateButton("ForceUnlock")
 	end
 	ClearCursor()

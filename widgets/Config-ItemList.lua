@@ -36,12 +36,16 @@ do
 		end
 		PlaySound("igMainMenuOption")
 		local previousId = widget.itemId
-		if previousId then
+		local kind, newId = GetCursorInfo()
+		local droppedId = (kind == "item" and tonumber(newId)) and newId or nil
+		-- The add must run first: it can only create or keep an option group, while a remove can delete the group the second fire still walks.
+		if droppedId then
+			listWidget:Fire("OnValueChanged", droppedId, true)
+		end
+		if previousId and tonumber(previousId) ~= tonumber(droppedId) then
 			listWidget:Fire("OnValueChanged", previousId, false)
 		end
-		local kind, newId = GetCursorInfo()
-		if kind == "item" and tonumber(newId) then
-			listWidget:Fire("OnValueChanged", newId, true)
+		if droppedId then
 			if previousId then
 				PickupItem(previousId)
 			else

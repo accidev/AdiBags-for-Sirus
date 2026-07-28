@@ -14,6 +14,7 @@ local PlaySound = _G.PlaySound
 local unpack = unpack
 
 local bags = {}
+local glows
 
 function mod:OnInitialize()
 	self.db = addon.db:RegisterNamespace(self.moduleName, {
@@ -50,6 +51,9 @@ function mod:OnDisable()
 		if bag.button then
 			bag.button:Hide()
 		end
+	end
+	for _, glow in pairs(glows) do
+		glow:Hide()
 	end
 	addon.filterProto.OnDisable(self)
 end
@@ -138,7 +142,7 @@ end
 -- Item glows
 --------------------------------------------------------------------------------
 
-local glows = setmetatable({}, { __mode = "k" })
+glows = setmetatable({}, { __mode = "k" })
 local hookedButtons = setmetatable({}, { __mode = "k" })
 
 local function Glow_Update(glow)

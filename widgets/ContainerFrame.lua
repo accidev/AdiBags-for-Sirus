@@ -17,6 +17,7 @@ local GetContainerNumSlots = _G.GetContainerNumSlots
 local GetCursorInfo = _G.GetCursorInfo
 local GetItemFamily = _G.GetItemFamily
 local GetItemInfo = _G.GetItemInfo
+local GetItemInfoInstant = _G.GetItemInfoInstant
 local GetMerchantItemLink = _G.GetMerchantItemLink
 local ipairs = _G.ipairs
 local KEYRING_CONTAINER = _G.KEYRING_CONTAINER
@@ -25,6 +26,7 @@ local next = _G.next
 local NUM_BAG_SLOTS = _G.NUM_BAG_SLOTS
 local pairs = _G.pairs
 local PlaySound = _G.PlaySound
+local select = _G.select
 local strjoin = _G.strjoin
 local tinsert = _G.tinsert
 local tostring = _G.tostring
@@ -634,6 +636,7 @@ function containerProto:UpdateContent(bag)
 					slotData.link = link
 					slotData.itemId = itemId
 					local name, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice
+					local classID, subclassID
 					if link then
 						if isKeystoneLink and itemId then
 							name, _, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice =
@@ -642,9 +645,11 @@ function containerProto:UpdateContent(bag)
 							name, _, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice =
 								GetItemInfo(link)
 						end
+						classID, subclassID = select(6, GetItemInfoInstant(itemId or link))
 					end
 					slotData.name, slotData.quality, slotData.iLevel, slotData.reqLevel, slotData.class, slotData.subclass, slotData.equipSlot, slotData.texture, slotData.vendorPrice =
 						name, quality, iLevel, reqLevel, class, subclass, equipSlot, texture, vendorPrice
+					slotData.classID, slotData.subclassID = classID, subclassID
 					slotData.maxStack = maxStack or (link and 1 or 0)
 					added[slotData.slotId] = slotData
 				elseif slotData.count ~= count then

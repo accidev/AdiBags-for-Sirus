@@ -10,6 +10,7 @@ local GetContainerNumFreeSlots = _G.GetContainerNumFreeSlots
 local geterrorhandler = _G.geterrorhandler
 local GetItemFamily = _G.GetItemFamily
 local GetItemInfo = _G.GetItemInfo
+local GetItemInfoInstant = _G.GetItemInfoInstant
 local ITEM_QUALITY_POOR = _G.ITEM_QUALITY_POOR
 local ITEM_QUALITY_UNCOMMON = _G.ITEM_QUALITY_UNCOMMON
 local pcall = _G.pcall
@@ -167,11 +168,20 @@ end
 -- Basic junk test
 --------------------------------------------------------------------------------
 
-local JUNK = addon.BI["Junk"]
+local CLASS_MISCELLANEOUS, SUBCLASS_JUNK = 15, 0
+
+function addon.IsJunkCategory(item)
+	if not item then
+		return false
+	end
+	local classID, subclassID = select(6, GetItemInfoInstant(item))
+	return classID == CLASS_MISCELLANEOUS and subclassID == SUBCLASS_JUNK
+end
+
 function addon:IsJunk(itemId)
-	local _, _, quality, _, _, class, subclass = GetItemInfo(itemId)
+	local quality = select(3, GetItemInfo(itemId))
 	return quality == ITEM_QUALITY_POOR
-		or (quality and quality < ITEM_QUALITY_UNCOMMON and (class == JUNK or subclass == JUNK))
+		or (quality and quality < ITEM_QUALITY_UNCOMMON and addon.IsJunkCategory(itemId))
 end
 
 --------------------------------------------------------------------------------

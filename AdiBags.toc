@@ -31,7 +31,6 @@ libs\LibDeflate\lib.xml
 
 Fonts.lua
 Localization.lua
-EventHandlers.lua
 Utility.lua
 AdiBags.lua
 Options.lua

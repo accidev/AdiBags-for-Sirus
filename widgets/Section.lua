@@ -486,7 +486,9 @@ local sortingFuncs = {
 		local _, _, qualityB, levelB, _, classB, subclassB, _, equipSlotB = GetItemInfo(idB)
 		local equipLocA = EQUIP_LOCS[equipSlotA or ""]
 		local equipLocB = EQUIP_LOCS[equipSlotB or ""]
-		if equipLocA and equipLocB and equipLocA ~= equipLocB then
+		if (equipLocA ~= nil) ~= (equipLocB ~= nil) then
+			return equipLocA ~= nil
+		elseif equipLocA and equipLocA ~= equipLocB then
 			return equipLocA < equipLocB
 		elseif classA ~= classB then
 			return classA < classB

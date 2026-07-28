@@ -124,6 +124,15 @@ function mod:OnBagFrameCreated(bag)
 	self:Update()
 end
 
+local collapse = {}
+-- 3.3.5a ExpandCurrencyList rejects booleans, it wants 1/0.
+local function RestoreCollapsed()
+	for i, index in ipairs(collapse) do
+		ExpandCurrencyList(index, 0)
+	end
+	wipe(collapse)
+end
+
 local IterateCurrencies
 do
 	local function iterator(collapse, index)
@@ -138,7 +147,7 @@ do
 				if isHeader then
 					if not isExpanded then
 						tinsert(collapse, 1, index)
-						ExpandCurrencyList(index, true)
+						ExpandCurrencyList(index, 1)
 					end
 				else
 					return index,
@@ -154,12 +163,9 @@ do
 				end
 			end
 		until index > GetCurrencyListSize()
-		for i, index in ipairs(collapse) do
-			ExpandCurrencyList(index, false)
-		end
+		RestoreCollapsed()
 	end
 
-	local collapse = {}
 	function IterateCurrencies()
 		wipe(collapse)
 		return iterator, collapse, 0
@@ -167,12 +173,7 @@ do
 end
 
 local updating
-function mod:Update()
-	if not self.widget or updating then
-		return
-	end
-	updating = true
-
+local function DoUpdate(self)
 	local btnIndex = 0
 	local totalWidth = 0
 
@@ -223,8 +224,22 @@ function mod:Update()
 
 	self.widget:SetWidth(math.max(totalWidth, 0.1))
 	self.widget:Show()
+end
 
+function mod:Update()
+	if not self.widget or updating then
+		return
+	end
+	updating = true
+	local ok, err = pcall(DoUpdate, self)
+	local restored, restoreErr = pcall(RestoreCollapsed)
 	updating = false
+	if not ok then
+		addon:Debug("CurrencyFrame update failed", err)
+	end
+	if not restored then
+		addon:Debug("CurrencyFrame collapse restore failed", restoreErr)
+	end
 end
 
 function mod:GetOptions()

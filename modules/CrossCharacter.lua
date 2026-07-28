@@ -11,6 +11,7 @@ local tsort = table.sort
 local wipe = wipe
 local tonumber = tonumber
 local GetContainerNumSlots = _G.GetContainerNumSlots
+local GetContainerNumFreeSlots = _G.GetContainerNumFreeSlots
 local GetContainerItemInfo = _G.GetContainerItemInfo
 local GetContainerItemLink = _G.GetContainerItemLink
 local GetInventoryItemLink = _G.GetInventoryItemLink
@@ -51,10 +52,17 @@ function mod:OnInitialize()
 			showOtherRealms = false,
 		},
 	})
+	addon.db.RegisterCallback(self, "OnProfileChanged", "OnProfileUpdated")
+	addon.db.RegisterCallback(self, "OnProfileCopied", "OnProfileUpdated")
+	addon.db.RegisterCallback(self, "OnProfileReset", "OnProfileUpdated")
 end
 
 local currentPlayer, currentRealm, currentClass
 local entriesDirty = true
+
+function mod:OnProfileUpdated()
+	entriesDirty = true
+end
 
 local function MigrateDB()
 	local db = mod.db.global
@@ -208,7 +216,32 @@ function mod:SaveBagItems()
 	RemoveEmptyItems(items)
 end
 
+local function IsBankReadable()
+	local numSlots = GetContainerNumSlots(BANK_CONTAINER)
+	if not numSlots or numSlots == 0 then
+		return false
+	end
+	if (GetContainerNumFreeSlots(BANK_CONTAINER) or 0) > 0 then
+		return true
+	end
+	for slot = 1, numSlots do
+		if GetContainerItemLink(BANK_CONTAINER, slot) then
+			return true
+		end
+	end
+	for bag = NUM_BAG_SLOTS + 1, NUM_BAG_SLOTS + NUM_BANKBAGSLOTS do
+		if (GetContainerNumSlots(bag) or 0) > 0 then
+			return true
+		end
+	end
+	return false
+end
+
 function mod:SaveBankItems()
+	if not IsBankReadable() then
+		return
+	end
+
 	local items = EnsureCharDB().items
 
 	for _, data in pairs(items) do
@@ -264,7 +297,7 @@ function mod:SaveCurrencies()
 			if isHeader then
 				if not isExpanded then
 					tinsert(collapsed, 1, index)
-					ExpandCurrencyList(index, true)
+					ExpandCurrencyList(index, 1)
 					size = GetCurrencyListSize()
 				end
 			else
@@ -279,7 +312,7 @@ function mod:SaveCurrencies()
 	until index >= size
 
 	for _, i in ipairs(collapsed) do
-		ExpandCurrencyList(i, false)
+		ExpandCurrencyList(i, 0)
 	end
 end
 
@@ -560,6 +593,7 @@ function mod:OnDisable()
 		self:CancelTimer(currencyUpdateTimer)
 		currencyUpdateTimer = nil
 	end
+	bankOpen = false
 end
 
 function mod:OnBagUpdate()
