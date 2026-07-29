@@ -132,6 +132,9 @@ L["Click to toggle the equipped bag panel, so you can change them."] =
 	"Кликните для переключения панели надетых сумок, так что вы можете их изменить."
 L["Close"] = "Закрыть"
 L["Configure"] = "Настройка"
+L["Consolidate with the other window"] = "Сводить с другим окном"
+L["Consolidate: with the bank open, T gathers every stackable item present on both sides into the window you clicked - incomplete stacks are topped up first, whole stacks then move into free slots, and an item without a free slot stays where it is. Local: T only merges incomplete stacks inside the window you clicked and fills profession bags."] =
+	"Сводить с другим окном: при открытом банке «T» собирает в нажатое окно все стакающиеся предметы, которые есть с обеих сторон. Сначала доливаются неполные стопки, затем целые стопки переезжают в свободные слоты. Если свободного слота нет, предмет остаётся на месте.\n\nУбирать только это окно: «T» лишь сливает неполные стопки внутри нажатого окна и заполняет профессиональные сумки, между сумками и банком ничего не переносится."
 L["Currencies to show"] = "Отображать валюту"
 L["Hide zeroes"] = "Прятать пустую валюту"
 L["Ignore currencies with null amounts."] =
@@ -326,8 +329,10 @@ L["Split armors by types"] = "Разделять доспехи по типам"
 L["Split by subcategories"] = "Разделить по субкатегориям"
 L["Strictly keep ordering"] = "Строго соблюдать порядок"
 L["Tidy bags"] = "Чистые сумки"
-L['Tidy your bags by clicking on the small "T" button at the top left of bags. Special bags with free slots will be filled with matching items and stackable items will be stacked to save space.'] =
-	'Убраться в ваших сумках можно нажав небольшую кнопку "Т", которая находится верхней левой стороне окна сумок. Специальные сумки будут заполнены подходящими для них предметами, и вещи которые можно сложить, будут сложены в стопки для экономии места.'
+L["Tidy mode"] = "Режим уборки"
+L["Tidy this window only"] = "Убирать только это окно"
+L['Tidy your bags by clicking on the small "T" button at the top of the window. Incomplete stacks are merged and special bags are filled with matching items. With the bank open, T also gathers identical items into the window you clicked.'] =
+	'Убраться в сумках можно нажав небольшую кнопку "Т" сверху окна. Неполные стопки сливаются, а специальные сумки заполняются подходящими для них предметами. Если открыт банк, кнопка ещё и сводит одинаковые предметы в то окно, где вы её нажали.'
 L["Toggle and configure item filters."] =
 	"Переключение и настройка фильтров предмета."
 L["Toggle and configure plugins."] = "Переключение и настройка плагина."
