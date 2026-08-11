@@ -8,6 +8,7 @@ local band = _G.bit.band
 local BANK_CONTAINER = _G.BANK_CONTAINER
 local CreateFrame = _G.CreateFrame
 local error = _G.error
+local floor = _G.math.floor
 local format = _G.format
 local GetContainerFreeSlots = _G.GetContainerFreeSlots
 local GetContainerItemID = _G.GetContainerItemID
@@ -42,6 +43,36 @@ local ITEM_SIZE = addon.ITEM_SIZE
 local ITEM_SPACING = addon.ITEM_SPACING
 local SECTION_SPACING = addon.SECTION_SPACING
 local BAG_INSET = addon.BAG_INSET
+
+local CLOSE_BUTTON_INSET = 2
+local HEADER_WIDGET_SIZE = 20
+local DEFAULT_CLOSE_BUTTON_SIZE = 32
+local DEFAULT_HEADER_SPACING = 4
+local ATLAS_HEADER_SPACING = 3
+
+local closeButtonSkin
+local function GetCloseButtonSkin()
+	if closeButtonSkin == nil then
+		closeButtonSkin = false
+		local ref = _G.ContainerFrame1CloseButton or _G.CharacterFrameCloseButton
+		local normal = ref and ref.GetNormalTexture and ref:GetNormalTexture()
+		local atlas = normal and normal.GetAtlas and normal:GetAtlas()
+		if atlas then
+			local function AtlasOf(getter)
+				local tex = ref[getter] and ref[getter](ref)
+				return tex and tex.GetAtlas and tex:GetAtlas() or nil
+			end
+			closeButtonSkin = {
+				size = floor(ref:GetWidth() + 0.5),
+				normal = atlas,
+				pushed = AtlasOf("GetPushedTexture"),
+				disabled = AtlasOf("GetDisabledTexture"),
+				highlight = AtlasOf("GetHighlightTexture"),
+			}
+		end
+	end
+	return closeButtonSkin
+end
 
 local EasyMenu = EasyMenu
 local CreateFrame = CreateFrame
@@ -209,8 +240,14 @@ function containerProto:OnCreate(name, bagIds, isBank)
 	self:AddWidget(headerLeftRegion)
 	headerLeftRegion:SetFrameLevel(minFrameLevel)
 
-	local headerRightRegion = SimpleLayeredRegion:Create(self, "TOPRIGHT", "LEFT", 4)
-	headerRightRegion:SetPoint("TOPRIGHT", -32, -BAG_INSET)
+	local closeSkin = GetCloseButtonSkin()
+	local closeSize = closeSkin and closeSkin.size or DEFAULT_CLOSE_BUTTON_SIZE
+	local headerSpacing = closeSkin and ATLAS_HEADER_SPACING or DEFAULT_HEADER_SPACING
+	local headerRightX = closeSkin and (CLOSE_BUTTON_INSET + closeSize + headerSpacing) or closeSize
+	local headerRightY = closeSkin and (CLOSE_BUTTON_INSET + closeSize - HEADER_WIDGET_SIZE) or BAG_INSET
+
+	local headerRightRegion = SimpleLayeredRegion:Create(self, "TOPRIGHT", "LEFT", headerSpacing)
+	headerRightRegion:SetPoint("TOPRIGHT", -headerRightX, -headerRightY)
 	self.HeaderRightRegion = headerRightRegion
 	self:AddWidget(headerRightRegion)
 	headerRightRegion:SetFrameLevel(minFrameLevel)
@@ -235,6 +272,20 @@ function containerProto:OnCreate(name, bagIds, isBank)
 	local closeButton = CreateFrame("Button", nil, self, "UIPanelCloseButton")
 	self.CloseButton = closeButton
 	closeButton:SetPoint("TOPRIGHT", -2, -2)
+	if closeSkin and closeButton.SetNormalAtlas then
+		closeButton:SetWidth(closeSize)
+		closeButton:SetHeight(closeSize)
+		closeButton:SetNormalAtlas(closeSkin.normal)
+		if closeSkin.pushed and closeButton.SetPushedAtlas then
+			closeButton:SetPushedAtlas(closeSkin.pushed)
+		end
+		if closeSkin.disabled and closeButton.SetDisabledAtlas then
+			closeButton:SetDisabledAtlas(closeSkin.disabled)
+		end
+		if closeSkin.highlight and closeButton.SetHighlightAtlas then
+			closeButton:SetHighlightAtlas(closeSkin.highlight)
+		end
+	end
 	addon.SetupTooltip(closeButton, L["Close"])
 	closeButton:SetFrameLevel(minFrameLevel)
 
