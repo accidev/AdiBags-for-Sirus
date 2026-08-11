@@ -711,7 +711,7 @@ function buttonProto:UpdateLock(isolatedEvent)
 end
 
 function buttonProto:UpdateCooldown()
-	return ContainerFrame_UpdateCooldown(self.bag, self)
+	return ContainerFrame_UpdateCooldown(self.bag, self, self.hasItem)
 end
 
 function buttonProto:UpdateBorder(isolatedEvent)
