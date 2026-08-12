@@ -564,7 +564,7 @@ local function GetContainerFrame(id, spawn)
 	if spawn then
 		local size = GetContainerNumSlots(id)
 		if size > 0 then
-			local frame = ContainerFrame_GetOpenFrame()
+			local frame = ContainerFrame_GetOpenFrame(id)
 			ContainerFrame_GenerateFrame(frame, size, id)
 		end
 	end
@@ -927,6 +927,9 @@ do
 		self:RegisterMessage("AdiBags_InteractingWindowChanged")
 
 		BankFrame:Hide()
+		if BankFrame:GetNumPoints() == 0 then
+			BankFrame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 0, -104)
+		end
 		self:RawHookScript(BankFrame, "OnEvent", NOOP, true)
 		self:RawHook(BankFrame, "Show", "Open", true)
 		self:RawHook(BankFrame, "Hide", "Close", true)

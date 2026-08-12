@@ -23,6 +23,24 @@ local tostring = _G.tostring
 local type = _G.type
 --GLOBALS>
 
+do
+	local GetAtlasInfo = (_G.C_Texture and _G.C_Texture.GetAtlasInfo) or _G.GetAtlasInfo
+	local cache = {}
+
+	function addon.HasAtlas(name)
+		if not GetAtlasInfo or not name then
+			return false
+		end
+		local known = cache[name]
+		if known == nil then
+			local ok, info = pcall(GetAtlasInfo, name)
+			known = (ok and info) and true or false
+			cache[name] = known
+		end
+		return known
+	end
+end
+
 --------------------------------------------------------------------------------
 -- (bag,slot) <=> slotId conversion
 --------------------------------------------------------------------------------

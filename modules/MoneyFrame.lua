@@ -24,6 +24,32 @@ function mod:OnDisable()
 	end
 end
 
+local COIN_BOX_EDGE, COIN_BOX_HEIGHT = 8, 17
+
+function mod:CreateCoinBox(widget)
+	if not addon.HasAtlas("common-coinbox-left") then
+		return false
+	end
+
+	local left = widget:CreateTexture(nil, "BACKGROUND")
+	left:SetAtlas("common-coinbox-left")
+	left:SetSize(COIN_BOX_EDGE, COIN_BOX_HEIGHT)
+	left:SetPoint("LEFT", -COIN_BOX_EDGE, 0)
+
+	local right = widget:CreateTexture(nil, "BACKGROUND")
+	right:SetAtlas("common-coinbox-right")
+	right:SetSize(COIN_BOX_EDGE, COIN_BOX_HEIGHT)
+	right:SetPoint("RIGHT", COIN_BOX_EDGE, 0)
+
+	local center = widget:CreateTexture(nil, "BACKGROUND")
+	center:SetAtlas("_common-coinbox-center")
+	center:SetHeight(COIN_BOX_HEIGHT)
+	center:SetPoint("LEFT", left, "RIGHT")
+	center:SetPoint("RIGHT", right, "LEFT")
+
+	return true
+end
+
 function mod:OnBagFrameCreated(bag)
 	if bag.bagName ~= "Backpack" then
 		return
@@ -32,7 +58,8 @@ function mod:OnBagFrameCreated(bag)
 	self.widget = CreateFrame("Frame", addonName .. "MoneyFrame", frame, "MoneyFrameTemplate")
 	self.widget:SetHeight(19)
 	self.widget:EnableMouse(true)
-	frame:AddBottomWidget(self.widget, "RIGHT", 50, nil, 13, 0)
+	local xOffset = self:CreateCoinBox(self.widget) and -COIN_BOX_EDGE / 2 or 13
+	frame:AddBottomWidget(self.widget, "RIGHT", 50, nil, xOffset, 0)
 
 	local overlay = CreateFrame("Frame", nil, self.widget)
 	overlay:SetAllPoints()

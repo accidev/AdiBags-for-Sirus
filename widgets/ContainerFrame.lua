@@ -78,9 +78,13 @@ local EasyMenu = EasyMenu
 local CreateFrame = CreateFrame
 
 local menuFrame = CreateFrame("Frame", "menuFrame", UIParent, "UIDropDownMenuTemplate")
+
+local CLOSE_ICON_FILE = "|TInterface\\Buttons\\UI-Panel-MinimizeButton-Up:24|t"
+local CLOSE_ICON_ATLAS = "|TInterface\\Buttons\\RedButton2x:24:24:0:0:256:128:39:75:1:39|t"
+
 local menuList = {
 	{
-		text = "|TInterface\\Buttons\\UI-Panel-MinimizeButton-Up:24|t |cffFFA500Close|r",
+		text = CLOSE_ICON_FILE .. " |cffFFA500Close|r",
 		func = function()
 			CloseMenus()
 		end,
@@ -106,6 +110,12 @@ local menuList = {
 		end,
 	},
 }
+
+local function UpdateMenuCloseIcon()
+	local skin = GetCloseButtonSkin()
+	local icon = (skin and skin.normal == "RedButton-Exit") and CLOSE_ICON_ATLAS or CLOSE_ICON_FILE
+	menuList[1].text = icon .. " |cffFFA500Close|r"
+end
 
 local function ShowAnchorTooltip(owner, headerText, bodyLines)
 	GameTooltip:SetOwner(owner, "ANCHOR_TOPLEFT", -25, 8)
@@ -290,7 +300,11 @@ function containerProto:OnCreate(name, bagIds, isBank)
 	closeButton:SetFrameLevel(minFrameLevel)
 
 	local bagSlotButton = CreateFrame("CheckButton", nil, self)
-	bagSlotButton:SetNormalTexture([[Interface\Buttons\Button-Backpack-Up]])
+	if addon.HasAtlas("bag-main") and bagSlotButton.SetNormalAtlas then
+		bagSlotButton:SetNormalAtlas("bag-main")
+	else
+		bagSlotButton:SetNormalTexture([[Interface\Buttons\Button-Backpack-Up]])
+	end
 	bagSlotButton:SetCheckedTexture([[Interface\Buttons\CheckButtonHilight]])
 	bagSlotButton:GetCheckedTexture():SetBlendMode("ADD")
 	bagSlotButton:SetScript("OnClick", BagSlotButton_OnClick)
@@ -362,6 +376,7 @@ function containerProto:OnCreate(name, bagIds, isBank)
 			local x, y = GetCursorPosition()
 			local screenHeight = UIParent:GetTop()
 			local threshold = 200
+			UpdateMenuCloseIcon()
 
 			if y > screenHeight - threshold and not IsAltKeyDown() then
 				self.lastClickTime = GetTime()

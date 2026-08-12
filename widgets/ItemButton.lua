@@ -495,6 +495,13 @@ function buttonProto:IsBank()
 	return not not BANK_BAG_IDS[self.bag]
 end
 
+function buttonProto:GetEmptySlotAtlas()
+	local atlas = self:IsBank() and "bags-item-bankslot64" or self.emptyBackgroundAtlas
+	if atlas and addon.HasAtlas(atlas) then
+		return atlas
+	end
+end
+
 function buttonProto:IsStack()
 	return false
 end
@@ -619,9 +626,13 @@ function buttonProto:Update()
 		icon:SetTexture(self.texture)
 		icon:SetTexCoord(0, 1, 0, 1)
 	else
+		local emptyAtlas = not Masque and self:GetEmptySlotAtlas()
 		if Masque then
 			icon:SetTexCoord(12 / 64, 51 / 64, 12 / 64, 51 / 64)
 			icon:SetTexture(nil)
+		elseif emptyAtlas then
+			icon:SetTexCoord(0, 1, 0, 1)
+			icon:SetAtlas(emptyAtlas)
 		else
 			icon:SetTexture([[Interface\BUTTONS\UI-EmptySlot]])
 			icon:SetTexCoord(12 / 64, 51 / 64, 12 / 64, 51 / 64)
