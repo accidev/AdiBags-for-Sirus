@@ -8,6 +8,7 @@ local BACKPACK_CONTAINER = _G.BACKPACK_CONTAINER
 local BankFrame = _G.BankFrame
 local BANK_CONTAINER = _G.BANK_CONTAINER
 local KEYRING_CONTAINER = _G.KEYRING_CONTAINER
+local REAGENTBANK_CONTAINER = _G.REAGENTBANK_CONTAINER
 local CloseBankFrame = _G.CloseBankFrame
 local ContainerFrame_GenerateFrame = _G.ContainerFrame_GenerateFrame
 local ContainerFrame_GetOpenFrame = _G.ContainerFrame_GetOpenFrame
@@ -79,7 +80,20 @@ do
 		ALL[id] = id
 	end
 
-	addon.BAG_IDS = { BAGS = BAGS, BANK = BANK, ALL = ALL }
+	local REAGENTBANK = REAGENTBANK_CONTAINER and { [REAGENTBANK_CONTAINER] = REAGENTBANK_CONTAINER } or nil
+
+	addon.BAG_IDS = { BAGS = BAGS, BANK = BANK, REAGENTBANK = REAGENTBANK, ALL = ALL }
+end
+
+if REAGENTBANK_CONTAINER then
+	local frame = CreateFrame("Frame")
+	if frame.RegisterCustomEvent then
+		frame:SetScript("OnEvent", function()
+			addon:SendMessage("AdiBags_BagUpdated", REAGENTBANK_CONTAINER)
+		end)
+		frame:RegisterCustomEvent("PLAYERREAGENTBANKSLOTS_CHANGED")
+		frame:RegisterCustomEvent("REAGENTBANK_UPDATE")
+	end
 end
 
 local FAMILY_TAGS = {

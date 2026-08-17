@@ -491,8 +491,13 @@ function buttonProto:GetBagFamily()
 end
 
 local BANK_BAG_IDS = addon.BAG_IDS.BANK
+local REAGENTBANK_BAG_IDS = addon.BAG_IDS.REAGENTBANK
 function buttonProto:IsBank()
-	return not not BANK_BAG_IDS[self.bag]
+	return not not (BANK_BAG_IDS[self.bag] or (REAGENTBANK_BAG_IDS and REAGENTBANK_BAG_IDS[self.bag]))
+end
+
+function buttonProto:IsReagentBank()
+	return not not (REAGENTBANK_BAG_IDS and REAGENTBANK_BAG_IDS[self.bag])
 end
 
 function buttonProto:GetEmptySlotAtlas()
@@ -722,13 +727,19 @@ function buttonProto:UpdateLock(isolatedEvent)
 end
 
 function buttonProto:UpdateCooldown()
+	if self:IsReagentBank() then
+		return
+	end
 	return ContainerFrame_UpdateCooldown(self.bag, self, self.hasItem)
 end
 
 function buttonProto:UpdateBorder(isolatedEvent)
 	if self.hasItem then
 		local texture, r, g, b, a, x1, x2, y1, y2, blendMode = nil, 1, 1, 1, 1, 0, 1, 0, 1, "BLEND"
-		local isQuestItem, questId, isActive = GetContainerItemQuestInfo(self.bag, self.slot)
+		local isQuestItem, questId, isActive
+		if not self:IsReagentBank() then
+			isQuestItem, questId, isActive = GetContainerItemQuestInfo(self.bag, self.slot)
+		end
 		self.isQuestItem, self.questId = isQuestItem, questId
 
 		if addon.db.profile.questIndicator and (questId and not isActive) then

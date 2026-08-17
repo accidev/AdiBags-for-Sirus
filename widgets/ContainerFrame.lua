@@ -26,6 +26,7 @@ local max = _G.max
 local next = _G.next
 local NUM_BAG_SLOTS = _G.NUM_BAG_SLOTS
 local pairs = _G.pairs
+local REAGENTBANK_CONTAINER = _G.REAGENTBANK_CONTAINER
 local PlaySound = _G.PlaySound
 local select = _G.select
 local strjoin = _G.strjoin
@@ -38,6 +39,15 @@ local wipe = _G.wipe
 --GLOBALS>
 
 local GetSlotId = addon.GetSlotId
+
+local REAGENT_BANK_TITLE = _G.REAGENT_BANK or "Reagent Bank"
+local REAGENT_BANK_DEPOSIT_TEXT = _G.REAGENTBANK_DEPOSIT or "Deposit All Reagents"
+local REAGENT_BANK_POPUP = "CONFIRM_BUY_REAGENTBANK_TAB"
+
+local ACTIVE_TAB_COLOR = { 1, 0.82, 0 }
+local INACTIVE_TAB_COLOR = { 0.75, 0.75, 0.75 }
+local LOCKED_TAB_COLOR = { 0.5, 0.5, 0.5 }
+local TAB_SPACING = 10
 
 local ITEM_SIZE = addon.ITEM_SIZE
 local ITEM_SPACING = addon.ITEM_SPACING
@@ -414,6 +424,10 @@ function containerProto:OnCreate(name, bagIds, isBank)
 
 	self.Anchor = anchor
 
+	if isBank and REAGENTBANK_CONTAINER then
+		self:CreateStorageTabs()
+	end
+
 	--------------------------------------------------------------------------------
 	-- Some Updating Bag Slots Stuff
 	--------------------------------------------------------------------------------
@@ -487,7 +501,178 @@ function containerProto:ConfigChanged(event, name)
 	end
 end
 
+local function IsReagentBankAvailable()
+	return REAGENTBANK_CONTAINER
+		and addon.BAG_IDS.REAGENTBANK
+		and _G.IsReagentBankUnlocked
+		and _G.IsReagentBankUnlocked()
+end
+
+function containerProto:IsReagentBankShown()
+	return self.bagIds == addon.BAG_IDS.REAGENTBANK
+end
+
+function containerProto:SetBagIds(bagIds)
+	if self.bagIds == bagIds then
+		return
+	end
+	for bagId in pairs(bagIds) do
+		if not self.content[bagId] then
+			self.content[bagId] = { size = 0 }
+		end
+		if not addon.itemParentFrames[bagId] then
+			local f = CreateFrame("Frame", addonName .. "ItemContainer" .. bagId, self)
+			f.isBank = self.isBank
+			f:SetID(bagId)
+			addon.itemParentFrames[bagId] = f
+		end
+	end
+	local previous = self.bagIds
+	self.bagIds = bagIds
+	for bagId in pairs(previous) do
+		if not bagIds[bagId] then
+			local content = self.content[bagId]
+			for slot = content.size, 1, -1 do
+				local slotData = content[slot]
+				if slotData then
+					self.removed[slotData.slotId] = slotData.link
+					content[slot] = nil
+				end
+			end
+			content.size = 0
+		end
+	end
+	for bagId in pairs(bagIds) do
+		self:UpdateContent(bagId)
+	end
+	self:UpdateButtons()
+	self:LayoutSections(0)
+end
+
+function containerProto:SetReagentBankShown(shown)
+	if not self.isBank or (shown and not IsReagentBankAvailable()) then
+		return
+	end
+	if shown and self.BagSlotPanel:IsShown() then
+		self.BagSlotPanel:Hide()
+	end
+	self:UpdateStorageTabs(shown)
+	self:SetBagIds(shown and addon.BAG_IDS.REAGENTBANK or addon.BAG_IDS.BANK)
+end
+
+function containerProto:CreateStorageTabs()
+	local container = self
+
+	local tabs = CreateFrame("Frame", nil, self)
+	-- якорь перетаскивания сидит на уровне 100 и перехватывает мышь, вкладки должны быть выше
+	tabs:SetFrameLevel(self.Anchor:GetFrameLevel() + 10)
+	tabs:SetPoint("LEFT", self.Title, "LEFT")
+	tabs:SetHeight(20)
+	self.HeaderTabs = tabs
+
+	local function CreateTab(text, onClick)
+		local button = CreateFrame("Button", nil, tabs)
+		button:SetFrameLevel(tabs:GetFrameLevel() + 1)
+		button:SetHeight(18)
+		button:RegisterForClicks("LeftButtonUp")
+		button:SetScript("OnClick", onClick)
+		local label = button:CreateFontString(nil, "OVERLAY")
+		label:SetFontObject(addon.bagFont)
+		label:SetText(text)
+		label:SetPoint("LEFT")
+		button.Label = label
+		return button
+	end
+
+	local bankTab = CreateTab(L[self.name], function()
+		PlaySound("igMainMenuOptionCheckBoxOn")
+		container:SetReagentBankShown(false)
+	end)
+	bankTab:SetPoint("LEFT", tabs, "LEFT")
+	self.BankTab = bankTab
+
+	local reagentTab = CreateTab(REAGENT_BANK_TITLE, function()
+		if IsReagentBankAvailable() then
+			PlaySound("igMainMenuOptionCheckBoxOn")
+			container:SetReagentBankShown(true)
+		elseif _G.StaticPopupDialogs and _G.StaticPopupDialogs[REAGENT_BANK_POPUP] then
+			_G.StaticPopup_Show(REAGENT_BANK_POPUP)
+		end
+	end)
+	reagentTab:SetPoint("LEFT", bankTab, "RIGHT", TAB_SPACING, 0)
+	self.ReagentTab = reagentTab
+
+	local deposit = CreateFrame("Button", nil, tabs, "UIPanelButtonTemplate")
+	deposit:SetFrameLevel(tabs:GetFrameLevel() + 1)
+	deposit:SetHeight(20)
+	deposit:SetText(REAGENT_BANK_DEPOSIT_TEXT)
+	deposit:SetPoint("LEFT", reagentTab, "RIGHT", TAB_SPACING, 0)
+	deposit:SetScript("OnClick", function()
+		if _G.DepositReagentBank then
+			PlaySound("igMainMenuOptionCheckBoxOn")
+			_G.DepositReagentBank()
+		end
+	end)
+	deposit:Hide()
+	self.DepositButton = deposit
+	addon.SetupTooltip(deposit, {
+		REAGENT_BANK_DEPOSIT_TEXT,
+		_G.REAGENT_BANK_HELP or "",
+	}, "ANCHOR_TOPLEFT", 0, 8)
+
+	if tabs.RegisterCustomEvent then
+		tabs:SetScript("OnEvent", function()
+			container:UpdateStorageTabs()
+		end)
+		tabs:RegisterCustomEvent("REAGENTBANK_PURCHASED")
+	end
+
+	self.Title:SetText("")
+	self:UpdateStorageTabs(false)
+end
+
+function containerProto:UpdateStorageTabs(reagentShown)
+	local tabs = self.HeaderTabs
+	if not tabs then
+		return
+	end
+	if reagentShown == nil then
+		reagentShown = self:IsReagentBankShown()
+	end
+	local unlocked = IsReagentBankAvailable() and true or false
+
+	local bankColor = reagentShown and INACTIVE_TAB_COLOR or ACTIVE_TAB_COLOR
+	self.BankTab.Label:SetTextColor(bankColor[1], bankColor[2], bankColor[3])
+
+	local reagentColor = LOCKED_TAB_COLOR
+	if unlocked then
+		reagentColor = reagentShown and ACTIVE_TAB_COLOR or INACTIVE_TAB_COLOR
+	end
+	self.ReagentTab.Label:SetTextColor(reagentColor[1], reagentColor[2], reagentColor[3])
+
+	self.BankTab:SetWidth(self.BankTab.Label:GetStringWidth())
+	self.ReagentTab:SetWidth(self.ReagentTab.Label:GetStringWidth())
+
+	local width = self.BankTab:GetWidth() + TAB_SPACING + self.ReagentTab:GetWidth()
+
+	local deposit = self.DepositButton
+	if reagentShown and unlocked then
+		deposit:SetWidth(deposit:GetFontString():GetStringWidth() + 16)
+		deposit:Show()
+		width = width + TAB_SPACING + deposit:GetWidth()
+	else
+		deposit:Hide()
+	end
+
+	tabs:SetWidth(width)
+end
+
 function containerProto:OnShow()
+	if self:IsReagentBankShown() then
+		self:SetReagentBankShown(false)
+	else
+		self:UpdateStorageTabs(false)
+	end
 	PlaySound(self.isBank and "igMainMenuOpen" or "igBackPackOpen")
 	self:RegisterEvent("EQUIPMENT_SWAP_PENDING", "PauseUpdates")
 	self:RegisterEvent("EQUIPMENT_SWAP_FINISHED", "ResumeUpdates")
@@ -612,7 +797,7 @@ function containerProto:GetContentMinWidth()
 	return max(
 		(self.BottomLeftRegion:IsShown() and self.BottomLeftRegion:GetWidth() or 0)
 			+ (self.BottomRightRegion:IsShown() and self.BottomRightRegion:GetWidth() or 0),
-		self.Title:GetStringWidth()
+		max(self.Title:GetStringWidth(), self.HeaderTabs and self.HeaderTabs:GetWidth() or 0)
 			+ 32
 			+ (self.HeaderLeftRegion:IsShown() and (self.HeaderLeftRegion:GetWidth() + 4) or 0)
 			+ (self.HeaderRightRegion:IsShown() and (self.HeaderRightRegion:GetWidth() + 4) or 0)
@@ -776,6 +961,8 @@ local function FilterByBag(slotData)
 		name = L["Backpack"]
 	elseif bag == BANK_CONTAINER then
 		name = L["Bank"]
+	elseif REAGENTBANK_CONTAINER and bag == REAGENTBANK_CONTAINER then
+		name = REAGENT_BANK_TITLE
 	elseif bag <= NUM_BAG_SLOTS then
 		name = format(L["Bag #%d"], bag)
 	else
