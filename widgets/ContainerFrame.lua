@@ -556,6 +556,9 @@ function containerProto:SetReagentBankShown(shown)
 	if shown and self.BagSlotPanel:IsShown() then
 		self.BagSlotPanel:Hide()
 	end
+	if _G.BankFrame then
+		_G.BankFrame.selectedTab = shown and 2 or 1
+	end
 	self:UpdateStorageTabs(shown)
 	self:SetBagIds(shown and addon.BAG_IDS.REAGENTBANK or addon.BAG_IDS.BANK)
 end

@@ -42,6 +42,9 @@ local wipe = _G.wipe
 local GetSlotId = addon.GetSlotId
 local GetBagSlotFromId = addon.GetBagSlotFromId
 
+local BANK_BAG_IDS = addon.BAG_IDS.BANK
+local REAGENTBANK_BAG_IDS = addon.BAG_IDS.REAGENTBANK
+
 local ITEM_SIZE = addon.ITEM_SIZE
 
 local Masque = LibStub("Masque", true)
@@ -332,11 +335,29 @@ function buttonProto:UpdateCountAppearance()
 	text:SetPoint(db.countAnchor, self, db.countOffsetX, db.countOffsetY)
 end
 
+local function ReagentBankButton_OnEnter(self)
+	local right = self:GetRight()
+	_G.GameTooltip:SetOwner(self, right and right >= _G.GetScreenWidth() / 2 and "ANCHOR_LEFT" or "ANCHOR_RIGHT")
+	if _G.GameTooltip:SetInventoryItem("player", _G.ReagentBankButtonIDToInvSlotID(self.slot)) then
+		_G.GameTooltip:Show()
+	else
+		_G.GameTooltip:Hide()
+	end
+	_G.ResetCursor()
+end
+
 function buttonProto:OnAcquire(container, bag, slot)
 	self.container = container
 	self.bag = bag
 	self.slot = slot
 	self.stack = nil
+	if REAGENTBANK_BAG_IDS and REAGENTBANK_BAG_IDS[bag] then
+		self:SetScript("OnEnter", ReagentBankButton_OnEnter)
+		self.UpdateTooltip = ReagentBankButton_OnEnter
+	elseif self:GetScript("OnEnter") == ReagentBankButton_OnEnter then
+		self:SetScript("OnEnter", _G.ContainerFrameItemButton_OnEnter)
+		self.UpdateTooltip = nil
+	end
 	self:SetParent(addon.itemParentFrames[bag])
 	if self.SetBagID then
 		self:SetBagID(bag)
@@ -490,8 +511,6 @@ function buttonProto:GetBagFamily()
 	return self.bagFamily
 end
 
-local BANK_BAG_IDS = addon.BAG_IDS.BANK
-local REAGENTBANK_BAG_IDS = addon.BAG_IDS.REAGENTBANK
 function buttonProto:IsBank()
 	return not not (BANK_BAG_IDS[self.bag] or (REAGENTBANK_BAG_IDS and REAGENTBANK_BAG_IDS[self.bag]))
 end
