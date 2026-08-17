@@ -556,9 +556,7 @@ function containerProto:SetReagentBankShown(shown)
 	if shown and self.BagSlotPanel:IsShown() then
 		self.BagSlotPanel:Hide()
 	end
-	if _G.BankFrame then
-		_G.BankFrame.selectedTab = shown and 2 or 1
-	end
+	addon.reagentBankMode = shown and true or nil
 	self:UpdateStorageTabs(shown)
 	self:SetBagIds(shown and addon.BAG_IDS.REAGENTBANK or addon.BAG_IDS.BANK)
 end
@@ -567,7 +565,6 @@ function containerProto:CreateStorageTabs()
 	local container = self
 
 	local tabs = CreateFrame("Frame", nil, self)
-	-- якорь перетаскивания сидит на уровне 100 и перехватывает мышь, вкладки должны быть выше
 	tabs:SetFrameLevel(self.Anchor:GetFrameLevel() + 10)
 	tabs:SetPoint("LEFT", self.Title, "LEFT")
 	tabs:SetHeight(20)
@@ -684,6 +681,9 @@ function containerProto:OnShow()
 end
 
 function containerProto:OnHide()
+	if self.isBank then
+		addon.reagentBankMode = nil
+	end
 	containerParentProto.OnHide(self)
 	PlaySound(self.isBank and "igMainMenuClose" or "igBackPackClose")
 	self:PauseUpdates()

@@ -309,11 +309,24 @@ buttonProto.UnregisterAllMessages = AceEvent.UnregisterAllMessages
 
 local childrenNames = { "Cooldown", "IconTexture", "IconQuestTexture", "Count", "Stock", "NormalTexture" }
 
+local function ItemButton_PreClick(self, button)
+	if
+		addon.reagentBankMode
+		and button == "RightButton"
+		and not (REAGENTBANK_BAG_IDS and REAGENTBANK_BAG_IDS[self.bag])
+		and not _G.CursorHasItem()
+		and not _G.SpellIsTargeting()
+	then
+		_G.UseContainerItem(self.bag, self.slot, nil, true)
+	end
+end
+
 function buttonProto:OnCreate()
 	local name = self:GetName()
 	for i, childName in pairs(childrenNames) do
 		self[childName] = _G[name .. childName]
 	end
+	self:SetScript("PreClick", ItemButton_PreClick)
 	self:RegisterForDrag("LeftButton")
 	self:UpdateClickRegistration()
 	self:SetScript("OnShow", self.OnShow)
