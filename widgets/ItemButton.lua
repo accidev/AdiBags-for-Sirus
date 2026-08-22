@@ -9,12 +9,14 @@ local C_Timer = _G.C_Timer
 local CreateFrame = _G.CreateFrame
 local ContainerFrame_UpdateCooldown = _G.ContainerFrame_UpdateCooldown
 local format = _G.format
+local GetContainerFreeSlots = _G.GetContainerFreeSlots
 local GetContainerItemGUID = _G.GetContainerItemGUID
 local GetContainerItemID = _G.GetContainerItemID
 local GetContainerItemInfo = _G.GetContainerItemInfo
 local GetContainerItemLink = _G.GetContainerItemLink
 local GetContainerItemQuestInfo = _G.GetContainerItemQuestInfo
 local GetContainerNumFreeSlots = _G.GetContainerNumFreeSlots
+local GetContainerNumSlots = _G.GetContainerNumSlots
 local GetItemExpirationTimeLeft = _G.GetItemExpirationTimeLeft
 local GetItemInfoEx = _G.GetItemInfoEx
 local GetItemInfo = _G.GetItemInfo
@@ -30,6 +32,7 @@ local ITEM_QUALITY_UNCOMMON = _G.ITEM_QUALITY_UNCOMMON
 local KEYRING_CONTAINER = _G.KEYRING_CONTAINER
 local next = _G.next
 local pairs = _G.pairs
+local REAGENTBANK_CONTAINER = _G.REAGENTBANK_CONTAINER
 local select = _G.select
 local SetItemButtonDesaturated = _G.SetItemButtonDesaturated
 local StackSplitFrame = _G.StackSplitFrame
@@ -63,6 +66,9 @@ local bagFamilyCache = {}
 local function GetBagFamily(bag)
 	if bag == KEYRING_CONTAINER then
 		return 256
+	end
+	if bag == REAGENTBANK_CONTAINER then
+		return 0
 	end
 	local family = bagFamilyCache[bag]
 	if family == nil then
@@ -309,13 +315,44 @@ buttonProto.UnregisterAllMessages = AceEvent.UnregisterAllMessages
 
 local childrenNames = { "Cooldown", "IconTexture", "IconQuestTexture", "Count", "Stock", "NormalTexture" }
 
+local reagentFreeSlots = {}
+local function CanStoreInReagentBank(bag, slot)
+	if not REAGENTBANK_BAG_IDS or REAGENTBANK_BAG_IDS[bag] or BANK_BAG_IDS[bag] then
+		return false
+	end
+	if addon:GetInteractingWindow() ~= "BANKFRAME" then
+		return false
+	end
+	if (GetContainerNumSlots(REAGENTBANK_CONTAINER) or 0) == 0 then
+		return false
+	end
+	local itemId = GetContainerItemID(bag, slot)
+	if not itemId or not (_G.IsReagentItem and _G.IsReagentItem(itemId)) then
+		return false
+	end
+	local guid = GetContainerItemGUID and GetContainerItemGUID(bag, slot)
+	if not guid then
+		return false
+	end
+	if not _G.IsItemLockedByGUID or _G.IsItemLockedByGUID(guid) then
+		return false
+	end
+	if select(3, GetContainerItemInfo(bag, slot)) then
+		return false
+	end
+	wipe(reagentFreeSlots)
+	GetContainerFreeSlots(REAGENTBANK_CONTAINER, reagentFreeSlots)
+	return reagentFreeSlots[1] ~= nil
+end
+addon.CanStoreInReagentBank = CanStoreInReagentBank
+
 local function ItemButton_PreClick(self, button)
 	if
-		addon.reagentBankMode
-		and button == "RightButton"
-		and not (REAGENTBANK_BAG_IDS and REAGENTBANK_BAG_IDS[self.bag])
+		button == "RightButton"
+		and not _G.IsModifiedClick()
 		and not _G.CursorHasItem()
 		and not _G.SpellIsTargeting()
+		and CanStoreInReagentBank(self.bag, self.slot)
 	then
 		_G.UseContainerItem(self.bag, self.slot, nil, true)
 	end

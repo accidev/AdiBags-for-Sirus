@@ -30,6 +30,7 @@ local NUM_BAG_SLOTS = _G.NUM_BAG_SLOTS
 local NUM_BANKBAGSLOTS = _G.NUM_BANKBAGSLOTS or 7
 local BANK_CONTAINER = _G.BANK_CONTAINER or -1
 local KEYRING_CONTAINER = _G.KEYRING_CONTAINER or -2
+local REAGENTBANK_CONTAINER = _G.REAGENTBANK_CONTAINER
 local INVSLOT_FIRST_EQUIPPED = _G.INVSLOT_FIRST_EQUIPPED or 1
 local INVSLOT_LAST_EQUIPPED = _G.INVSLOT_LAST_EQUIPPED or 19
 local GetCurrencyListInfo = _G.GetCurrencyListInfo
@@ -246,6 +247,13 @@ function mod:DecodeContainer(text)
 	return content
 end
 
+local function IsReagentBankReadable()
+	if not REAGENTBANK_CONTAINER then
+		return false
+	end
+	return (GetContainerNumSlots(REAGENTBANK_CONTAINER) or 0) > 0
+end
+
 local function SaveContainers(store, first, last, extra)
 	for bag = first, last do
 		store[bag] = EncodeContainer(bag)
@@ -270,8 +278,15 @@ function mod:SaveBankLayout()
 	end
 	local charDB = EnsureCharDB()
 	local snapshot = charDB.snapshot
+	local reagent = REAGENTBANK_CONTAINER and snapshot.bank[REAGENTBANK_CONTAINER]
 	wipe(snapshot.bank)
 	SaveContainers(snapshot.bank, NUM_BAG_SLOTS + 1, NUM_BAG_SLOTS + NUM_BANKBAGSLOTS, BANK_CONTAINER)
+	if REAGENTBANK_CONTAINER then
+		if IsReagentBankReadable() then
+			reagent = EncodeContainer(REAGENTBANK_CONTAINER)
+		end
+		snapshot.bank[REAGENTBANK_CONTAINER] = reagent
+	end
 	charDB.bankSeen = time()
 end
 
@@ -286,7 +301,7 @@ end
 
 local function RemoveEmptyItems(items)
 	for id, data in pairs(items) do
-		if data.bags == 0 and data.bank == 0 and data.equipped == 0 then
+		if data.bags == 0 and data.bank == 0 and data.equipped == 0 and (data.reagentBank or 0) == 0 then
 			items[id] = nil
 		end
 	end
@@ -425,6 +440,23 @@ function mod:SaveBankItems()
 					local _, count = GetContainerItemInfo(bag, slot)
 					local data = EnsureItem(items, itemId)
 					data.bank = data.bank + (count or 1)
+				end
+			end
+		end
+	end
+
+	if IsReagentBankReadable() then
+		for _, data in pairs(items) do
+			data.reagentBank = 0
+		end
+		for slot = 1, GetContainerNumSlots(REAGENTBANK_CONTAINER) do
+			local link = GetContainerItemLink(REAGENTBANK_CONTAINER, slot)
+			if link then
+				local itemId = GetItemId(link)
+				if itemId then
+					local _, count = GetContainerItemInfo(REAGENTBANK_CONTAINER, slot)
+					local data = EnsureItem(items, itemId)
+					data.reagentBank = (data.reagentBank or 0) + (count or 1)
 				end
 			end
 		end
@@ -599,7 +631,7 @@ function mod:AddItemOwners(tooltip, itemLink)
 			local itemData = charData.items[itemId]
 			if itemData then
 				local bagCount = itemData.bags or 0
-				local bankCount = itemData.bank or 0
+				local bankCount = (itemData.bank or 0) + (itemData.reagentBank or 0)
 				local equipCount = itemData.equipped or 0
 				local info = FormatCount(bagCount, bankCount, equipCount)
 				if info then
@@ -799,6 +831,19 @@ end
 function mod:OnBankOpened()
 	bankOpen = true
 	ScheduleBankSave()
+end
+
+if REAGENTBANK_CONTAINER then
+	local frame = _G.CreateFrame("Frame")
+	if frame.RegisterCustomEvent then
+		frame:SetScript("OnEvent", function()
+			if bankOpen then
+				ScheduleBankSave()
+			end
+		end)
+		frame:RegisterCustomEvent("PLAYERREAGENTBANKSLOTS_CHANGED")
+		frame:RegisterCustomEvent("REAGENTBANK_UPDATE")
+	end
 end
 
 function mod:OnBankClosed()

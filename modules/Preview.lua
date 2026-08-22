@@ -34,6 +34,9 @@ mod.uiDesc = L["Show bags and bank of another character."]
 
 local BAG_ORDER = { 0, 1, 2, 3, 4, -2 }
 local BANK_ORDER = { -1, 5, 6, 7, 8, 9, 10, 11 }
+if _G.REAGENTBANK_CONTAINER then
+	tinsert(BANK_ORDER, _G.REAGENTBANK_CONTAINER)
+end
 
 local PREVIEW_BAG_IDS = {}
 local PREVIEW_BAG_SET = {}

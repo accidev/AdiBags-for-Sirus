@@ -173,6 +173,8 @@ L["Filters are used to dispatch items in bag sections. One item can only appear 
 	"Фильтры используются для группировки ваших вещей. Одна вещь может находиться только в одной из секций. Если одна вещь входит в несколько фильтров, используется тот фильтр, чей приоритет выше."
 L["Four general sections."] = "Четыре общих секции."
 L["Free space"] = "Свободно"
+L["Left click: deposit all reagents"] = "ЛКМ: сложить все материалы в банк"
+L["Left click: buy the reagent bank"] = "ЛКМ: приобрести банк материалов"
 L["Free space / total space"] = "Свободно / всего места"
 L["Item level"] = "Уровень предметов" -- ItemLevel.lua
 L["Which color scheme should be used to display the item level ?"] =
