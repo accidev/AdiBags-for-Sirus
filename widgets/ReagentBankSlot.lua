@@ -9,7 +9,6 @@ local GameTooltip = _G.GameTooltip
 local GetCoinTextureString = _G.GetCoinTextureString
 local GetContainerFreeSlots = _G.GetContainerFreeSlots
 local GetContainerNumSlots = _G.GetContainerNumSlots
-local GetCursorInfo = _G.GetCursorInfo
 local GetScreenWidth = _G.GetScreenWidth
 local pairs = _G.pairs
 local PickupContainerItem = _G.PickupContainerItem
@@ -58,10 +57,6 @@ local function Slot_OnClick(self, button)
 		return
 	end
 	if CursorHasItem() then
-		local kind, itemId = GetCursorInfo()
-		if kind ~= "item" or not itemId or not (_G.IsReagentItem and _G.IsReagentItem(itemId)) then
-			return
-		end
 		local slot = GetFirstFreeSlot()
 		if slot then
 			PickupContainerItem(REAGENTBANK_CONTAINER, slot)
